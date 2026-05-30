@@ -51,16 +51,26 @@ SMTP_USER     = os.environ.get('SMTP_USER', '')
 SMTP_PASSWORD = os.environ.get('SMTP_PASSWORD', '')
 
 # Cloudinary — persistent cloud storage for uploaded images/videos
-_cld_url = os.environ.get('CLOUDINARY_URL', '')
-if _cld_url:
-    cloudinary.config(cloudinary_url=_cld_url)
-else:
-    cloudinary.config(
-        cloud_name = os.environ.get('CLOUDINARY_CLOUD_NAME', ''),
-        api_key    = os.environ.get('CLOUDINARY_API_KEY', ''),
-        api_secret = os.environ.get('CLOUDINARY_API_SECRET', ''),
-    )
-USE_CLOUDINARY = bool(os.environ.get('CLOUDINARY_URL') or os.environ.get('CLOUDINARY_CLOUD_NAME'))
+USE_CLOUDINARY = False
+try:
+    _cld_url = os.environ.get('CLOUDINARY_URL', '').strip()
+    # Strip the variable name if user accidentally pasted "CLOUDINARY_URL=cloudinary://..."
+    if '=' in _cld_url and _cld_url.startswith('CLOUDINARY_URL'):
+        _cld_url = _cld_url.split('=', 1)[1].strip()
+    if _cld_url.startswith('cloudinary://'):
+        cloudinary.config(cloudinary_url=_cld_url)
+        USE_CLOUDINARY = True
+    elif os.environ.get('CLOUDINARY_CLOUD_NAME'):
+        cloudinary.config(
+            cloud_name = os.environ.get('CLOUDINARY_CLOUD_NAME', ''),
+            api_key    = os.environ.get('CLOUDINARY_API_KEY', ''),
+            api_secret = os.environ.get('CLOUDINARY_API_SECRET', ''),
+        )
+        USE_CLOUDINARY = True
+    else:
+        print('[CLOUDINARY] Not configured — using local file storage.')
+except Exception as e:
+    print(f'[CLOUDINARY] Config error: {e} — falling back to local storage.')
 
 
 def send_loan_notification(app_obj):
