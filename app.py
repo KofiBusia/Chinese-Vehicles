@@ -54,11 +54,9 @@ ALLOWED_VIDEOS = {'mp4', 'mov', 'avi', 'mkv', 'webm'}
 ALLOWED_ALL = ALLOWED_IMAGES | ALLOWED_VIDEOS
 
 # ── Email configuration ───────────────────────────────────────────────────── #
-# Recipients who receive loan application notifications
-LOAN_NOTIFY_EMAILS = [
-    'sbonsu@republicghana.com',
-    'kyeikofi@gmail.com',
-]
+LOAN_TO_EMAIL    = 'sbonsu@republicghana.com'          # primary recipient for loans
+LOAN_CC_EMAILS   = ['kofi@chinacarsinghana.com', 'kyeikofi@gmail.com']
+NOTIFY_EMAILS    = ['kofi@chinacarsinghana.com', 'kyeikofi@gmail.com']  # orders, test drives, contacts
 # SMTP settings
 SMTP_HOST     = 'smtp.gmail.com'
 SMTP_PORT     = 587
@@ -151,17 +149,19 @@ NEW LOAN APPLICATION — #{app_obj.id}
 {'=' * 54}
 Submitted : {app_obj.created_at.strftime('%d %B %Y at %H:%M UTC')}
 """
+        all_recipients = [LOAN_TO_EMAIL] + LOAN_CC_EMAILS
         msg = MIMEMultipart('alternative')
         msg['Subject'] = f"[Loan #{app_obj.id}] {ptype}: {pname} — {app_obj.first_name} {app_obj.last_name}"
         msg['From']    = SMTP_USER
-        msg['To']      = ', '.join(LOAN_NOTIFY_EMAILS)
+        msg['To']      = LOAN_TO_EMAIL
+        msg['Cc']      = ', '.join(LOAN_CC_EMAILS)
         msg.attach(MIMEText(body, 'plain'))
 
         with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
             server.ehlo()
             server.starttls()
             server.login(SMTP_USER, SMTP_PASSWORD)
-            server.sendmail(SMTP_USER, LOAN_NOTIFY_EMAILS, msg.as_string())
+            server.sendmail(SMTP_USER, all_recipients, msg.as_string())
     except Exception as e:
         print(f'[EMAIL] Failed to send loan notification: {e}')
 
@@ -597,12 +597,12 @@ Submitted : {order.created_at.strftime('%d %B %Y at %H:%M UTC')}
         msg = MIMEMultipart('alternative')
         msg['Subject'] = f"[{otype} #{order.id}] {vehicle.name} — {order.name}"
         msg['From']    = SMTP_USER
-        msg['To']      = ', '.join(LOAN_NOTIFY_EMAILS)
+        msg['To']      = ', '.join(NOTIFY_EMAILS)
         msg.attach(MIMEText(body, 'plain'))
         with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
             server.ehlo(); server.starttls()
             server.login(SMTP_USER, SMTP_PASSWORD)
-            server.sendmail(SMTP_USER, LOAN_NOTIFY_EMAILS, msg.as_string())
+            server.sendmail(SMTP_USER, NOTIFY_EMAILS, msg.as_string())
     except Exception as e:
         print(f'[EMAIL] Order notification failed: {e}')
 
