@@ -606,6 +606,99 @@ Submitted : {order.created_at.strftime('%d %B %Y at %H:%M UTC')}
     except Exception as e:
         print(f'[EMAIL] Order notification failed: {e}')
 
+def send_salesperson_welcome(sp):
+    """Email the new salesperson their code + login details, and notify admin."""
+    if not SMTP_USER or not SMTP_PASSWORD:
+        return
+    try:
+        login_url   = 'https://chinacarsinghana.com/sales/login'
+        ref_link    = f'https://chinacarsinghana.com?ref={sp.code}'
+        joined_date = sp.created_at.strftime('%d %B %Y at %H:%M UTC')
+
+        # ── Email to the salesperson ──────────────────────────────────────
+        sp_body = f"""\
+Welcome to the China Cars in Ghana Sales Team!
+{'=' * 54}
+
+Hi {sp.full_name},
+
+Your account has been created. Here are your details:
+
+  YOUR UNIQUE CODE : {sp.code}
+  LOGIN URL        : {login_url}
+  YOUR REFERRAL LINK:
+  {ref_link}
+
+HOW IT WORKS
+------------
+1. Share your referral link on WhatsApp, Facebook, or
+   anywhere your audience is.
+2. When a customer visits through your link and places
+   an order or applies for a loan, it is automatically
+   linked to you.
+3. You earn 1% commission on the full sale value for
+   every confirmed (fully paid) sale you bring in.
+
+LOG IN TO YOUR DASHBOARD
+-------------------------
+Visit {login_url} and enter your code ({sp.code})
+together with the password you set during registration.
+
+Questions? Contact us at +233 50 356 6913 or reply to
+this email.
+
+Good luck and happy selling!
+— China Cars in Ghana Team
+{'=' * 54}
+chinacarsinghana.com · Accra, Ghana
+"""
+        msg_sp = MIMEMultipart('alternative')
+        msg_sp['Subject'] = f'Welcome to the Team — Your Code is {sp.code}'
+        msg_sp['From']    = SMTP_USER
+        msg_sp['To']      = sp.email
+        msg_sp.attach(MIMEText(sp_body, 'plain'))
+
+        with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
+            server.ehlo(); server.starttls()
+            server.login(SMTP_USER, SMTP_PASSWORD)
+            server.sendmail(SMTP_USER, [sp.email], msg_sp.as_string())
+
+        # ── Admin notification ────────────────────────────────────────────
+        admin_body = f"""\
+NEW SALESPERSON REGISTRATION
+{'=' * 54}
+
+A new salesperson has self-registered via the public link.
+
+  Name      : {sp.full_name}
+  Code      : {sp.code}
+  Email     : {sp.email or '—'}
+  Phone     : {sp.phone or '—'}
+  Commission: {sp.commission_pct}%
+  Registered: {joined_date}
+
+Their welcome email (with code + login details) has been
+sent automatically to {sp.email or 'their email address'}.
+
+Manage the team at:
+https://chinacarsinghana.com/admin/salespersons
+{'=' * 54}
+"""
+        msg_admin = MIMEMultipart('alternative')
+        msg_admin['Subject'] = f'[New Salesperson] {sp.full_name} — Code {sp.code}'
+        msg_admin['From']    = SMTP_USER
+        msg_admin['To']      = ', '.join(NOTIFY_EMAILS)
+        msg_admin.attach(MIMEText(admin_body, 'plain'))
+
+        with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
+            server.ehlo(); server.starttls()
+            server.login(SMTP_USER, SMTP_PASSWORD)
+            server.sendmail(SMTP_USER, NOTIFY_EMAILS, msg_admin.as_string())
+
+    except Exception as e:
+        print(f'[EMAIL] Salesperson welcome failed: {e}')
+
+
 # ────────────────────────── PUBLIC ROUTES ───────────────────────────────── #
 
 @app.route('/static/img/og-sales.jpg')
@@ -1398,7 +1491,11 @@ def admin_add_salesperson():
         sp.set_password(request.form.get('password', ''))
         db.session.add(sp)
         db.session.commit()
-        flash(f'Salesperson "{sp.full_name}" added with code {sp.code}.', 'success')
+        if sp.email:
+            send_salesperson_welcome(sp)
+            flash(f'Salesperson "{sp.full_name}" added (code {sp.code}) — welcome email sent.', 'success')
+        else:
+            flash(f'Salesperson "{sp.full_name}" added with code {sp.code}.', 'success')
         return redirect(url_for('admin_salespersons'))
     return render_template('admin/salesperson_form.html', sp=None, action='Add')
 
@@ -1523,7 +1620,12 @@ def sales_register(token):
             sp.set_password(password)
             db.session.add(sp)
             db.session.commit()
-            flash(f'Registration successful! Your code is {code}. Please log in.', 'success')
+            # Email the salesperson their code + admin notification
+            if email:
+                send_salesperson_welcome(sp)
+                flash(f'Registration successful! Your code is {code}. Check your email for login details.', 'success')
+            else:
+                flash(f'Registration successful! Your code is {code}. Please log in.', 'success')
             return redirect(url_for('sales_login'))
 
     return render_template('sales/register.html')
