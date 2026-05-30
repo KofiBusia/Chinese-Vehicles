@@ -3,67 +3,293 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sales Team Registration</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@700;800&display=swap" rel="stylesheet">
+  <title>Join the Sales Team — China Cars in Ghana</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@700;800;900&display=swap" rel="stylesheet">
   <style>
-    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
-    body{font-family:'Inter',sans-serif;background:#f1f5f9;min-height:100svh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2rem 1rem;}
-    .card{background:white;border-radius:16px;padding:2.5rem 2rem;width:100%;max-width:440px;box-shadow:0 4px 24px rgba(0,0,0,.08);}
-    .logo{font-family:'Poppins',sans-serif;font-weight:800;font-size:1.1rem;color:#0f172a;margin-bottom:.25rem;}
-    h1{font-family:'Poppins',sans-serif;font-size:1.5rem;font-weight:800;margin:.5rem 0 .25rem;}
-    .sub{font-size:.85rem;color:#64748b;margin-bottom:1.75rem;}
-    .form-group{margin-bottom:1rem;}
-    label{display:block;font-size:.8rem;font-weight:600;color:#374151;margin-bottom:.35rem;}
-    input{width:100%;padding:.7rem .9rem;border:1.5px solid #e2e8f0;border-radius:8px;font-size:.9rem;outline:none;transition:border-color .2s;}
-    input:focus{border-color:#2563eb;}
-    .btn{width:100%;padding:.85rem;background:#2563eb;color:white;border:none;border-radius:10px;font-size:.95rem;font-weight:700;cursor:pointer;margin-top:.5rem;}
-    .btn:hover{background:#1d4ed8;}
-    .flash{padding:.65rem .9rem;border-radius:8px;font-size:.83rem;font-weight:500;margin-bottom:1rem;}
-    .flash.error{background:#fee2e2;color:#b91c1c;}
-    .flash.success{background:#dcfce7;color:#15803d;}
-    .note{font-size:.78rem;color:#94a3b8;text-align:center;margin-top:1.25rem;line-height:1.6;}
-    .login-link{display:block;text-align:center;margin-top:1rem;font-size:.83rem;color:#2563eb;font-weight:600;}
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: #0f172a;
+      min-height: 100svh;
+      display: flex;
+      align-items: stretch;
+    }
+
+    /* Left panel */
+    .left {
+      display: none;
+      flex: 1;
+      background: linear-gradient(160deg, #1e3a5f 0%, #0f172a 60%);
+      padding: 3rem;
+      flex-direction: column;
+      justify-content: space-between;
+      position: relative;
+      overflow: hidden;
+    }
+    @media(min-width: 900px) { .left { display: flex; } }
+
+    .left::before {
+      content: '';
+      position: absolute;
+      width: 600px; height: 600px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(37,99,235,.18) 0%, transparent 70%);
+      top: -100px; right: -100px;
+    }
+
+    .left-logo {
+      font-family: 'Poppins', sans-serif;
+      font-size: 1.1rem;
+      font-weight: 800;
+      color: white;
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+    }
+
+    .left-hero h1 {
+      font-family: 'Poppins', sans-serif;
+      font-size: clamp(2rem, 3.5vw, 3rem);
+      font-weight: 900;
+      color: white;
+      line-height: 1.1;
+      letter-spacing: -.03em;
+      margin-bottom: 1rem;
+    }
+    .left-hero h1 span { color: #60a5fa; }
+    .left-hero p { color: rgba(255,255,255,.55); font-size: .95rem; line-height: 1.8; max-width: 380px; }
+
+    .perks { display: flex; flex-direction: column; gap: .85rem; margin-top: 2.5rem; }
+    .perk {
+      display: flex; align-items: center; gap: 1rem;
+      background: rgba(255,255,255,.05);
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 12px;
+      padding: .85rem 1rem;
+    }
+    .perk-icon { font-size: 1.4rem; flex-shrink: 0; }
+    .perk-title { font-weight: 700; font-size: .88rem; color: white; }
+    .perk-sub { font-size: .75rem; color: rgba(255,255,255,.45); margin-top: .1rem; }
+
+    .left-footer { font-size: .75rem; color: rgba(255,255,255,.25); }
+
+    /* Right panel (form) */
+    .right {
+      flex: 0 0 100%;
+      max-width: 100%;
+      background: white;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 2.5rem 2rem;
+      overflow-y: auto;
+    }
+    @media(min-width: 900px) { .right { flex: 0 0 480px; max-width: 480px; } }
+
+    .form-wrap { max-width: 400px; margin: 0 auto; width: 100%; }
+
+    .mobile-logo {
+      display: flex; align-items: center; gap: .5rem;
+      font-family: 'Poppins', sans-serif;
+      font-size: 1rem; font-weight: 800;
+      color: #0f172a;
+      margin-bottom: 2rem;
+    }
+    @media(min-width: 900px) { .mobile-logo { display: none; } }
+
+    .form-heading { font-family: 'Poppins', sans-serif; font-size: 1.6rem; font-weight: 800; color: #0f172a; margin-bottom: .25rem; }
+    .form-sub { font-size: .85rem; color: #64748b; margin-bottom: 2rem; line-height: 1.6; }
+
+    .flash {
+      padding: .75rem 1rem;
+      border-radius: 10px;
+      font-size: .83rem;
+      font-weight: 600;
+      margin-bottom: 1.25rem;
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+    }
+    .flash.error   { background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; }
+    .flash.success { background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; }
+
+    .form-group { margin-bottom: 1rem; }
+    .form-label {
+      display: block;
+      font-size: .78rem;
+      font-weight: 700;
+      color: #374151;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+      margin-bottom: .4rem;
+    }
+    .form-control {
+      width: 100%;
+      padding: .75rem 1rem;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 10px;
+      font-size: .9rem;
+      font-family: inherit;
+      color: #0f172a;
+      background: #f8fafc;
+      outline: none;
+      transition: border-color .2s, background .2s;
+    }
+    .form-control:focus { border-color: #2563eb; background: white; }
+    .form-control::placeholder { color: #94a3b8; }
+
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: .75rem; }
+
+    .btn-submit {
+      width: 100%;
+      padding: .9rem;
+      background: linear-gradient(135deg, #2563eb, #1d4ed8);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: .95rem;
+      font-weight: 700;
+      font-family: inherit;
+      cursor: pointer;
+      letter-spacing: .02em;
+      margin-top: .5rem;
+      box-shadow: 0 4px 14px rgba(37,99,235,.35);
+      transition: transform .15s, box-shadow .15s;
+    }
+    .btn-submit:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(37,99,235,.45); }
+    .btn-submit:active { transform: none; }
+
+    .divider { display: flex; align-items: center; gap: .75rem; margin: 1.25rem 0; }
+    .divider hr { flex: 1; border: none; border-top: 1px solid #e2e8f0; }
+    .divider span { font-size: .75rem; color: #94a3b8; white-space: nowrap; }
+
+    .login-link {
+      text-align: center;
+      font-size: .83rem;
+      color: #64748b;
+    }
+    .login-link a { color: #2563eb; font-weight: 700; text-decoration: none; }
+
+    .code-note {
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      border-radius: 10px;
+      padding: .75rem 1rem;
+      font-size: .78rem;
+      color: #1d4ed8;
+      line-height: 1.6;
+      margin-bottom: 1.25rem;
+    }
   </style>
 </head>
 <body>
 
-<div class="card">
-  <div class="logo">⚡ China Cars in Ghana</div>
-  <h1>Join the Sales Team</h1>
-  <p class="sub">Create your salesperson account. Your unique referral code will be generated automatically.</p>
+<!-- Left branding panel -->
+<div class="left">
+  <div class="left-logo">⚡ China Cars in Ghana</div>
 
-  {% with messages = get_flashed_messages(with_categories=true) %}
-  {% for cat, msg in messages %}
-  <div class="flash {{ cat }}">{{ msg }}</div>
-  {% endfor %}
-  {% endwith %}
+  <div class="left-hero">
+    <h1>Sell. Earn.<br><span>Grow.</span></h1>
+    <p>Join our network of top-performing sales representatives. Share your unique link — earn commission on every vehicle and solar system sold.</p>
 
-  <form method="post">
-    <div class="form-group">
-      <label>Full Name *</label>
-      <input type="text" name="full_name" required placeholder="e.g. Kwame Mensah">
+    <div class="perks">
+      <div class="perk">
+        <div class="perk-icon">💰</div>
+        <div>
+          <div class="perk-title">1.5% Commission Per Sale</div>
+          <div class="perk-sub">1.5% of the full vehicle or solar system price — paid on full customer payment</div>
+        </div>
+      </div>
+      <div class="perk">
+        <div class="perk-icon">🔗</div>
+        <div>
+          <div class="perk-title">Your Personal Referral Link</div>
+          <div class="perk-sub">Share it on WhatsApp, Facebook, anywhere</div>
+        </div>
+      </div>
+      <div class="perk">
+        <div class="perk-icon">📊</div>
+        <div>
+          <div class="perk-title">Live Sales Dashboard</div>
+          <div class="perk-sub">Track every lead, order, and commission in real time</div>
+        </div>
+      </div>
+      <div class="perk">
+        <div class="perk-icon">🚗</div>
+        <div>
+          <div class="perk-title">Premium Inventory</div>
+          <div class="perk-sub">Vehicles &amp; solar systems with Republic Bank financing</div>
+        </div>
+      </div>
     </div>
-    <div class="form-group">
-      <label>Phone Number *</label>
-      <input type="tel" name="phone" required placeholder="+233 50 000 0000">
-    </div>
-    <div class="form-group">
-      <label>Email Address</label>
-      <input type="email" name="email" placeholder="you@example.com">
-    </div>
-    <div class="form-group">
-      <label>Password *</label>
-      <input type="password" name="password" required placeholder="At least 6 characters">
-    </div>
-    <div class="form-group">
-      <label>Confirm Password *</label>
-      <input type="password" name="confirm" required placeholder="Repeat password">
-    </div>
-    <button type="submit" class="btn">Create My Account</button>
-  </form>
+  </div>
 
-  <p class="note">Your referral code is generated automatically from your name.<br>Share your link to earn commission on every sale.</p>
-  <a href="{{ url_for('sales_login') }}" class="login-link">Already have an account? Log in →</a>
+  <div class="left-footer">© {{ business.name if business else 'China Cars in Ghana' }} — Accra, Ghana</div>
+</div>
+
+<!-- Right form panel -->
+<div class="right">
+  <div class="form-wrap">
+
+    <div class="mobile-logo">⚡ China Cars in Ghana</div>
+
+    <div class="form-heading">Create Your Account</div>
+    <p class="form-sub">Fill in your details to join the sales team. Your unique referral code is generated automatically.</p>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for cat, msg in messages %}
+    <div class="flash {{ cat }}">
+      {% if cat == 'success' %}✅{% else %}⚠️{% endif %} {{ msg }}
+    </div>
+    {% endfor %}
+    {% endwith %}
+
+    <div style="background:#f0fdf4;border:1.5px solid #86efac;border-radius:12px;padding:.9rem 1.1rem;font-size:.8rem;color:#166534;line-height:1.7;margin-bottom:1rem;">
+      <div style="font-weight:800;font-size:.85rem;margin-bottom:.35rem;">💰 Commission Structure</div>
+      <div><strong>1.5%</strong> of the full sale value — on every vehicle or solar system you sell.</div>
+      <div style="margin-top:.25rem;color:#15803d;">Commission is paid once the customer has made <strong>full payment</strong>.</div>
+    </div>
+
+    <div class="code-note">
+      🔑 Your referral code is auto-generated from your name (e.g. <strong>KM4821</strong>). Share your link after signing up to start earning.
+    </div>
+
+    <form method="post">
+      <div class="form-group">
+        <label class="form-label">Full Name *</label>
+        <input type="text" name="full_name" class="form-control" required placeholder="e.g. Kwame Mensah" autofocus>
+      </div>
+
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">Phone *</label>
+          <input type="tel" name="phone" class="form-control" required placeholder="+233 50 000 0000">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email</label>
+          <input type="email" name="email" class="form-control" placeholder="you@example.com">
+        </div>
+      </div>
+
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">Password *</label>
+          <input type="password" name="password" class="form-control" required placeholder="Min. 6 characters">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Confirm *</label>
+          <input type="password" name="confirm" class="form-control" required placeholder="Repeat password">
+        </div>
+      </div>
+
+      <button type="submit" class="btn-submit">🚀 Create My Account &amp; Get My Link</button>
+    </form>
+
+    <div class="divider"><hr><span>Already registered?</span><hr></div>
+    <div class="login-link"><a href="{{ url_for('sales_login') }}">Log in to your dashboard →</a></div>
+
+  </div>
 </div>
 
 </body>

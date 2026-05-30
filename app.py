@@ -334,7 +334,7 @@ class Salesperson(db.Model):
     code         = db.Column(db.String(20), unique=True, nullable=False)  # unique referral/access code
     password_hash = db.Column(db.String(200), nullable=False)
     active       = db.Column(db.Boolean, default=True)
-    commission_pct = db.Column(db.Float, default=2.0)  # commission percentage
+    commission_pct = db.Column(db.Float, default=1.5)  # commission percentage
     notes        = db.Column(db.Text)
     created_at   = db.Column(db.DateTime, default=datetime.utcnow)
     # stats (computed from linked applications/sales)
@@ -1274,7 +1274,7 @@ def admin_add_salesperson():
             email          = request.form.get('email', '').strip(),
             phone          = request.form.get('phone', '').strip(),
             code           = code,
-            commission_pct = request.form.get('commission_pct', type=float) or 2.0,
+            commission_pct = request.form.get('commission_pct', type=float) or 1.5,
             notes          = request.form.get('notes', '').strip(),
             active         = 'active' in request.form,
         )
@@ -1300,7 +1300,7 @@ def admin_edit_salesperson(sid):
         sp.email          = request.form.get('email', '').strip()
         sp.phone          = request.form.get('phone', '').strip()
         sp.code           = new_code
-        sp.commission_pct = request.form.get('commission_pct', type=float) or 2.0
+        sp.commission_pct = request.form.get('commission_pct', type=float) or 1.5
         sp.notes          = request.form.get('notes', '').strip()
         sp.active         = 'active' in request.form
         new_pw = request.form.get('new_password', '').strip()
@@ -1396,11 +1396,12 @@ def sales_register(token):
                 if not Salesperson.query.filter_by(code=code).first():
                     break
             sp = Salesperson(
-                full_name = full_name,
-                email     = email,
-                phone     = phone,
-                code      = code,
-                active    = True,
+                full_name      = full_name,
+                email          = email,
+                phone          = phone,
+                code           = code,
+                active         = True,
+                commission_pct = 1.5,
             )
             sp.set_password(password)
             db.session.add(sp)
@@ -1422,7 +1423,7 @@ def admin_gen_reg_link():
     else:
         db.session.add(SiteSettings(key='sp_reg_token', value=token))
     db.session.commit()
-    link = f"{request.host_url}sales/register/{token}"
+    link = f"https://chinacarsinghana.com/sales/register/{token}"
     return jsonify({'link': link})
 
 
