@@ -104,6 +104,15 @@ def send_loan_notification(app_obj):
         d_ghs        = f"GH₵ {app_obj.deposit_amount * rate:,.2f}" if app_obj.deposit_amount else 'N/A'
         income_str   = f"${app_obj.annual_income:,.2f} (GH₵ {app_obj.annual_income * rate:,.2f})" if app_obj.annual_income else 'N/A'
 
+        sp_section = ''
+        if app_obj.sp_code:
+            sp_section = f"""
+  REFERRED BY SALESPERSON
+  -----------------------
+  Name  : {app_obj.sp_name}
+  Code  : {app_obj.sp_code}
+  Phone : {app_obj.sp_phone or 'N/A'}
+"""
         body = f"""\
 NEW LOAN APPLICATION — #{app_obj.id}
 {'=' * 54}
@@ -134,7 +143,7 @@ NEW LOAN APPLICATION — #{app_obj.id}
   Employment  : {app_obj.employment_status or 'N/A'}
   Employer    : {app_obj.employer or 'N/A'}
   Ann. Income : {income_str}
-
+{sp_section}
   ADDITIONAL NOTES
   ----------------
   {app_obj.message or 'None'}
@@ -262,6 +271,9 @@ class LoanApplication(db.Model):
     message           = db.Column(db.Text)
     status            = db.Column(db.String(20), default='pending')
     created_at        = db.Column(db.DateTime, default=datetime.utcnow)
+    sp_code           = db.Column(db.String(20))
+    sp_name           = db.Column(db.String(100))
+    sp_phone          = db.Column(db.String(20))
 
 
 class Contact(db.Model):
@@ -273,6 +285,9 @@ class Contact(db.Model):
     message    = db.Column(db.Text, nullable=False)
     status     = db.Column(db.String(20), default='unread')
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    sp_code    = db.Column(db.String(20))
+    sp_name    = db.Column(db.String(100))
+    sp_phone   = db.Column(db.String(20))
 
 
 class CarOrder(db.Model):
@@ -291,6 +306,9 @@ class CarOrder(db.Model):
     notes          = db.Column(db.Text)
     status         = db.Column(db.String(20), default='pending')
     created_at     = db.Column(db.DateTime, default=datetime.utcnow)
+    sp_code        = db.Column(db.String(20))
+    sp_name        = db.Column(db.String(100))
+    sp_phone       = db.Column(db.String(20))
 
 
 class AdminUser(db.Model):
@@ -522,6 +540,72 @@ def inject_globals():
     }
 
 
+# ── Salesperson referral tracking ───────────────────────────────────────── #
+@app.before_request
+def capture_referral():
+    """Store salesperson referral in session when ?ref=CODE is in the URL."""
+    ref = request.args.get('ref', '').strip()
+    if ref:
+        sp = Salesperson.query.filter_by(code=ref.upper(), active=True).first() \
+          or Salesperson.query.filter_by(code=ref, active=True).first()
+        if sp:
+            session['ref_sp_id']    = sp.id
+            session['ref_sp_code']  = sp.code
+            session['ref_sp_name']  = sp.full_name
+            session['ref_sp_phone'] = sp.phone or ''
+
+def _sp_session():
+    """Return (sp_code, sp_name, sp_phone) from the current session."""
+    return (
+        session.get('ref_sp_code', ''),
+        session.get('ref_sp_name', ''),
+        session.get('ref_sp_phone', ''),
+    )
+
+def send_order_notification(order, vehicle):
+    """Email order/test-drive details to admin."""
+    if not SMTP_USER or not SMTP_PASSWORD:
+        return
+    try:
+        sp_line = ''
+        if order.sp_code:
+            sp_line = f"\n  REFERRED BY\n  -----------\n  Salesperson : {order.sp_name}\n  Code        : {order.sp_code}\n  Phone       : {order.sp_phone}\n"
+        otype = 'TEST DRIVE BOOKING' if order.order_type == 'test_drive' else 'VEHICLE ORDER'
+        vprice = f"${vehicle.price:,.2f}"
+        body  = f"""\
+NEW {otype} — #{order.id}
+{'=' * 54}
+
+  VEHICLE
+  -------
+  {vehicle.name}{' (' + str(vehicle.year) + ')' if vehicle.year else ''}
+  Price : {vprice}
+{sp_line}
+  CUSTOMER
+  --------
+  Name     : {order.name}
+  Email    : {order.email}
+  Phone    : {order.phone}
+  Location : {order.location or 'Not provided'}
+  {'Date : ' + order.preferred_date if order.preferred_date else ''}
+  {'Time : ' + order.preferred_time if order.preferred_time else ''}
+  Notes    : {order.notes or 'None'}
+
+{'=' * 54}
+Submitted : {order.created_at.strftime('%d %B %Y at %H:%M UTC')}
+"""
+        msg = MIMEMultipart('alternative')
+        msg['Subject'] = f"[{otype} #{order.id}] {vehicle.name} — {order.name}"
+        msg['From']    = SMTP_USER
+        msg['To']      = ', '.join(LOAN_NOTIFY_EMAILS)
+        msg.attach(MIMEText(body, 'plain'))
+        with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
+            server.ehlo(); server.starttls()
+            server.login(SMTP_USER, SMTP_PASSWORD)
+            server.sendmail(SMTP_USER, LOAN_NOTIFY_EMAILS, msg.as_string())
+    except Exception as e:
+        print(f'[EMAIL] Order notification failed: {e}')
+
 # ────────────────────────── PUBLIC ROUTES ───────────────────────────────── #
 
 @app.route('/static/img/og-default.jpg')
@@ -705,6 +789,7 @@ def loan():
                     product_name  = s.name
                     product_price = s.price
 
+        sp_code, sp_name, sp_phone = _sp_session()
         app_obj = LoanApplication(
             first_name        = request.form.get('first_name', '').strip(),
             last_name         = request.form.get('last_name', '').strip(),
@@ -724,6 +809,9 @@ def loan():
             employer          = request.form.get('employer', '').strip(),
             annual_income     = request.form.get('annual_income', type=float),
             message           = request.form.get('message', '').strip(),
+            sp_code           = sp_code,
+            sp_name           = sp_name,
+            sp_phone          = sp_phone,
         )
         db.session.add(app_obj)
         db.session.commit()
@@ -746,12 +834,16 @@ def loan():
 @app.route('/contact', methods=['GET', 'POST'])
 def contact():
     if request.method == 'POST':
+        sp_code, sp_name, sp_phone = _sp_session()
         c = Contact(
-            name    = request.form.get('name', '').strip(),
-            email   = request.form.get('email', '').strip(),
-            phone   = request.form.get('phone', '').strip(),
-            subject = request.form.get('subject', '').strip(),
-            message = request.form.get('message', '').strip(),
+            name     = request.form.get('name', '').strip(),
+            email    = request.form.get('email', '').strip(),
+            phone    = request.form.get('phone', '').strip(),
+            subject  = request.form.get('subject', '').strip(),
+            message  = request.form.get('message', '').strip(),
+            sp_code  = sp_code,
+            sp_name  = sp_name,
+            sp_phone = sp_phone,
         )
         db.session.add(c)
         db.session.commit()
@@ -769,6 +861,7 @@ def about():
 def order_vehicle(vid):
     vehicle = Vehicle.query.get_or_404(vid)
     if request.method == 'POST':
+        sp_code, sp_name, sp_phone = _sp_session()
         order = CarOrder(
             order_type     = request.form.get('order_type', 'order'),
             vehicle_id     = vid,
@@ -781,9 +874,13 @@ def order_vehicle(vid):
             preferred_date = request.form.get('preferred_date'),
             preferred_time = request.form.get('preferred_time'),
             notes          = request.form.get('notes', '').strip(),
+            sp_code        = sp_code,
+            sp_name        = sp_name,
+            sp_phone       = sp_phone,
         )
         db.session.add(order)
         db.session.commit()
+        send_order_notification(order, vehicle)
         order_type_label = 'test drive' if order.order_type == 'test_drive' else 'order'
         flash(f'Your {order_type_label} request for the {vehicle.name} has been submitted! We will contact you shortly.', 'success')
         return redirect(url_for('vehicle_detail', vid=vid))
@@ -1267,6 +1364,66 @@ def admin_update_sale_status(sale_id):
     db.session.commit()
     flash('Sale status updated.', 'success')
     return redirect(url_for('admin_salesperson_sales', sid=sale.salesperson_id))
+
+
+# ── Salesperson self-registration ── #
+
+@app.route('/sales/register/<token>', methods=['GET', 'POST'])
+def sales_register(token):
+    """Public self-registration page shared by admin with a secure token."""
+    setting = SiteSettings.query.get('sp_reg_token')
+    if not setting or setting.value != token:
+        return '<h2 style="font-family:sans-serif;text-align:center;padding:3rem;color:#dc2626;">Invalid or expired registration link.</h2>', 403
+
+    if request.method == 'POST':
+        full_name = request.form.get('full_name', '').strip()
+        email     = request.form.get('email', '').strip()
+        phone     = request.form.get('phone', '').strip()
+        password  = request.form.get('password', '')
+        confirm   = request.form.get('confirm', '')
+
+        if not full_name or not password:
+            flash('Name and password are required.', 'error')
+        elif password != confirm:
+            flash('Passwords do not match.', 'error')
+        elif len(password) < 6:
+            flash('Password must be at least 6 characters.', 'error')
+        else:
+            # Auto-generate unique code from initials + random digits
+            base = ''.join(w[0] for w in full_name.split() if w).upper()[:3]
+            while True:
+                code = base + str(uuid.uuid4().int)[:4]
+                if not Salesperson.query.filter_by(code=code).first():
+                    break
+            sp = Salesperson(
+                full_name = full_name,
+                email     = email,
+                phone     = phone,
+                code      = code,
+                active    = True,
+            )
+            sp.set_password(password)
+            db.session.add(sp)
+            db.session.commit()
+            flash(f'Registration successful! Your code is {code}. Please log in.', 'success')
+            return redirect(url_for('sales_login'))
+
+    return render_template('sales/register.html')
+
+
+@app.route('/admin/salespersons/reg-link', methods=['POST'])
+@admin_required
+def admin_gen_reg_link():
+    """Generate a new salesperson registration link."""
+    token = uuid.uuid4().hex
+    row   = SiteSettings.query.get('sp_reg_token')
+    if row:
+        row.value = token
+    else:
+        db.session.add(SiteSettings(key='sp_reg_token', value=token))
+    db.session.commit()
+    link = f"{request.host_url}sales/register/{token}"
+    return jsonify({'link': link})
 
 
 # ── Salesperson Portal (their own login) ── #

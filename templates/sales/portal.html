@@ -65,7 +65,29 @@
 <div class="main">
   <div class="greeting">Hello, {{ sp.full_name }}! 👋</div>
   <div class="sub">Welcome to your sales dashboard.</div>
-  <div><span class="code-badge">🔑 Your Code: {{ sp.code }}</span></div>
+  <div style="display:flex;align-items:center;gap:.75rem;flex-wrap:wrap;margin-bottom:1.5rem;">
+    <span class="code-badge">🔑 Your Code: {{ sp.code }}</span>
+  </div>
+
+  <!-- Shareable referral link card -->
+  <div style="background:linear-gradient(135deg,#1e3a5f,#0f172a);border-radius:14px;padding:1.5rem;margin-bottom:2rem;color:white;">
+    <div style="font-size:.75rem;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.45);margin-bottom:.35rem;">Your Referral Link</div>
+    <div style="font-size:.95rem;font-weight:700;margin-bottom:1rem;color:rgba(255,255,255,.9);">Share this link — every order, loan &amp; enquiry is tracked back to you</div>
+    <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
+      <input id="refLink" readonly
+             value="https://chinacarsinghana.com?ref={{ sp.code }}"
+             style="flex:1;min-width:200px;padding:.65rem 1rem;border-radius:8px;border:none;background:rgba(255,255,255,.1);color:white;font-size:.85rem;font-family:monospace;">
+      <button onclick="copyRef()" id="copyBtn"
+              style="padding:.65rem 1.25rem;background:#2563eb;color:white;border:none;border-radius:8px;font-weight:700;cursor:pointer;white-space:nowrap;">
+        📋 Copy Link
+      </button>
+      <a href="https://wa.me/?text=Check%20out%20China%20Cars%20in%20Ghana%20for%20premium%20vehicles%20%26%20solar%20systems%3A%20https%3A%2F%2Fchinacarsinghana.com%3Fref%3D{{ sp.code }}"
+         target="_blank"
+         style="padding:.65rem 1.25rem;background:#22c55e;color:white;border-radius:8px;font-weight:700;text-decoration:none;white-space:nowrap;">
+        💬 Share on WhatsApp
+      </a>
+    </div>
+  </div>
 
   <div class="stats">
     <div class="stat-card">
@@ -149,5 +171,17 @@
   </div>
 </div>
 
+<script>
+function copyRef() {
+  const inp = document.getElementById('refLink');
+  inp.select(); inp.setSelectionRange(0, 99999);
+  navigator.clipboard.writeText(inp.value).then(() => {
+    const btn = document.getElementById('copyBtn');
+    btn.textContent = '✓ Copied!';
+    btn.style.background = '#16a34a';
+    setTimeout(() => { btn.textContent = '📋 Copy Link'; btn.style.background = '#2563eb'; }, 2500);
+  });
+}
+</script>
 </body>
 </html>

@@ -4,10 +4,43 @@
 
 {% block content %}
 
-<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;">
+<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.75rem;margin-bottom:1.5rem;">
   <p style="font-size:.85rem;color:var(--mid);">{{ salespersons | length }} salesperson{{ 's' if salespersons | length != 1 }}</p>
-  <a href="{{ url_for('admin_add_salesperson') }}" class="btn btn-primary">+ Add Salesperson</a>
+  <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
+    <button onclick="genRegLink()" class="btn btn-outline" style="font-size:.83rem;">🔗 Generate Registration Link</button>
+    <a href="{{ url_for('admin_add_salesperson') }}" class="btn btn-primary">+ Add Salesperson</a>
+  </div>
 </div>
+
+<!-- Registration link modal -->
+<div id="regLinkModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;align-items:center;justify-content:center;">
+  <div style="background:white;border-radius:14px;padding:2rem;max-width:520px;width:90%;box-shadow:0 8px 32px rgba(0,0,0,.2);">
+    <h3 style="font-size:1rem;font-weight:700;margin-bottom:.5rem;">🔗 Salesperson Registration Link</h3>
+    <p style="font-size:.82rem;color:#64748b;margin-bottom:1rem;">Share this link with new salespersons. They can self-register and their code is auto-generated. This link expires when you generate a new one.</p>
+    <div style="display:flex;gap:.5rem;">
+      <input id="regLinkInput" readonly style="flex:1;padding:.65rem .9rem;border:1.5px solid #e2e8f0;border-radius:8px;font-size:.82rem;font-family:monospace;">
+      <button onclick="copyRegLink()" style="padding:.65rem 1rem;background:#2563eb;color:white;border:none;border-radius:8px;font-weight:700;cursor:pointer;">Copy</button>
+    </div>
+    <div style="margin-top:.75rem;display:flex;gap:.5rem;justify-content:flex-end;">
+      <button onclick="document.getElementById('regLinkModal').style.display='none'" style="padding:.5rem 1rem;background:#f3f4f6;border:none;border-radius:8px;cursor:pointer;font-size:.83rem;">Close</button>
+    </div>
+  </div>
+</div>
+
+<script>
+async function genRegLink() {
+  const res  = await fetch('{{ url_for("admin_gen_reg_link") }}', {method:'POST'});
+  const data = await res.json();
+  document.getElementById('regLinkInput').value = data.link;
+  const modal = document.getElementById('regLinkModal');
+  modal.style.display = 'flex';
+}
+function copyRegLink() {
+  const inp = document.getElementById('regLinkInput');
+  inp.select();
+  navigator.clipboard.writeText(inp.value).then(() => alert('Link copied!'));
+}
+</script>
 
 <div class="table-card">
   <div class="table-header">
