@@ -33,7 +33,7 @@
           <td>
             {% set imgs = v.get_images() %}
             {% if imgs %}
-            <img src="{{ url_for('static', filename=imgs[0]) }}" class="td-image" alt="{{ v.name }}">
+            <img src="{{ media_url(imgs[0]) }}" class="td-image" alt="{{ v.name }}">
             {% else %}
             <div class="td-image-placeholder">🚗</div>
             {% endif %}

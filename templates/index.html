@@ -26,7 +26,7 @@
 {% if newest_vehicle %}
 <section class="hero-screen" id="latest-arrival">
   {% if newest_vehicle.cover %}
-  <img src="{{ url_for('static', filename=newest_vehicle.cover) }}" alt="{{ newest_vehicle.name }}" class="hero-bg">
+  <img src="{{ media_url(newest_vehicle.cover) }}" alt="{{ newest_vehicle.name }}" class="hero-bg">
   <div class="hero-overlay"></div>
   {% else %}
   <div class="hero-gradient" style="background: linear-gradient(135deg, #0d0d14, #1a2744);"></div>
@@ -65,7 +65,7 @@
 {% set is_light = loop.index % 2 == 0 %}
 <section class="hero-screen {% if is_light %}hero-light{% endif %}" id="vehicle-{{ vehicle.id }}">
   {% if vehicle.cover %}
-  <img src="{{ url_for('static', filename=vehicle.cover) }}" alt="{{ vehicle.name }}" class="hero-bg">
+  <img src="{{ media_url(vehicle.cover) }}" alt="{{ vehicle.name }}" class="hero-bg">
   <div class="hero-overlay"></div>
   {% else %}
   <div class="hero-gradient" style="background: linear-gradient(135deg, #0d0d14, #0f2744);"></div>
@@ -108,7 +108,7 @@
 {% for solar in featured_solar %}
 <section class="hero-screen hero-solar">
   {% if solar.cover %}
-  <img src="{{ url_for('static', filename=solar.cover) }}" alt="{{ solar.name }}" class="hero-bg">
+  <img src="{{ media_url(solar.cover) }}" alt="{{ solar.name }}" class="hero-bg">
   <div class="hero-overlay"></div>
   {% else %}
   <div class="hero-gradient" style="background: radial-gradient(ellipse at 40% 60%, rgba(229,90,0,.2), transparent 60%);"></div>
@@ -184,7 +184,7 @@
       <div class="product-card reveal reveal-delay-{{ loop.index0 % 4 }}">
         <div class="card-image-wrap">
           {% if vehicle.cover %}
-          <img src="{{ url_for('static', filename=vehicle.cover) }}" alt="{{ vehicle.name }}" loading="lazy">
+          <img src="{{ media_url(vehicle.cover) }}" alt="{{ vehicle.name }}" loading="lazy">
           {% else %}
           <div class="card-no-image">🚗<span>No Image</span></div>
           {% endif %}
@@ -232,7 +232,7 @@
       <div class="product-card reveal reveal-delay-{{ loop.index0 % 4 }}">
         <div class="card-image-wrap">
           {% if sol.cover %}
-          <img src="{{ url_for('static', filename=sol.cover) }}" alt="{{ sol.name }}" loading="lazy">
+          <img src="{{ media_url(sol.cover) }}" alt="{{ sol.name }}" loading="lazy">
           {% else %}
           <div class="card-no-image solar">☀️<span>Solar System</span></div>
           {% endif %}

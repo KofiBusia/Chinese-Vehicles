@@ -129,7 +129,7 @@
       <div style="position:sticky;top:calc(var(--nav-h) + 1rem);">
         <div class="form-card">
           {% if vehicle.cover %}
-          <img src="{{ url_for('static', filename=vehicle.cover) }}" alt="{{ vehicle.name }}"
+          <img src="{{ media_url(vehicle.cover) }}" alt="{{ vehicle.name }}"
                style="width:100%;aspect-ratio:16/10;object-fit:cover;">
           {% endif %}
           <div style="padding:1.25rem;">

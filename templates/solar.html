@@ -37,7 +37,7 @@
       <div class="product-card reveal">
         <div class="card-image-wrap">
           {% if sol.cover %}
-          <img src="{{ url_for('static', filename=sol.cover) }}" alt="{{ sol.name }}" loading="lazy">
+          <img src="{{ media_url(sol.cover) }}" alt="{{ sol.name }}" loading="lazy">
           {% else %}
           <div class="card-no-image solar">☀️<span>Solar System</span></div>
           {% endif %}

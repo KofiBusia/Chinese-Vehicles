@@ -68,7 +68,7 @@
       <div class="product-card reveal">
         <div class="card-image-wrap">
           {% if vehicle.cover %}
-          <img src="{{ url_for('static', filename=vehicle.cover) }}" alt="{{ vehicle.name }}" loading="lazy">
+          <img src="{{ media_url(vehicle.cover) }}" alt="{{ vehicle.name }}" loading="lazy">
           {% else %}
           <div class="card-no-image">🚗<span>No Image Yet</span></div>
           {% endif %}

@@ -11,6 +11,9 @@ from flask import (Flask, render_template, request, redirect, url_for,
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
+import cloudinary
+import cloudinary.uploader
+import cloudinary.api
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'autopow3r-s3cr3t-k3y-2024-change-me')
@@ -41,11 +44,23 @@ LOAN_NOTIFY_EMAILS = [
     'sbonsu@republicghana.com',
     'kyeikofi@gmail.com',
 ]
-# SMTP settings — uses Gmail by default. Set env vars or edit here.
+# SMTP settings
 SMTP_HOST     = 'smtp.gmail.com'
 SMTP_PORT     = 587
 SMTP_USER     = os.environ.get('SMTP_USER', '')
 SMTP_PASSWORD = os.environ.get('SMTP_PASSWORD', '')
+
+# Cloudinary — persistent cloud storage for uploaded images/videos
+_cld_url = os.environ.get('CLOUDINARY_URL', '')
+if _cld_url:
+    cloudinary.config(cloudinary_url=_cld_url)
+else:
+    cloudinary.config(
+        cloud_name = os.environ.get('CLOUDINARY_CLOUD_NAME', ''),
+        api_key    = os.environ.get('CLOUDINARY_API_KEY', ''),
+        api_secret = os.environ.get('CLOUDINARY_API_SECRET', ''),
+    )
+USE_CLOUDINARY = bool(os.environ.get('CLOUDINARY_URL') or os.environ.get('CLOUDINARY_CLOUD_NAME'))
 
 
 def send_loan_notification(app_obj):
@@ -352,6 +367,17 @@ def allowed(filename, kind='all'):
     return e in ALLOWED_ALL
 
 def save_upload(file, subfolder):
+    """Upload to Cloudinary when configured, otherwise save to local disk."""
+    if USE_CLOUDINARY:
+        resource_type = 'video' if _ext(file.filename) in ALLOWED_VIDEOS else 'image'
+        result = cloudinary.uploader.upload(
+            file,
+            folder=f"dealership/{subfolder}",
+            resource_type=resource_type,
+        )
+        # Store Cloudinary public_id prefixed with 'cld:' so we can delete it later
+        return f"cld:{result['public_id']}|{result['secure_url']}"
+    # Local fallback
     filename = secure_filename(file.filename)
     ext = _ext(filename)
     unique = f"{uuid.uuid4().hex}.{ext}"
@@ -359,6 +385,32 @@ def save_upload(file, subfolder):
     os.makedirs(folder, exist_ok=True)
     file.save(os.path.join(folder, unique))
     return f"uploads/{subfolder}/{unique}"
+
+
+def media_url(path):
+    """Return a URL for a stored media path (Cloudinary or local static)."""
+    if path and path.startswith('cld:'):
+        return path.split('|', 1)[1]   # Cloudinary secure_url
+    return url_for('static', filename=path) if path else ''
+
+app.jinja_env.globals['media_url'] = media_url
+
+
+def _delete_media_file(path):
+    """Delete a media file from Cloudinary or local disk."""
+    if not path:
+        return
+    if path.startswith('cld:'):
+        try:
+            public_id = path.split('cld:', 1)[1].split('|')[0]
+            cloudinary.uploader.destroy(public_id)
+        except Exception:
+            pass
+    else:
+        try:
+            os.remove(os.path.join('static', path))
+        except Exception:
+            pass
 
 def admin_required(f):
     @wraps(f)
@@ -779,8 +831,7 @@ def admin_delete_vehicle_media(vid):
         items = [i for i in v.get_videos() if i != path]
         v.videos = json.dumps(items)
     db.session.commit()
-    try: os.remove(os.path.join('static', path))
-    except: pass
+    _delete_media_file(path)
     return jsonify({'ok': True})
 
 
@@ -898,8 +949,7 @@ def admin_delete_solar_media(sid):
         items = [i for i in s.get_videos() if i != path]
         s.videos = json.dumps(items)
     db.session.commit()
-    try: os.remove(os.path.join('static', path))
-    except: pass
+    _delete_media_file(path)
     return jsonify({'ok': True})
 
 

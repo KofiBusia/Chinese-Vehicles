@@ -9,7 +9,7 @@
     {% set imgs = solar.get_images() %}
     {% if imgs %}
     <div style="position:relative;">
-      <img src="{{ url_for('static', filename=imgs[0]) }}" alt="{{ solar.name }}" class="detail-main-image" id="detailMainImg">
+      <img src="{{ media_url(imgs[0]) }}" alt="{{ solar.name }}" class="detail-main-image" id="detailMainImg">
       <div class="gallery-nav">
         <button class="gallery-btn" id="galleryPrev">‹</button>
         <button class="gallery-btn" id="galleryNext">›</button>
@@ -18,7 +18,7 @@
     {% if imgs | length > 1 %}
     <div class="gallery-thumbs">
       {% for img in imgs %}
-      <img src="{{ url_for('static', filename=img) }}" alt="Photo {{ loop.index }}"
+      <img src="{{ media_url(img) }}" alt="Photo {{ loop.index }}"
            class="gallery-thumb {% if loop.first %}active{% endif %}">
       {% endfor %}
     </div>
@@ -93,7 +93,7 @@
           {% for vid in vids %}
           <div class="video-wrap">
             <video controls preload="none">
-              <source src="{{ url_for('static', filename=vid) }}">
+              <source src="{{ media_url(vid) }}">
             </video>
           </div>
           {% endfor %}
@@ -151,7 +151,7 @@
       <div class="product-card reveal">
         <div class="card-image-wrap">
           {% if s.cover %}
-          <img src="{{ url_for('static', filename=s.cover) }}" alt="{{ s.name }}" loading="lazy">
+          <img src="{{ media_url(s.cover) }}" alt="{{ s.name }}" loading="lazy">
           {% else %}
           <div class="card-no-image solar">☀️</div>
           {% endif %}

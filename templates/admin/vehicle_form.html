@@ -113,7 +113,7 @@
           <div class="media-grid" style="margin-bottom:1.25rem;">
             {% for img in existing_imgs %}
             <div class="media-thumb">
-              <img src="{{ url_for('static', filename=img) }}" alt="photo">
+              <img src="{{ media_url(img) }}" alt="photo">
               <button type="button" class="del-btn delete-media-btn"
                       data-path="{{ img }}" data-kind="image"
                       data-id="{{ vehicle.id }}" data-type="vehicles">✕</button>
@@ -143,7 +143,7 @@
           <div class="media-grid" style="margin-bottom:1.25rem;">
             {% for vid in existing_vids %}
             <div class="media-thumb">
-              <video src="{{ url_for('static', filename=vid) }}" style="width:100px;height:70px;object-fit:cover;border-radius:6px;"></video>
+              <video src="{{ media_url(vid) }}" style="width:100px;height:70px;object-fit:cover;border-radius:6px;"></video>
               <button type="button" class="del-btn delete-media-btn"
                       data-path="{{ vid }}" data-kind="video"
                       data-id="{{ vehicle.id }}" data-type="vehicles">✕</button>
