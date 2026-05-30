@@ -526,33 +526,77 @@ def inject_globals():
 
 @app.route('/static/img/og-default.jpg')
 def og_default_image():
-    """Dynamically generate the default OG share image (1200×630 PNG)."""
+    """Dynamically generate the default OG share image (1200×630 JPEG)."""
     try:
         from PIL import Image, ImageDraw, ImageFont
-        img  = Image.new('RGB', (1200, 630), color=(15, 23, 42))
+
+        W, H = 1200, 630
+        img  = Image.new('RGB', (W, H), color=(15, 23, 42))
         draw = ImageDraw.Draw(img)
-        # Gradient-style accent bar at top
-        for x in range(1200):
-            r = int(37  + (249 - 37)  * x / 1200)
-            g = int(99  + (115 - 99)  * x / 1200)
-            b = int(235 + (22  - 235) * x / 1200)
-            draw.line([(x, 0), (x, 6)], fill=(r, g, b))
-        # Text — use default PIL font (always available)
-        draw.text((100, 130), '⚡  China Cars in Ghana',      fill=(255, 255, 255), font=None)
-        draw.text((100, 210), 'Drive Excellence. Power the Future.', fill=(148, 163, 184), font=None)
-        draw.text((100, 310), '🚗  Premium Vehicles',         fill=(96,  165, 250), font=None)
-        draw.text((100, 360), '☀️  Solar Energy Systems',     fill=(251, 146, 60),  font=None)
-        draw.text((100, 410), '🏦  Financing via Republic Bank', fill=(74,  222, 128), font=None)
-        draw.text((100, 530), 'chinacarsinghana.com',         fill=(71,  85,  105), font=None)
-        draw.text((100, 560), '+233 50 356 6913  ·  Accra, Ghana', fill=(71, 85, 105), font=None)
+
+        # Blue-to-orange gradient bar at top (8px)
+        for x in range(W):
+            t = x / W
+            r = int(37  + (249 - 37)  * t)
+            g = int(99  + (115 - 99)  * t)
+            b = int(235 + (22  - 235) * t)
+            draw.line([(x, 0), (x, 8)], fill=(r, g, b))
+
+        # Subtle diagonal highlight
+        for i in range(0, 300, 40):
+            draw.line([(W - i, 0), (W, i)], fill=(255, 255, 255, 8), width=1)
+
+        # Load scalable default fonts (Pillow 10+)
+        try:
+            f_big   = ImageFont.load_default(size=72)
+            f_mid   = ImageFont.load_default(size=34)
+            f_small = ImageFont.load_default(size=26)
+            f_tag   = ImageFont.load_default(size=28)
+        except Exception:
+            f_big = f_mid = f_small = f_tag = ImageFont.load_default()
+
+        # Business name
+        draw.text((80, 80),  'CHINA CARS IN GHANA', font=f_big,   fill=(255, 255, 255))
+        # Tagline
+        draw.text((84, 175), 'Drive Excellence.  Power the Future.',  font=f_mid,   fill=(148, 163, 184))
+
+        # Divider line
+        draw.rectangle([80, 230, 400, 235], fill=(37, 99, 235))
+
+        # Tag pills
+        def pill(x, y, text, bg, fg):
+            tw = len(text) * 17 + 40
+            draw.rounded_rectangle([x, y, x + tw, y + 52], radius=26, fill=bg)
+            draw.text((x + 20, y + 12), text, font=f_tag, fill=fg)
+
+        pill(80,  260, 'VEHICLES',     (30, 58, 138),  (147, 197, 253))
+        pill(300, 260, 'SOLAR',        (124, 45, 18),  (253, 186, 116))
+        pill(470, 260, 'EASY FINANCE', (20, 83, 45),   (134, 239, 172))
+
+        # Big price / value prop block
+        draw.rectangle([80, 340, W - 80, 490], fill=(255, 255, 255, 0))
+        draw.rounded_rectangle([80, 340, W - 80, 500], radius=16,
+                                fill=(255, 255, 255), outline=(37, 99, 235), width=2)
+        draw.text((120, 360), 'Premium imported vehicles & solar energy systems',
+                  font=f_mid, fill=(15, 23, 42))
+        draw.text((120, 405), 'Flexible financing via Republic Bank · Delivery across Ghana',
+                  font=f_small, fill=(71, 85, 105))
+        draw.text((120, 445), 'Call / WhatsApp:  +233 50 356 6913',
+                  font=f_mid, fill=(37, 99, 235))
+
+        # Domain footer
+        draw.text((80,  540), 'chinacarsinghana.com',  font=f_mid,   fill=(96, 165, 250))
+        draw.text((80,  585), 'Accra, Ghana',          font=f_small, fill=(71, 85, 105))
+
         buf = io.BytesIO()
-        img.save(buf, format='JPEG', quality=92)
+        img.save(buf, format='JPEG', quality=93)
         buf.seek(0)
         return send_file(buf, mimetype='image/jpeg',
                          max_age=86400,
                          as_attachment=False,
                          download_name='og-default.jpg')
-    except Exception:
+    except Exception as e:
+        print(f'[OG IMAGE] Error: {e}')
         from flask import abort
         abort(404)
 
