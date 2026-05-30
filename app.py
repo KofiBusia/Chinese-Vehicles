@@ -44,8 +44,8 @@ LOAN_NOTIFY_EMAILS = [
 # SMTP settings — uses Gmail by default. Set env vars or edit here.
 SMTP_HOST     = 'smtp.gmail.com'
 SMTP_PORT     = 587
-SMTP_USER     = 'kyeikofi@gmail.com'
-SMTP_PASSWORD = 'yxdnbdsrenfjlbyn'
+SMTP_USER     = os.environ.get('SMTP_USER', '')
+SMTP_PASSWORD = os.environ.get('SMTP_PASSWORD', '')
 
 
 def send_loan_notification(app_obj):
@@ -1192,9 +1192,12 @@ def init_db():
             os.makedirs(os.path.join('static', 'uploads', folder), exist_ok=True)
 
 
+# Initialise DB on every startup (works with gunicorn / Render too)
+init_db()
+
 if __name__ == '__main__':
-    init_db()
+    port = int(os.environ.get('PORT', 5000))
     print("[START] AutoPower Dealership is running at http://localhost:5000")
     print("[ADMIN] Admin panel at http://localhost:5000/admin")
     print("[SALES] Sales portal at http://localhost:5000/sales/login\n")
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    app.run(debug=False, host='0.0.0.0', port=port)
