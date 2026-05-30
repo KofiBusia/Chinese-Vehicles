@@ -48,6 +48,30 @@
       </div>
     </div>
 
+    <!-- GHS Exchange Rate -->
+    <div class="form-section">
+      <div class="form-section-header">💱 GHS Exchange Rate</div>
+      <div class="form-section-body">
+        <div style="display:flex;align-items:flex-end;gap:1rem;flex-wrap:wrap;">
+          <div class="form-group" style="flex:1;min-width:200px;">
+            <label class="form-label">1 USD = how many GHS? <span style="color:var(--red);">*</span></label>
+            <div style="display:flex;align-items:center;gap:.5rem;">
+              <span style="font-weight:700;color:var(--mid);font-size:1rem;">GH₵</span>
+              <input type="number" name="ghs_rate" class="form-control" step="0.01" min="0.01"
+                     value="{{ current_rate }}" placeholder="e.g. 15.50"
+                     style="font-size:1.1rem;font-weight:700;">
+            </div>
+          </div>
+          <div style="padding-bottom:.5rem;">
+            <div style="font-size:.8rem;color:var(--mid);line-height:1.6;">
+              Current rate: <strong style="color:var(--blue);">1 USD = GH₵ {{ current_rate }}</strong><br>
+              All prices on the website will instantly update to reflect the new rate.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <button type="submit" class="btn btn-primary" style="padding:.85rem 2rem;">💾 Save Settings</button>
   </form>
 

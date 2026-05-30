@@ -53,7 +53,7 @@ def send_loan_notification(app_obj):
     if not SMTP_USER or not SMTP_PASSWORD:
         return
     try:
-        rate         = USD_TO_GHS
+        rate         = get_ghs_rate()
         ptype        = (app_obj.product_type or '').title()
         pname        = app_obj.product_name or 'Not specified'
         p_usd        = f"${app_obj.product_price:,.2f}"  if app_obj.product_price else 'N/A'
@@ -315,18 +315,32 @@ class SalespersonSale(db.Model):
     created_at       = db.Column(db.DateTime, default=datetime.utcnow)
 
 
+class SiteSettings(db.Model):
+    key   = db.Column(db.String(50), primary_key=True)
+    value = db.Column(db.String(200), nullable=False)
+
+
 # ───────────────────────────── HELPERS ──────────────────────────────────── #
 
-# GHS exchange rate (update this value to keep current)
-USD_TO_GHS = 15.5  # approx rate; admin can change this constant
+USD_TO_GHS_DEFAULT = 15.5
+
+def get_ghs_rate():
+    """Read the live GHS rate from DB; fall back to default."""
+    try:
+        row = SiteSettings.query.get('usd_to_ghs_rate')
+        return float(row.value) if row else USD_TO_GHS_DEFAULT
+    except Exception:
+        return USD_TO_GHS_DEFAULT
+
+# Keep a module-level alias for the email helper (uses live rate each call)
+USD_TO_GHS = USD_TO_GHS_DEFAULT
 
 def usd_to_ghs(usd):
     if usd is None:
         return None
-    return usd * USD_TO_GHS
+    return usd * get_ghs_rate()
 
 app.jinja_env.globals['usd_to_ghs'] = usd_to_ghs
-app.jinja_env.globals['USD_TO_GHS'] = USD_TO_GHS
 
 def _ext(filename):
     return filename.rsplit('.', 1)[-1].lower() if '.' in filename else ''
@@ -363,7 +377,7 @@ def currency_filter(value):
 @app.template_filter('ghs')
 def ghs_filter(value):
     if value is None: return 'N/A'
-    return f"GH₵ {value * USD_TO_GHS:,.2f}"
+    return f"GH₵ {value * get_ghs_rate():,.2f}"
 
 @app.template_filter('comma')
 def comma_filter(value):
@@ -386,7 +400,7 @@ def inject_globals():
         'unread_contacts': unread,
         'pending_loans':   pending,
         'pending_orders':  pending_orders,
-        'USD_TO_GHS':      USD_TO_GHS,
+        'USD_TO_GHS':      get_ghs_rate(),
     }
 
 
@@ -1171,10 +1185,23 @@ def admin_settings():
             else:
                 flash('Current password is incorrect.', 'error')
                 return redirect(url_for('admin_settings'))
+        # Save GHS rate
+        rate_str = request.form.get('ghs_rate', '').strip()
+        try:
+            rate_val = float(rate_str)
+            if rate_val > 0:
+                row = SiteSettings.query.get('usd_to_ghs_rate')
+                if row:
+                    row.value = str(rate_val)
+                else:
+                    db.session.add(SiteSettings(key='usd_to_ghs_rate', value=str(rate_val)))
+        except (ValueError, TypeError):
+            pass
         db.session.commit()
         session['admin_name'] = admin.full_name or admin.username
         flash('Settings saved successfully.', 'success')
-    return render_template('admin/settings.html', admin=admin)
+    current_rate = get_ghs_rate()
+    return render_template('admin/settings.html', admin=admin, current_rate=current_rate)
 
 
 # ─────────────────────────── INIT ───────────────────────────────────────── #
