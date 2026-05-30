@@ -25,11 +25,11 @@ app.config['MAX_CONTENT_LENGTH'] = 500 * 1024 * 1024  # 500 MB
 BUSINESS = {
     'name': 'AutoPower Dealership',
     'tagline': 'Drive Excellence. Power the Future.',
-    'phone': '+1 (868) 000-0000',
-    'email': 'info@autopowerdealership.com',
-    'address': 'Port of Spain, Trinidad & Tobago',
+    'phone': '+233 50 356 9130',
+    'email': 'kyeikofi@gmail.com',
+    'address': 'Accra, Ghana',
     'republic_bank_url': '#',
-    'whatsapp': '+18680000000',
+    'whatsapp': '233503569130',
     'facebook': '#',
     'instagram': '#',
 }
