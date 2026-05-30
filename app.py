@@ -523,8 +523,11 @@ def loan():
         flash('Your loan application has been submitted successfully! We will contact you within 24–48 hours.', 'success')
         return redirect(url_for('loan'))
 
-    preselect_v = request.args.get('vehicle', type=int)
-    preselect_s = request.args.get('solar', type=int)
+    preselect_v    = request.args.get('vehicle', type=int)
+    preselect_s    = request.args.get('solar', type=int)
+    preselect_type = request.args.get('product_type', '')  # 'vehicle' or 'solar'
+    if preselect_type == 'solar' and not preselect_s:
+        preselect_s = -1  # flag to pre-check solar radio without a specific item
     return render_template('loan.html',
                            vehicles=all_vehicles,
                            solar_systems=all_solar,
