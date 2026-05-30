@@ -17,7 +17,7 @@
     .main{max-width:1100px;margin:0 auto;padding:2rem 1.5rem;}
     .greeting{font-family:'Poppins',sans-serif;font-size:1.6rem;font-weight:800;margin-bottom:.25rem;}
     .sub{color:#6b7280;font-size:.9rem;margin-bottom:2rem;}
-    .code-badge{display:inline-flex;align-items:center;gap:.5rem;background:#dbeafe;color:#1d4ed8;padding:.4rem .9rem;border-radius:20px;font-size:.82rem;font-weight:700;letter-spacing:.06em;margin-bottom:1.5rem;}
+    .code-badge{display:inline-flex;align-items:center;gap:.5rem;background:#2563eb;color:white;padding:.45rem 1rem;border-radius:20px;font-size:.85rem;font-weight:700;letter-spacing:.08em;margin-bottom:1.5rem;box-shadow:0 2px 8px rgba(37,99,235,.3);}
     .stats{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:1rem;margin-bottom:2rem;}
     .stat-card{background:white;border-radius:12px;padding:1.25rem;border:1px solid #e5e7eb;}
     .stat-icon{font-size:1.5rem;margin-bottom:.5rem;}
@@ -70,22 +70,25 @@
   </div>
 
   <!-- Shareable referral link card -->
-  <div style="background:linear-gradient(135deg,#1e3a5f,#0f172a);border-radius:14px;padding:1.5rem;margin-bottom:2rem;color:white;">
-    <div style="font-size:.75rem;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.45);margin-bottom:.35rem;">Your Referral Link</div>
-    <div style="font-size:.95rem;font-weight:700;margin-bottom:1rem;color:rgba(255,255,255,.9);">Share this link — every order, loan &amp; enquiry is tracked back to you</div>
-    <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
+  <div style="background:linear-gradient(135deg,#2563eb,#1d4ed8);border-radius:14px;padding:1.5rem;margin-bottom:2rem;color:white;box-shadow:0 4px 20px rgba(37,99,235,.3);">
+    <div style="font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.7);margin-bottom:.35rem;">🔗 Your Referral Link</div>
+    <div style="font-size:.95rem;font-weight:700;margin-bottom:1rem;color:white;">Share this link — every order, loan &amp; enquiry is tracked back to you and earns you commission</div>
+    <div style="display:flex;gap:.5rem;flex-wrap:wrap;align-items:center;">
       <input id="refLink" readonly
              value="https://chinacarsinghana.com?ref={{ sp.code }}"
-             style="flex:1;min-width:200px;padding:.65rem 1rem;border-radius:8px;border:none;background:rgba(255,255,255,.1);color:white;font-size:.85rem;font-family:monospace;">
+             style="flex:1;min-width:200px;padding:.7rem 1rem;border-radius:8px;border:2px solid rgba(255,255,255,.3);background:rgba(255,255,255,.15);color:white;font-size:.85rem;font-family:monospace;font-weight:600;">
       <button onclick="copyRef()" id="copyBtn"
-              style="padding:.65rem 1.25rem;background:#2563eb;color:white;border:none;border-radius:8px;font-weight:700;cursor:pointer;white-space:nowrap;">
+              style="padding:.7rem 1.25rem;background:white;color:#1d4ed8;border:none;border-radius:8px;font-weight:800;cursor:pointer;white-space:nowrap;font-size:.85rem;">
         📋 Copy Link
       </button>
       <a href="https://wa.me/?text=Check%20out%20China%20Cars%20in%20Ghana%20for%20premium%20vehicles%20%26%20solar%20systems%3A%20https%3A%2F%2Fchinacarsinghana.com%3Fref%3D{{ sp.code }}"
          target="_blank"
-         style="padding:.65rem 1.25rem;background:#22c55e;color:white;border-radius:8px;font-weight:700;text-decoration:none;white-space:nowrap;">
-        💬 Share on WhatsApp
+         style="padding:.7rem 1.25rem;background:#22c55e;color:white;border-radius:8px;font-weight:700;text-decoration:none;white-space:nowrap;font-size:.85rem;">
+        💬 WhatsApp
       </a>
+    </div>
+    <div style="margin-top:.85rem;font-size:.78rem;color:rgba(255,255,255,.75);">
+      💡 Your code: <strong style="color:white;letter-spacing:.08em;">{{ sp.code }}</strong> · 1% commission on every fully paid sale
     </div>
   </div>
 
