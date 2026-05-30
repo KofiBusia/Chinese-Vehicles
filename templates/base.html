@@ -3,8 +3,31 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="{{ business.name }} — {{ business.tagline }}">
+  <meta name="description" content="{% block meta_description %}{{ business.name }} — {{ business.tagline }}. Premium vehicles and solar energy systems in Ghana. Flexible financing via Republic Bank.{% endblock %}">
   <title>{% block title %}{{ business.name }}{% endblock %}</title>
+
+  <!-- Open Graph (WhatsApp, Facebook, LinkedIn previews) -->
+  {% block og_meta %}
+  <meta property="og:type"        content="website">
+  <meta property="og:site_name"   content="{{ business.name }}">
+  <meta property="og:url"         content="{{ request.url }}">
+  <meta property="og:title"       content="{{ business.name }} — {{ business.tagline }}">
+  <meta property="og:description" content="Premium vehicles &amp; solar systems in Ghana. Drive away today or power your home with solar. Financing available via Republic Bank.">
+  <meta property="og:image"       content="{{ request.host_url }}static/img/og-default.jpg">
+  <meta property="og:image:width"  content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:locale"      content="en_GH">
+  {% endblock %}
+
+  <!-- Twitter / X Card -->
+  <meta name="twitter:card"        content="summary_large_image">
+  <meta name="twitter:site"        content="@chinacarsinghana">
+  <meta name="twitter:title"       content="{% block tw_title %}{{ business.name }} — {{ business.tagline }}{% endblock %}">
+  <meta name="twitter:description" content="{% block tw_desc %}Premium vehicles &amp; solar systems in Ghana. Financing available.{% endblock %}">
+  <meta name="twitter:image"       content="{% block tw_image %}{{ request.host_url }}static/img/og-default.jpg{% endblock %}">
+
+  <!-- Theme colour (browser UI on Android Chrome) -->
+  <meta name="theme-color" content="#0f172a">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">

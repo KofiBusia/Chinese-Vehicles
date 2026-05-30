@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0f172a"/>
+      <stop offset="100%" style="stop-color:#1e3a5f"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#2563eb"/>
+      <stop offset="100%" style="stop-color:#f97316"/>
+    </linearGradient>
+  </defs>
+  <!-- Background -->
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <!-- Accent bar -->
+  <rect x="0" y="0" width="1200" height="6" fill="url(#accent)"/>
+  <!-- Grid lines -->
+  <line x1="0" y1="630" x2="1200" y2="0" stroke="rgba(255,255,255,0.03)" stroke-width="120"/>
+  <line x1="600" y1="630" x2="1200" y2="0" stroke="rgba(255,255,255,0.03)" stroke-width="120"/>
+  <!-- Logo icon -->
+  <text x="100" y="220" font-family="Arial Black, Arial" font-size="72" fill="#2563eb">⚡</text>
+  <!-- Business name -->
+  <text x="100" y="310" font-family="Arial Black, Arial" font-size="64" font-weight="900" fill="white" letter-spacing="-1">China Cars in Ghana</text>
+  <!-- Tagline -->
+  <text x="100" y="375" font-family="Arial, sans-serif" font-size="30" fill="rgba(255,255,255,0.6)">Drive Excellence. Power the Future.</text>
+  <!-- Divider -->
+  <rect x="100" y="410" width="80" height="4" fill="#2563eb" rx="2"/>
+  <!-- Tag 1 -->
+  <rect x="100" y="445" width="210" height="48" rx="24" fill="rgba(37,99,235,0.2)" stroke="#2563eb" stroke-width="1.5"/>
+  <text x="205" y="475" font-family="Arial, sans-serif" font-size="22" fill="#60a5fa" text-anchor="middle">🚗 Premium Vehicles</text>
+  <!-- Tag 2 -->
+  <rect x="328" y="445" width="210" height="48" rx="24" fill="rgba(249,115,22,0.2)" stroke="#f97316" stroke-width="1.5"/>
+  <text x="433" y="475" font-family="Arial, sans-serif" font-size="22" fill="#fdba74" text-anchor="middle">☀️ Solar Systems</text>
+  <!-- Tag 3 -->
+  <rect x="556" y="445" width="200" height="48" rx="24" fill="rgba(22,163,74,0.2)" stroke="#16a34a" stroke-width="1.5"/>
+  <text x="656" y="475" font-family="Arial, sans-serif" font-size="22" fill="#4ade80" text-anchor="middle">🏦 Easy Finance</text>
+  <!-- Domain -->
+  <text x="100" y="565" font-family="Arial, sans-serif" font-size="26" fill="rgba(255,255,255,0.35)">chinacarsinghana.com</text>
+  <!-- Phone -->
+  <text x="1100" y="565" font-family="Arial, sans-serif" font-size="26" fill="rgba(255,255,255,0.35)" text-anchor="end">+233 50 356 6913</text>
+  <!-- Accra badge -->
+  <text x="1100" y="200" font-family="Arial, sans-serif" font-size="22" fill="rgba(255,255,255,0.2)" text-anchor="end">📍 Accra, Ghana</text>
+</svg>

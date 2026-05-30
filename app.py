@@ -1,4 +1,5 @@
 import os
+import io
 import json
 import uuid
 import smtplib
@@ -7,7 +8,7 @@ from email.mime.multipart import MIMEMultipart
 from datetime import datetime
 from functools import wraps
 from flask import (Flask, render_template, request, redirect, url_for,
-                   flash, session, jsonify)
+                   flash, session, jsonify, send_file)
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
@@ -39,11 +40,11 @@ app.config['MAX_CONTENT_LENGTH'] = 500 * 1024 * 1024  # 500 MB
 BUSINESS = {
     'name': 'AutoPower Dealership',
     'tagline': 'Drive Excellence. Power the Future.',
-    'phone': '+233 50 356 9130',
+    'phone': '+233 50 356 6913',
     'email': 'kofi@chinacarsinghana.com',
     'address': 'Accra, Ghana',
     'republic_bank_url': '#',
-    'whatsapp': '233503569130',
+    'whatsapp': '233503566913',
     'facebook': '#',
     'instagram': '#',
 }
@@ -522,6 +523,38 @@ def inject_globals():
 
 
 # ────────────────────────── PUBLIC ROUTES ───────────────────────────────── #
+
+@app.route('/static/img/og-default.jpg')
+def og_default_image():
+    """Dynamically generate the default OG share image (1200×630 PNG)."""
+    try:
+        from PIL import Image, ImageDraw, ImageFont
+        img  = Image.new('RGB', (1200, 630), color=(15, 23, 42))
+        draw = ImageDraw.Draw(img)
+        # Gradient-style accent bar at top
+        for x in range(1200):
+            r = int(37  + (249 - 37)  * x / 1200)
+            g = int(99  + (115 - 99)  * x / 1200)
+            b = int(235 + (22  - 235) * x / 1200)
+            draw.line([(x, 0), (x, 6)], fill=(r, g, b))
+        # Text — use default PIL font (always available)
+        draw.text((100, 130), '⚡  China Cars in Ghana',      fill=(255, 255, 255), font=None)
+        draw.text((100, 210), 'Drive Excellence. Power the Future.', fill=(148, 163, 184), font=None)
+        draw.text((100, 310), '🚗  Premium Vehicles',         fill=(96,  165, 250), font=None)
+        draw.text((100, 360), '☀️  Solar Energy Systems',     fill=(251, 146, 60),  font=None)
+        draw.text((100, 410), '🏦  Financing via Republic Bank', fill=(74,  222, 128), font=None)
+        draw.text((100, 530), 'chinacarsinghana.com',         fill=(71,  85,  105), font=None)
+        draw.text((100, 560), '+233 50 356 6913  ·  Accra, Ghana', fill=(71, 85, 105), font=None)
+        buf = io.BytesIO()
+        img.save(buf, format='JPEG', quality=92)
+        buf.seek(0)
+        return send_file(buf, mimetype='image/jpeg',
+                         max_age=86400,
+                         as_attachment=False,
+                         download_name='og-default.jpg')
+    except Exception:
+        from flask import abort
+        abort(404)
 
 @app.route('/')
 def index():
