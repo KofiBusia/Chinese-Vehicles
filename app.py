@@ -1582,12 +1582,18 @@ def admin_update_sale_status(sale_id):
 
 # ── Salesperson self-registration ── #
 
+@app.route('/sales/register', methods=['GET'])
 @app.route('/sales/register/<token>', methods=['GET', 'POST'])
-def sales_register(token):
+def sales_register(token=None):
     """Public self-registration page shared by admin with a secure token."""
-    setting = SiteSettings.query.get('sp_reg_token')
+    if not token:
+        return '<h2 style="font-family:sans-serif;text-align:center;padding:3rem;color:#dc2626;">No registration token provided.</h2>', 400
+    try:
+        setting = SiteSettings.query.filter_by(key='sp_reg_token').first()
+    except Exception:
+        setting = None
     if not setting or setting.value != token:
-        return '<h2 style="font-family:sans-serif;text-align:center;padding:3rem;color:#dc2626;">Invalid or expired registration link.</h2>', 403
+        return '<h2 style="font-family:sans-serif;text-align:center;padding:3rem;color:#dc2626;">Invalid or expired registration link. Ask the admin to generate a new one.</h2>', 403
 
     if request.method == 'POST':
         full_name = request.form.get('full_name', '').strip()
