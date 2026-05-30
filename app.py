@@ -11,6 +11,17 @@ from flask import (Flask, render_template, request, redirect, url_for,
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
+# Fix CLOUDINARY_URL before importing the library — it auto-reads the env var
+# at import time and crashes if the value is invalid
+_raw_cld = os.environ.get('CLOUDINARY_URL', '')
+if _raw_cld and not _raw_cld.startswith('cloudinary://'):
+    # User may have pasted the full line "CLOUDINARY_URL=cloudinary://..."
+    if '=' in _raw_cld:
+        _raw_cld = _raw_cld.split('=', 1)[1].strip()
+    if _raw_cld.startswith('cloudinary://'):
+        os.environ['CLOUDINARY_URL'] = _raw_cld   # fixed
+    else:
+        del os.environ['CLOUDINARY_URL']           # remove bad value entirely
 import cloudinary
 import cloudinary.uploader
 import cloudinary.api
