@@ -1177,19 +1177,22 @@ def admin_settings():
 # ─────────────────────────── INIT ───────────────────────────────────────── #
 
 def init_db():
-    with app.app_context():
-        db.create_all()
-        if not AdminUser.query.first():
-            a = AdminUser(username='admin', full_name='Administrator', email='admin@autopowerdealership.com')
-            a.set_password('admin123')
-            db.session.add(a)
-            db.session.commit()
-            print("\n[OK] Default admin created")
-            print("   Username : admin")
-            print("   Password : admin123")
+    try:
+        with app.app_context():
+            db.create_all()
+            if not AdminUser.query.first():
+                a = AdminUser(username='admin', full_name='Administrator', email='admin@autopowerdealership.com')
+                a.set_password('admin123')
+                db.session.add(a)
+                db.session.commit()
+                print("\n[OK] Default admin created")
+                print("   Username : admin")
+                print("   Password : admin123")
             print("   WARNING  : Change this password after first login!\n")
         for folder in ('vehicles', 'solar'):
             os.makedirs(os.path.join('static', 'uploads', folder), exist_ok=True)
+    except Exception as e:
+        print(f"[INIT] DB init warning: {e}")
 
 
 # Initialise DB on every startup (works with gunicorn / Render too)
