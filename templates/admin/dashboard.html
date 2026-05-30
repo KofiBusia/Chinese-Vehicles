@@ -37,6 +37,25 @@
   </div>
 </div>
 
+<!-- Salesperson Summary Bar -->
+<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:1rem;margin-bottom:2rem;padding:1.25rem;background:linear-gradient(135deg,#0f172a,#1e3a5f);border-radius:14px;">
+  <div style="text-align:center;">
+    <div style="font-size:1.8rem;font-weight:800;color:#60a5fa;">{{ stats.salespersons }}</div>
+    <div style="font-size:.75rem;color:rgba(255,255,255,.55);margin-top:.2rem;">Active Salespersons</div>
+  </div>
+  <div style="text-align:center;">
+    <div style="font-size:1.8rem;font-weight:800;color:#34d399;">{{ stats.sp_loans }}</div>
+    <div style="font-size:.75rem;color:rgba(255,255,255,.55);margin-top:.2rem;">Referred Loan Applications</div>
+  </div>
+  <div style="text-align:center;">
+    <div style="font-size:1.8rem;font-weight:800;color:#f59e0b;">{{ stats.sp_orders }}</div>
+    <div style="font-size:.75rem;color:rgba(255,255,255,.55);margin-top:.2rem;">Referred Orders / Test Drives</div>
+  </div>
+  <div style="text-align:center;display:flex;flex-direction:column;justify-content:center;align-items:center;">
+    <a href="{{ url_for('admin_salespersons') }}" style="padding:.55rem 1.1rem;background:#2563eb;color:white;border-radius:8px;font-size:.8rem;font-weight:700;text-decoration:none;">Manage Team →</a>
+  </div>
+</div>
+
 <!-- Quick Actions -->
 <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:1rem;margin-bottom:2rem;">
   <a href="{{ url_for('admin_add_vehicle') }}" style="display:flex;align-items:center;gap:.75rem;padding:1rem 1.25rem;background:white;border-radius:10px;border:1px solid #e5e7eb;text-decoration:none;color:var(--dark);transition:box-shadow .2s;" onmouseover="this.style.boxShadow='0 4px 16px rgba(0,0,0,.08)'" onmouseout="this.style.boxShadow=''">
@@ -131,6 +150,111 @@
     </table>
   </div>
 
+</div>
+
+<!-- ── Salesperson Activity ── -->
+<div style="margin-top:2rem;">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+    <h2 style="font-size:1rem;font-weight:800;color:var(--dark);">👥 Salesperson Activity</h2>
+    <a href="{{ url_for('admin_salespersons') }}" class="btn btn-outline btn-sm">Full Team →</a>
+  </div>
+
+  <!-- Leaderboard -->
+  <div class="table-card" style="margin-bottom:1.5rem;">
+    <div class="table-header">
+      <span class="table-title">Team Leaderboard</span>
+      <span style="font-size:.75rem;color:var(--mid);">1.5% commission on confirmed sales</span>
+    </div>
+    <div style="overflow-x:auto;">
+      <table>
+        <thead><tr>
+          <th>Salesperson</th>
+          <th>Code</th>
+          <th>Confirmed Sales</th>
+          <th>Total Revenue</th>
+          <th>Commission Earned</th>
+          <th>Status</th>
+          <th></th>
+        </tr></thead>
+        <tbody>
+          {% for sp in salespersons %}
+          <tr>
+            <td>
+              <div style="font-weight:700;">{{ sp.full_name }}</div>
+              <div style="font-size:.72rem;color:var(--mid);">{{ sp.phone or sp.email or '—' }}</div>
+            </td>
+            <td>
+              <code style="background:#f1f5f9;padding:.2rem .55rem;border-radius:4px;font-weight:700;color:var(--blue);font-size:.85rem;letter-spacing:.06em;">{{ sp.code }}</code>
+            </td>
+            <td style="font-weight:700;color:var(--blue);">{{ sp.total_sales() }}</td>
+            <td style="font-weight:700;">{{ sp.total_revenue() | currency }}</td>
+            <td style="font-weight:700;color:var(--green);">{{ sp.commission_earned() | currency }}</td>
+            <td>
+              {% if sp.active %}<span class="badge badge-green">Active</span>
+              {% else %}<span class="badge badge-red">Inactive</span>{% endif %}
+            </td>
+            <td><a href="{{ url_for('admin_salesperson_sales', sid=sp.id) }}" class="btn btn-outline btn-sm">Details</a></td>
+          </tr>
+          {% else %}
+          <tr><td colspan="7" style="text-align:center;padding:2.5rem;color:var(--mid);">No salespersons yet.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Recent Referred Activity -->
+  <div class="table-card">
+    <div class="table-header">
+      <span class="table-title">Recent Referred Activity</span>
+      <span style="font-size:.75rem;color:var(--mid);">All loans &amp; orders brought in by salespersons</span>
+    </div>
+    <div style="overflow-x:auto;">
+      <table>
+        <thead><tr>
+          <th>Salesperson</th>
+          <th>Type</th>
+          <th>Customer</th>
+          <th>Product</th>
+          <th>Amount</th>
+          <th>Status</th>
+          <th>Date</th>
+        </tr></thead>
+        <tbody>
+          {% for act in sp_activity %}
+          <tr>
+            <td>
+              <div style="font-weight:700;font-size:.85rem;">{{ act.sp_name or '—' }}</div>
+              <code style="background:#f1f5f9;padding:.15rem .4rem;border-radius:4px;font-size:.72rem;color:var(--blue);font-weight:700;">{{ act.sp_code }}</code>
+            </td>
+            <td>
+              {% if act.type == 'loan' %}
+              <span class="badge badge-blue">🏦 Loan</span>
+              {% else %}
+              <span class="badge badge-yellow">🚗 Order</span>
+              {% endif %}
+            </td>
+            <td style="font-weight:600;font-size:.85rem;">{{ act.customer }}</td>
+            <td style="font-size:.82rem;color:var(--mid);max-width:150px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ act.product or '—' }}</td>
+            <td style="font-weight:700;font-size:.85rem;">
+              {% if act.amount %}{{ act.amount | currency }}{% else %}—{% endif %}
+            </td>
+            <td>
+              {% if act.status == 'approved' %}<span class="badge badge-green">Approved</span>
+              {% elif act.status == 'confirmed' %}<span class="badge badge-green">Confirmed</span>
+              {% elif act.status == 'rejected' or act.status == 'cancelled' %}<span class="badge badge-red">{{ act.status | title }}</span>
+              {% elif act.status == 'processing' %}<span class="badge badge-blue">Processing</span>
+              {% else %}<span class="badge badge-yellow">Pending</span>{% endif %}
+            </td>
+            <td style="font-size:.78rem;color:var(--mid);">{{ act.date.strftime('%b %d, %Y') }}</td>
+          </tr>
+          {% else %}
+          <tr><td colspan="7" style="text-align:center;padding:2.5rem;color:var(--mid);">No salesperson-referred activity yet. Share referral links to start tracking.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
 </div>
 
 {% endblock %}

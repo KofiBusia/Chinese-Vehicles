@@ -943,13 +943,50 @@ def admin_dashboard():
         'pending':      LoanApplication.query.filter_by(status='pending').count(),
         'contacts':     Contact.query.filter_by(status='unread').count(),
         'approved':     LoanApplication.query.filter_by(status='approved').count(),
+        'salespersons': Salesperson.query.filter_by(active=True).count(),
+        'sp_loans':     LoanApplication.query.filter(LoanApplication.sp_code != None, LoanApplication.sp_code != '').count(),
+        'sp_orders':    CarOrder.query.filter(CarOrder.sp_code != None, CarOrder.sp_code != '').count(),
     }
     recent_apps      = LoanApplication.query.order_by(LoanApplication.created_at.desc()).limit(6).all()
     recent_contacts  = Contact.query.order_by(Contact.created_at.desc()).limit(5).all()
+
+    # Salesperson leaderboard
+    salespersons = Salesperson.query.filter_by(active=True).order_by(Salesperson.created_at.desc()).all()
+
+    # Recent salesperson-attributed activity (loans + orders merged, last 10)
+    sp_loan_activity = (LoanApplication.query
+        .filter(LoanApplication.sp_code != None, LoanApplication.sp_code != '')
+        .order_by(LoanApplication.created_at.desc()).limit(20).all())
+    sp_order_activity = (CarOrder.query
+        .filter(CarOrder.sp_code != None, CarOrder.sp_code != '')
+        .order_by(CarOrder.created_at.desc()).limit(20).all())
+
+    sp_activity = []
+    for a in sp_loan_activity:
+        sp_activity.append({
+            'type': 'loan', 'sp_code': a.sp_code, 'sp_name': a.sp_name,
+            'customer': f"{a.first_name} {a.last_name}",
+            'product': a.product_name or a.product_type,
+            'amount': a.loan_amount, 'status': a.status,
+            'date': a.created_at,
+        })
+    for o in sp_order_activity:
+        sp_activity.append({
+            'type': 'order', 'sp_code': o.sp_code, 'sp_name': o.sp_name,
+            'customer': o.name,
+            'product': (o.vehicle.name if o.vehicle else 'Vehicle') + (' (Test Drive)' if o.order_type == 'test_drive' else ''),
+            'amount': o.vehicle.price if o.vehicle else None, 'status': o.status,
+            'date': o.created_at,
+        })
+    sp_activity.sort(key=lambda x: x['date'], reverse=True)
+    sp_activity = sp_activity[:15]
+
     return render_template('admin/dashboard.html',
                            stats=stats,
                            recent_apps=recent_apps,
-                           recent_contacts=recent_contacts)
+                           recent_contacts=recent_contacts,
+                           salespersons=salespersons,
+                           sp_activity=sp_activity)
 
 
 # ── Vehicles ── #
