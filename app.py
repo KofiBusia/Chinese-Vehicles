@@ -334,7 +334,7 @@ class Salesperson(db.Model):
     code         = db.Column(db.String(20), unique=True, nullable=False)  # unique referral/access code
     password_hash = db.Column(db.String(200), nullable=False)
     active       = db.Column(db.Boolean, default=True)
-    commission_pct = db.Column(db.Float, default=1.5)  # commission percentage
+    commission_pct = db.Column(db.Float, default=1.0)  # commission percentage
     notes        = db.Column(db.Text)
     created_at   = db.Column(db.DateTime, default=datetime.utcnow)
     # stats (computed from linked applications/sales)
@@ -607,6 +607,86 @@ Submitted : {order.created_at.strftime('%d %B %Y at %H:%M UTC')}
         print(f'[EMAIL] Order notification failed: {e}')
 
 # ────────────────────────── PUBLIC ROUTES ───────────────────────────────── #
+
+@app.route('/static/img/og-sales.jpg')
+def og_sales_image():
+    """OG share image for the salesperson recruitment / registration page."""
+    try:
+        from PIL import Image, ImageDraw, ImageFont
+
+        W, H = 1200, 630
+        img  = Image.new('RGB', (W, H), color=(15, 23, 42))
+        draw = ImageDraw.Draw(img)
+
+        # Gold gradient bar at top
+        for x in range(W):
+            t = x / W
+            r = int(234 + (16  - 234) * t)
+            g = int(179 + (185 - 179) * t)
+            b = int(8   + (129 - 8)   * t)
+            draw.line([(x, 0), (x, 10)], fill=(r, g, b))
+
+        # Subtle corner glow (top-right, blue)
+        for r in range(280, 0, -20):
+            alpha = max(0, 18 - (280 - r) // 15)
+            draw.ellipse([W - r, -r // 2, W + r // 2, r], fill=(37, 99, 235))
+
+        try:
+            f_hero  = ImageFont.load_default(size=88)
+            f_big   = ImageFont.load_default(size=54)
+            f_mid   = ImageFont.load_default(size=32)
+            f_small = ImageFont.load_default(size=26)
+            f_tag   = ImageFont.load_default(size=28)
+        except Exception:
+            f_hero = f_big = f_mid = f_small = f_tag = ImageFont.load_default()
+
+        # Top label
+        draw.text((80, 30), 'CHINA CARS IN GHANA', font=f_small, fill=(148, 163, 184))
+
+        # Hero headline
+        draw.text((80, 80),  'JOIN OUR',    font=f_hero, fill=(255, 255, 255))
+        draw.text((80, 175), 'SALES TEAM',  font=f_hero, fill=(234, 179, 8))
+
+        # Divider
+        draw.rectangle([80, 280, 320, 286], fill=(234, 179, 8))
+
+        # Commission pill (green)
+        def pill(x, y, text, bg, fg, radius=26):
+            tw = len(text) * 16 + 44
+            draw.rounded_rectangle([x, y, x + tw, y + 54], radius=radius, fill=bg)
+            draw.text((x + 22, y + 13), text, font=f_tag, fill=fg)
+            return x + tw + 16
+
+        nx = pill(80, 304, '1% COMMISSION',      (20, 83, 45),   (134, 239, 172))
+        nx = pill(nx, 304, 'VEHICLES & SOLAR',  (30, 58, 138),  (147, 197, 253))
+        pill(nx,  304, 'FREE TO JOIN',           (88, 28, 135),  (216, 180, 254))
+
+        # White info card
+        draw.rounded_rectangle([80, 378, W - 80, 530], radius=16,
+                                fill=(255, 255, 255), outline=(234, 179, 8), width=2)
+        draw.text((120, 396), 'Earn on every vehicle & solar system you sell',
+                  font=f_mid, fill=(15, 23, 42))
+        draw.text((120, 438), 'Get your personal referral link · Track earnings in real time',
+                  font=f_small, fill=(71, 85, 105))
+        draw.text((120, 476), 'Commission paid on full customer payment · Sign up free today',
+                  font=f_small, fill=(71, 85, 105))
+
+        # Footer
+        draw.text((80,  554), 'chinacarsinghana.com/sales/register', font=f_mid,   fill=(96, 165, 250))
+        draw.text((80,  598), 'Accra, Ghana',                         font=f_small, fill=(71, 85, 105))
+
+        buf = io.BytesIO()
+        img.save(buf, format='JPEG', quality=93)
+        buf.seek(0)
+        return send_file(buf, mimetype='image/jpeg',
+                         max_age=86400,
+                         as_attachment=False,
+                         download_name='og-sales.jpg')
+    except Exception as e:
+        print(f'[OG SALES IMAGE] Error: {e}')
+        from flask import abort
+        abort(404)
+
 
 @app.route('/static/img/og-default.jpg')
 def og_default_image():
@@ -1311,7 +1391,7 @@ def admin_add_salesperson():
             email          = request.form.get('email', '').strip(),
             phone          = request.form.get('phone', '').strip(),
             code           = code,
-            commission_pct = request.form.get('commission_pct', type=float) or 1.5,
+            commission_pct = request.form.get('commission_pct', type=float) or 1.0,
             notes          = request.form.get('notes', '').strip(),
             active         = 'active' in request.form,
         )
@@ -1337,7 +1417,7 @@ def admin_edit_salesperson(sid):
         sp.email          = request.form.get('email', '').strip()
         sp.phone          = request.form.get('phone', '').strip()
         sp.code           = new_code
-        sp.commission_pct = request.form.get('commission_pct', type=float) or 1.5
+        sp.commission_pct = request.form.get('commission_pct', type=float) or 1.0
         sp.notes          = request.form.get('notes', '').strip()
         sp.active         = 'active' in request.form
         new_pw = request.form.get('new_password', '').strip()
@@ -1438,7 +1518,7 @@ def sales_register(token):
                 phone          = phone,
                 code           = code,
                 active         = True,
-                commission_pct = 1.5,
+                commission_pct = 1.0,
             )
             sp.set_password(password)
             db.session.add(sp)
