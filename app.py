@@ -1571,6 +1571,26 @@ def init_db():
     try:
         with app.app_context():
             db.create_all()
+
+            # Add new columns to existing tables (safe — IF NOT EXISTS skips if already present)
+            migrations = [
+                "ALTER TABLE loan_application ADD COLUMN IF NOT EXISTS sp_code  VARCHAR(20)",
+                "ALTER TABLE loan_application ADD COLUMN IF NOT EXISTS sp_name  VARCHAR(100)",
+                "ALTER TABLE loan_application ADD COLUMN IF NOT EXISTS sp_phone VARCHAR(20)",
+                "ALTER TABLE car_order        ADD COLUMN IF NOT EXISTS sp_code  VARCHAR(20)",
+                "ALTER TABLE car_order        ADD COLUMN IF NOT EXISTS sp_name  VARCHAR(100)",
+                "ALTER TABLE car_order        ADD COLUMN IF NOT EXISTS sp_phone VARCHAR(20)",
+                "ALTER TABLE contact          ADD COLUMN IF NOT EXISTS sp_code  VARCHAR(20)",
+                "ALTER TABLE contact          ADD COLUMN IF NOT EXISTS sp_name  VARCHAR(100)",
+                "ALTER TABLE contact          ADD COLUMN IF NOT EXISTS sp_phone VARCHAR(20)",
+            ]
+            for sql in migrations:
+                try:
+                    db.session.execute(db.text(sql))
+                except Exception:
+                    pass
+            db.session.commit()
+
             if not AdminUser.query.first():
                 a = AdminUser(username='admin', full_name='Administrator', email='admin@autopowerdealership.com')
                 a.set_password('admin123')
