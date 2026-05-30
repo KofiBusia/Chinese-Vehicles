@@ -37,7 +37,7 @@ BUSINESS = {
     'name': 'AutoPower Dealership',
     'tagline': 'Drive Excellence. Power the Future.',
     'phone': '+233 50 356 9130',
-    'email': 'kyeikofi@gmail.com',
+    'email': 'kofi@chinacarsinghana.com',
     'address': 'Accra, Ghana',
     'republic_bank_url': '#',
     'whatsapp': '233503569130',
