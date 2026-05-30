@@ -264,6 +264,44 @@
 </section>
 {% endif %}
 
+<!-- ── ORDER VEHICLE CTA ── -->
+<section class="hero-screen" style="background:linear-gradient(135deg,#0d0d14 0%,#0f2744 50%,#111827 100%);position:relative;overflow:hidden;">
+  <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 30% 60%,rgba(26,86,219,.18),transparent 60%);"></div>
+  <div style="position:absolute;bottom:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.08),transparent);"></div>
+  <div class="hero-content reveal" style="text-align:center;align-items:center;">
+    <p class="hero-eyebrow" style="color:rgba(255,255,255,.5);">Ready to Drive?</p>
+    <h2 class="hero-title" style="font-size:clamp(2.5rem,5vw,4.5rem);">Order Your Vehicle<br><span style="color:var(--blue-light);">Today.</span></h2>
+    <p class="hero-sub" style="max-width:520px;">Browse our full inventory, pick your dream vehicle, and place an order or book a test drive — all online, from anywhere in Ghana.</p>
+    <div class="hero-actions" style="justify-content:center;">
+      <a href="{{ url_for('vehicles') }}" class="btn-hero-primary" style="background:var(--blue);">Browse &amp; Order a Vehicle</a>
+      <a href="{{ url_for('vehicles') }}" class="btn-hero-secondary">Book a Test Drive</a>
+    </div>
+    <p style="margin-top:1.5rem;font-size:.8rem;color:rgba(255,255,255,.35);letter-spacing:.04em;">Select any vehicle from the catalogue to place your order or book a test drive</p>
+  </div>
+</section>
+
+<!-- ── ORDER SOLAR CTA ── -->
+<section class="hero-screen hero-solar" style="position:relative;overflow:hidden;">
+  <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 70% 40%,rgba(229,90,0,.22),transparent 60%);"></div>
+  <div class="hero-content reveal" style="text-align:center;align-items:center;">
+    <p class="hero-eyebrow" style="color:rgba(255,255,255,.5);">Go Green. Save More.</p>
+    <h2 class="hero-title" style="font-size:clamp(2.5rem,5vw,4.5rem);">Order Your Solar<br><span style="color:var(--solar-light);">System.</span></h2>
+    <p class="hero-sub" style="max-width:520px;">Cut your electricity bills by up to 90%. Explore our residential and commercial solar packages and request a quote in minutes.</p>
+    <div class="hero-actions" style="justify-content:center;">
+      <a href="{{ url_for('solar') }}" class="btn-hero-primary" style="background:var(--solar);">Browse Solar Systems</a>
+      <a href="{{ url_for('contact') }}" class="btn-hero-secondary">Get a Free Quote</a>
+    </div>
+    <div style="display:flex;gap:2rem;justify-content:center;margin-top:2rem;flex-wrap:wrap;">
+      {% for icon, label in [('✅','Zero Carbon'),('⚡','90% Bill Reduction'),('🛡️','25-yr Warranty'),('🏦','Loan Available')] %}
+      <div style="text-align:center;">
+        <div style="font-size:1.4rem;">{{ icon }}</div>
+        <div style="font-size:.72rem;color:rgba(255,255,255,.5);margin-top:.3rem;letter-spacing:.04em;text-transform:uppercase;">{{ label }}</div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
 <!-- ── FINANCE CTA ── -->
 <section class="finance-cta">
   <div class="reveal">
