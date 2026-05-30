@@ -28,7 +28,10 @@ import cloudinary.api
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'autopow3r-s3cr3t-k3y-2024-change-me')
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///dealership.db'
+_db_url = os.environ.get('DATABASE_URL', 'sqlite:///dealership.db')
+if _db_url.startswith('postgres://'):          # Render gives postgres://, SQLAlchemy needs postgresql://
+    _db_url = _db_url.replace('postgres://', 'postgresql://', 1)
+app.config['SQLALCHEMY_DATABASE_URI'] = _db_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['UPLOAD_FOLDER'] = os.path.join('static', 'uploads')
 app.config['MAX_CONTENT_LENGTH'] = 500 * 1024 * 1024  # 500 MB
