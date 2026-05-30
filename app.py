@@ -442,6 +442,47 @@ def admin_required(f):
         return f(*args, **kwargs)
     return decorated
 
+# ─── Mobile photo upload via QR code ────────────────────────────────────── #
+MOBILE_SESSIONS = {}   # token → {'files': [...], 'subfolder': str}
+
+@app.route('/admin/mobile-token', methods=['POST'])
+@admin_required
+def admin_mobile_token():
+    data      = request.get_json(silent=True) or {}
+    subfolder = data.get('subfolder', 'vehicles')
+    if subfolder not in ('vehicles', 'solar'):
+        subfolder = 'vehicles'
+    token = uuid.uuid4().hex
+    MOBILE_SESSIONS[token] = {'files': [], 'subfolder': subfolder}
+    return jsonify({'token': token})
+
+@app.route('/mobile-upload/<token>')
+def mobile_upload_page(token):
+    if token not in MOBILE_SESSIONS:
+        return '<h2 style="font-family:sans-serif;text-align:center;padding:3rem;color:#dc2626;">Session expired — please scan the QR code again.</h2>', 403
+    return render_template('admin/mobile_upload.html', token=token, business=BUSINESS)
+
+@app.route('/mobile-upload/<token>', methods=['POST'])
+def mobile_upload_receive(token):
+    if token not in MOBILE_SESSIONS:
+        return jsonify({'ok': False, 'error': 'Session expired'}), 403
+    subfolder = MOBILE_SESSIONS[token]['subfolder']
+    uploaded  = []
+    for f in request.files.getlist('files'):
+        if f and f.filename and allowed(f.filename, 'image'):
+            path = save_upload(f, subfolder)
+            if path:
+                MOBILE_SESSIONS[token]['files'].append(path)
+                uploaded.append({'path': path, 'url': media_url(path)})
+    return jsonify({'ok': True, 'count': len(uploaded), 'uploaded': uploaded})
+
+@app.route('/admin/mobile-poll/<token>')
+@admin_required
+def admin_mobile_poll(token):
+    data  = MOBILE_SESSIONS.get(token, {'files': []})
+    files = data.get('files', [])
+    return jsonify({'files': files, 'urls': [media_url(f) for f in files]})
+
 @app.template_filter('currency')
 def currency_filter(value):
     if value is None: return 'N/A'
@@ -774,6 +815,9 @@ def admin_add_vehicle():
         for f in request.files.getlist('images'):
             if f and f.filename and allowed(f.filename, 'image'):
                 imgs.append(save_upload(f, 'vehicles'))
+        mt = request.form.get('mobile_token', '')
+        if mt and mt in MOBILE_SESSIONS:
+            imgs.extend(MOBILE_SESSIONS.pop(mt)['files'])
         v.images = json.dumps(imgs)
 
         vids = []
@@ -815,6 +859,9 @@ def admin_edit_vehicle(vid):
         for f in request.files.getlist('images'):
             if f and f.filename and allowed(f.filename, 'image'):
                 existing_imgs.append(save_upload(f, 'vehicles'))
+        mt = request.form.get('mobile_token', '')
+        if mt and mt in MOBILE_SESSIONS:
+            existing_imgs.extend(MOBILE_SESSIONS.pop(mt)['files'])
         v.images = json.dumps(existing_imgs)
 
         existing_vids = v.get_videos()
@@ -894,6 +941,9 @@ def admin_add_solar():
         for f in request.files.getlist('images'):
             if f and f.filename and allowed(f.filename, 'image'):
                 imgs.append(save_upload(f, 'solar'))
+        mt = request.form.get('mobile_token', '')
+        if mt and mt in MOBILE_SESSIONS:
+            imgs.extend(MOBILE_SESSIONS.pop(mt)['files'])
         s.images = json.dumps(imgs)
 
         vids = []
@@ -933,6 +983,9 @@ def admin_edit_solar(sid):
         for f in request.files.getlist('images'):
             if f and f.filename and allowed(f.filename, 'image'):
                 existing_imgs.append(save_upload(f, 'solar'))
+        mt = request.form.get('mobile_token', '')
+        if mt and mt in MOBILE_SESSIONS:
+            existing_imgs.extend(MOBILE_SESSIONS.pop(mt)['files'])
         s.images = json.dumps(existing_imgs)
 
         existing_vids = s.get_videos()

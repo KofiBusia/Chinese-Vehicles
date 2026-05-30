@@ -109,6 +109,33 @@
             <input type="file" name="images" id="imageInput" accept="image/*" multiple>
           </label>
           <div class="upload-preview" id="imagePreview"></div>
+
+          <!-- QR Code Mobile Upload -->
+          <div style="margin-top:1.25rem;padding:1.25rem;background:#fff8f0;border-radius:12px;border:2px dashed #fed7aa;">
+            <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:1rem;">
+              <span style="font-size:1.75rem;">📱</span>
+              <div>
+                <div style="font-weight:700;font-size:.9rem;color:#0f172a;">Upload from your phone</div>
+                <div style="font-size:.75rem;color:#92400e;margin-top:.1rem;">Scan the QR code — photos appear here instantly</div>
+              </div>
+            </div>
+            <div style="display:flex;gap:1.5rem;align-items:flex-start;flex-wrap:wrap;">
+              <div style="background:white;padding:8px;border-radius:8px;box-shadow:0 1px 4px rgba(0,0,0,.1);flex-shrink:0;">
+                <div id="qrSolar" style="width:128px;height:128px;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:.75rem;">Loading…</div>
+              </div>
+              <div style="flex:1;min-width:140px;">
+                <ol style="font-size:.78rem;color:#78350f;line-height:2;padding-left:1.1rem;">
+                  <li>Open your phone camera</li>
+                  <li>Point it at the QR code</li>
+                  <li>Select or take photos</li>
+                  <li>Photos are added automatically</li>
+                </ol>
+                <div id="mobileSolarStatus" style="display:none;margin-top:.65rem;padding:.5rem .75rem;background:#f0fdf4;border-radius:6px;font-size:.78rem;font-weight:600;color:#166534;"></div>
+              </div>
+            </div>
+            <div id="mobileSolarPreview" style="display:flex;flex-wrap:wrap;gap:.5rem;margin-top:.85rem;"></div>
+          </div>
+          <input type="hidden" name="mobile_token" id="mobileSolarToken">
         </div>
       </div>
 
@@ -176,5 +203,60 @@
 
   </div>
 </form>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+(function() {
+  const knownFiles = new Set();
+  let pollTimer = null;
+
+  fetch('/admin/mobile-token', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({subfolder: 'solar'})
+  })
+  .then(r => r.json())
+  .then(data => {
+    const token    = data.token;
+    const mobileUrl = window.location.origin + '/mobile-upload/' + token;
+    document.getElementById('mobileSolarToken').value = token;
+
+    new QRCode(document.getElementById('qrSolar'), {
+      text: mobileUrl,
+      width: 128, height: 128,
+      colorDark: '#0f172a', colorLight: '#ffffff',
+      correctLevel: QRCode.CorrectLevel.M
+    });
+
+    pollTimer = setInterval(() => {
+      fetch('/admin/mobile-poll/' + token)
+        .then(r => r.json())
+        .then(d => {
+          const newFiles = d.files.filter(f => !knownFiles.has(f));
+          if (!newFiles.length) return;
+          newFiles.forEach(f => {
+            knownFiles.add(f);
+            const url = d.urls[d.files.indexOf(f)];
+            const img = document.createElement('img');
+            img.src = url;
+            img.style.cssText = 'width:64px;height:64px;object-fit:cover;border-radius:6px;border:2px solid #22c55e;';
+            document.getElementById('mobileSolarPreview').appendChild(img);
+          });
+          const st = document.getElementById('mobileSolarStatus');
+          st.textContent = '✓ ' + d.files.length + ' photo' + (d.files.length !== 1 ? 's' : '') + ' ready — will be saved with the form';
+          st.style.display = 'block';
+        })
+        .catch(() => {});
+    }, 3000);
+  })
+  .catch(() => {
+    document.getElementById('qrSolar').textContent = 'QR unavailable';
+  });
+
+  document.querySelector('form').addEventListener('submit', () => {
+    if (pollTimer) clearInterval(pollTimer);
+  });
+})();
+</script>
 
 {% endblock %}

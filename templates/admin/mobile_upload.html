@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Upload Photos — {{ business.name }}</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --blue: #2563eb;
+      --green: #16a34a;
+      --red: #dc2626;
+      --dark: #0f172a;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--dark);
+      color: white;
+      min-height: 100svh;
+      display: flex;
+      flex-direction: column;
+    }
+    header {
+      padding: 1.25rem 1.5rem;
+      background: rgba(255,255,255,.05);
+      border-bottom: 1px solid rgba(255,255,255,.08);
+      display: flex;
+      align-items: center;
+      gap: .75rem;
+    }
+    header .logo { font-size: 1.5rem; }
+    header .biz { font-size: .85rem; font-weight: 700; color: rgba(255,255,255,.9); }
+    header .sub { font-size: .72rem; color: rgba(255,255,255,.45); margin-top: .1rem; }
+
+    main { flex: 1; padding: 2rem 1.5rem; display: flex; flex-direction: column; gap: 1.5rem; }
+
+    .upload-zone {
+      border: 2.5px dashed rgba(255,255,255,.2);
+      border-radius: 16px;
+      padding: 2.5rem 1.5rem;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color .2s, background .2s;
+      position: relative;
+    }
+    .upload-zone:active, .upload-zone.drag { border-color: var(--blue); background: rgba(37,99,235,.08); }
+    .upload-zone input[type=file] {
+      position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+    }
+    .upload-zone .icon { font-size: 3.5rem; margin-bottom: 1rem; display: block; }
+    .upload-zone h2 { font-size: 1.1rem; font-weight: 700; margin-bottom: .35rem; }
+    .upload-zone p { font-size: .82rem; color: rgba(255,255,255,.5); line-height: 1.6; }
+
+    .btn-upload {
+      display: block; width: 100%; padding: 1rem;
+      background: var(--blue); color: white; border: none; border-radius: 12px;
+      font-size: 1rem; font-weight: 700; cursor: pointer; text-align: center;
+      transition: opacity .2s;
+    }
+    .btn-upload:disabled { opacity: .5; cursor: not-allowed; }
+
+    #progressWrap {
+      display: none;
+      background: rgba(255,255,255,.06);
+      border-radius: 10px;
+      overflow: hidden;
+      height: 8px;
+    }
+    #progressBar {
+      height: 100%; background: var(--blue); width: 0%;
+      transition: width .3s ease;
+      border-radius: 10px;
+    }
+
+    #statusMsg {
+      text-align: center;
+      font-size: .85rem;
+      color: rgba(255,255,255,.6);
+      min-height: 1.4em;
+    }
+    #statusMsg.ok   { color: #4ade80; }
+    #statusMsg.err  { color: #f87171; }
+
+    #previewGrid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: .5rem;
+    }
+    .preview-thumb {
+      aspect-ratio: 1;
+      border-radius: 8px;
+      overflow: hidden;
+      position: relative;
+      background: rgba(255,255,255,.05);
+    }
+    .preview-thumb img {
+      width: 100%; height: 100%; object-fit: cover;
+    }
+    .preview-thumb .tick {
+      position: absolute; bottom: 4px; right: 4px;
+      background: var(--green); color: white;
+      border-radius: 50%; width: 20px; height: 20px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: .65rem; font-weight: 700;
+    }
+    .preview-thumb .uploading-overlay {
+      position: absolute; inset: 0;
+      background: rgba(0,0,0,.5);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.2rem;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">📸</div>
+  <div>
+    <div class="biz">{{ business.name }}</div>
+    <div class="sub">Mobile Photo Upload</div>
+  </div>
+</header>
+
+<main>
+
+  <div class="upload-zone" id="uploadZone">
+    <input type="file" id="fileInput" accept="image/*" multiple capture="environment">
+    <span class="icon">📷</span>
+    <h2>Tap to take or choose photos</h2>
+    <p>Select multiple photos from your gallery<br>or take new ones with your camera</p>
+  </div>
+
+  <button class="btn-upload" id="uploadBtn" disabled>Upload Selected Photos</button>
+
+  <div id="progressWrap"><div id="progressBar"></div></div>
+  <div id="statusMsg">No photos selected yet</div>
+
+  <div id="previewGrid"></div>
+
+</main>
+
+<script>
+const TOKEN    = {{ token | tojson }};
+const fileInput = document.getElementById('fileInput');
+const uploadBtn = document.getElementById('uploadBtn');
+const statusMsg = document.getElementById('statusMsg');
+const previewGrid = document.getElementById('previewGrid');
+const progressWrap = document.getElementById('progressWrap');
+const progressBar  = document.getElementById('progressBar');
+
+let pendingFiles = [];
+
+fileInput.addEventListener('change', () => {
+  pendingFiles = Array.from(fileInput.files);
+  if (pendingFiles.length === 0) return;
+  uploadBtn.disabled = false;
+  statusMsg.className = '';
+  statusMsg.textContent = `${pendingFiles.length} photo${pendingFiles.length > 1 ? 's' : ''} selected — tap Upload`;
+
+  // Show local previews immediately
+  previewGrid.innerHTML = '';
+  pendingFiles.forEach((file, i) => {
+    const div = document.createElement('div');
+    div.className = 'preview-thumb';
+    div.id = 'thumb-' + i;
+    const img = document.createElement('img');
+    img.src = URL.createObjectURL(file);
+    const overlay = document.createElement('div');
+    overlay.className = 'uploading-overlay';
+    overlay.textContent = '⏳';
+    div.appendChild(img);
+    div.appendChild(overlay);
+    previewGrid.appendChild(div);
+  });
+});
+
+uploadBtn.addEventListener('click', async () => {
+  if (pendingFiles.length === 0) return;
+  uploadBtn.disabled = true;
+  progressWrap.style.display = 'block';
+  progressBar.style.width = '5%';
+  statusMsg.className = '';
+  statusMsg.textContent = 'Uploading…';
+
+  const form = new FormData();
+  pendingFiles.forEach(f => form.append('files', f));
+
+  try {
+    const res  = await fetch('/mobile-upload/' + TOKEN, { method: 'POST', body: form });
+    const data = await res.json();
+
+    progressBar.style.width = '100%';
+
+    if (data.ok) {
+      statusMsg.className = 'ok';
+      statusMsg.textContent = `✓ ${data.count} photo${data.count !== 1 ? 's' : ''} uploaded successfully! You can upload more.`;
+
+      // Mark thumbs as done
+      pendingFiles.forEach((_, i) => {
+        const div = document.getElementById('thumb-' + i);
+        if (div) {
+          const overlay = div.querySelector('.uploading-overlay');
+          if (overlay) overlay.remove();
+          const tick = document.createElement('div');
+          tick.className = 'tick';
+          tick.textContent = '✓';
+          div.appendChild(tick);
+        }
+      });
+
+      // Reset for next batch
+      pendingFiles = [];
+      fileInput.value = '';
+      uploadBtn.disabled = true;
+      setTimeout(() => {
+        progressWrap.style.display = 'none';
+        progressBar.style.width = '0%';
+      }, 1500);
+    } else {
+      throw new Error(data.error || 'Upload failed');
+    }
+  } catch (err) {
+    progressBar.style.width = '0%';
+    progressWrap.style.display = 'none';
+    statusMsg.className = 'err';
+    statusMsg.textContent = '✗ Error: ' + err.message + ' — please try again.';
+    uploadBtn.disabled = false;
+  }
+});
+</script>
+</body>
+</html>
