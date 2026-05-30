@@ -1,0 +1,125 @@
+{% extends "admin/base.html" %}
+{% block title %}Application #{{ app.id }}{% endblock %}
+{% block page_title %}Application #{{ app.id }}{% endblock %}
+
+{% block content %}
+<div class="breadcrumb">
+  <a href="{{ url_for('admin_applications') }}">Applications</a> / #{{ app.id }} — {{ app.first_name }} {{ app.last_name }}
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 300px;gap:1.5rem;">
+
+  <div>
+    <!-- Personal Info -->
+    <div class="form-section">
+      <div class="form-section-header">👤 Personal Information</div>
+      <div class="form-section-body">
+        <table style="width:100%;border-collapse:collapse;">
+          {% set rows = [
+            ('Full Name', app.first_name ~ ' ' ~ app.last_name),
+            ('Email', app.email),
+            ('Phone', app.phone),
+            ('Date of Birth', app.date_of_birth or 'Not provided'),
+            ('National ID', app.id_number or 'Not provided'),
+            ('Address', app.address or 'Not provided'),
+          ] %}
+          {% for label, value in rows %}
+          <tr style="border-bottom:1px solid #f3f4f6;">
+            <td style="padding:.65rem .5rem;font-size:.78rem;font-weight:700;color:var(--mid);width:160px;">{{ label }}</td>
+            <td style="padding:.65rem .5rem;font-size:.875rem;">{{ value }}</td>
+          </tr>
+          {% endfor %}
+        </table>
+      </div>
+    </div>
+
+    <!-- Product & Loan -->
+    <div class="form-section">
+      <div class="form-section-header">💰 Loan Details</div>
+      <div class="form-section-body">
+        <table style="width:100%;border-collapse:collapse;">
+          {% set rows = [
+            ('Product Type', (app.product_type or '—') | title),
+            ('Product', app.product_name or '—'),
+            ('Product Price', app.product_price | currency if app.product_price else '—'),
+            ('Deposit', app.deposit_amount | currency if app.deposit_amount else '—'),
+            ('Loan Amount', app.loan_amount | currency if app.loan_amount else '—'),
+            ('Loan Term', (app.loan_term | string ~ ' months') if app.loan_term else '—'),
+          ] %}
+          {% for label, value in rows %}
+          <tr style="border-bottom:1px solid #f3f4f6;">
+            <td style="padding:.65rem .5rem;font-size:.78rem;font-weight:700;color:var(--mid);width:160px;">{{ label }}</td>
+            <td style="padding:.65rem .5rem;font-size:.875rem;font-weight:{% if 'Amount' in label %}700{% else %}400{% endif %};">{{ value }}</td>
+          </tr>
+          {% endfor %}
+        </table>
+      </div>
+    </div>
+
+    <!-- Employment -->
+    <div class="form-section">
+      <div class="form-section-header">💼 Employment</div>
+      <div class="form-section-body">
+        <table style="width:100%;border-collapse:collapse;">
+          {% set rows = [
+            ('Employment Status', app.employment_status or '—'),
+            ('Employer', app.employer or '—'),
+            ('Annual Income', app.annual_income | currency if app.annual_income else '—'),
+          ] %}
+          {% for label, value in rows %}
+          <tr style="border-bottom:1px solid #f3f4f6;">
+            <td style="padding:.65rem .5rem;font-size:.78rem;font-weight:700;color:var(--mid);width:160px;">{{ label }}</td>
+            <td style="padding:.65rem .5rem;font-size:.875rem;">{{ value }}</td>
+          </tr>
+          {% endfor %}
+        </table>
+      </div>
+    </div>
+
+    {% if app.message %}
+    <div class="form-section">
+      <div class="form-section-header">📝 Additional Notes</div>
+      <div class="form-section-body">
+        <p style="font-size:.9rem;line-height:1.7;color:var(--mid);">{{ app.message }}</p>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Sidebar -->
+  <div>
+    <div class="form-section" style="position:sticky;top:1rem;">
+      <div class="form-section-header">⚙️ Application Status</div>
+      <div class="form-section-body">
+        <div style="margin-bottom:1rem;">
+          {% if app.status == 'approved' %}<span class="badge badge-green" style="font-size:.9rem;padding:.4rem 1rem;">✅ Approved</span>
+          {% elif app.status == 'rejected' %}<span class="badge badge-red" style="font-size:.9rem;padding:.4rem 1rem;">❌ Rejected</span>
+          {% elif app.status == 'processing' %}<span class="badge badge-blue" style="font-size:.9rem;padding:.4rem 1rem;">🔄 Processing</span>
+          {% else %}<span class="badge badge-yellow" style="font-size:.9rem;padding:.4rem 1rem;">⏳ Pending</span>{% endif %}
+        </div>
+        <form method="post" action="{{ url_for('admin_update_app_status', aid=app.id) }}">
+          <div class="form-group">
+            <label class="form-label">Update Status</label>
+            <select name="status" class="form-control">
+              <option value="pending"    {% if app.status == 'pending' %}selected{% endif %}>⏳ Pending</option>
+              <option value="processing" {% if app.status == 'processing' %}selected{% endif %}>🔄 Processing</option>
+              <option value="approved"   {% if app.status == 'approved' %}selected{% endif %}>✅ Approved</option>
+              <option value="rejected"   {% if app.status == 'rejected' %}selected{% endif %}>❌ Rejected</option>
+            </select>
+          </div>
+          <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;margin-top:.5rem;">Update Status</button>
+        </form>
+        <div style="margin-top:1rem;border-top:1px solid #f3f4f6;padding-top:1rem;font-size:.78rem;color:var(--mid);">
+          <div>Submitted: {{ app.created_at.strftime('%B %d, %Y at %I:%M %p') }}</div>
+        </div>
+      </div>
+    </div>
+    <div style="margin-top:1rem;display:flex;flex-direction:column;gap:.5rem;">
+      <a href="mailto:{{ app.email }}?subject=Re: Your Loan Application #{{ app.id }}&body=Dear {{ app.first_name }}," class="btn btn-outline" style="width:100%;justify-content:center;">✉️ Email Applicant</a>
+      <a href="https://wa.me/{{ app.phone | replace(' ','') | replace('+','') | replace('-','') }}?text=Hello {{ app.first_name }}, regarding your loan application #{{ app.id }}..." class="btn btn-outline" style="width:100%;justify-content:center;" target="_blank">💬 WhatsApp</a>
+      <a href="{{ url_for('admin_applications') }}" class="btn btn-outline" style="width:100%;justify-content:center;">← Back to List</a>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

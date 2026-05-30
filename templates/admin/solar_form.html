@@ -1,0 +1,180 @@
+{% extends "admin/base.html" %}
+{% block title %}{{ action }} Solar System{% endblock %}
+{% block page_title %}{{ action }} Solar System{% endblock %}
+
+{% block content %}
+
+<div class="breadcrumb">
+  <a href="{{ url_for('admin_solar') }}">Solar Systems</a> / {{ action }}
+  {% if solar %} / {{ solar.name }}{% endif %}
+</div>
+
+<form method="post" enctype="multipart/form-data"
+      action="{% if solar %}{{ url_for('admin_edit_solar', sid=solar.id) }}{% else %}{{ url_for('admin_add_solar') }}{% endif %}">
+
+  <div style="display:grid;grid-template-columns:1fr 300px;gap:1.5rem;">
+
+    <!-- Left column -->
+    <div>
+      <div class="form-section">
+        <div class="form-section-header">☀️ System Information</div>
+        <div class="form-section-body">
+          <div class="form-grid">
+            <div class="form-group full">
+              <label class="form-label">System Name *</label>
+              <input type="text" name="name" class="form-control" required placeholder="e.g. ProSolar 10kW Home System"
+                     value="{{ solar.name if solar else '' }}">
+            </div>
+            <div class="form-group full">
+              <label class="form-label">Tagline</label>
+              <input type="text" name="tagline" class="form-control" placeholder="e.g. Complete home solar solution with battery backup"
+                     value="{{ solar.tagline if solar else '' }}">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Category</label>
+              <select name="category" class="form-control">
+                <option value="">Select category</option>
+                {% for cat in ['Residential', 'Commercial', 'Industrial', 'Off-Grid', 'Hybrid'] %}
+                <option value="{{ cat }}" {% if solar and solar.category == cat %}selected{% endif %}>{{ cat }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Price (USD) *</label>
+              <input type="number" name="price" class="form-control" required step="0.01" min="0" placeholder="0.00"
+                     value="{{ solar.price if solar else '' }}">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Power Output</label>
+              <input type="text" name="power_output" class="form-control" placeholder="e.g. 10 kW"
+                     value="{{ solar.power_output if solar else '' }}">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Number of Panels</label>
+              <input type="number" name="panel_count" class="form-control" placeholder="e.g. 25"
+                     value="{{ solar.panel_count if solar else '' }}">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Battery Capacity</label>
+              <input type="text" name="battery_capacity" class="form-control" placeholder="e.g. 10 kWh"
+                     value="{{ solar.battery_capacity if solar else '' }}">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Panel Efficiency</label>
+              <input type="text" name="efficiency" class="form-control" placeholder="e.g. 22%"
+                     value="{{ solar.efficiency if solar else '' }}">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Warranty</label>
+              <input type="text" name="warranty" class="form-control" placeholder="e.g. 25 years"
+                     value="{{ solar.warranty if solar else '' }}">
+            </div>
+            <div class="form-group full">
+              <label class="form-label">Full Description</label>
+              <textarea name="description" class="form-control" rows="4"
+                        placeholder="Detailed description of the solar system…">{{ solar.description if solar else '' }}</textarea>
+            </div>
+            <div class="form-group full">
+              <label class="form-label">Features (one per line)</label>
+              <textarea name="features" class="form-control" rows="6"
+                        placeholder="High-efficiency monocrystalline panels&#10;Lithium-ion battery storage&#10;Smart inverter with monitoring&#10;…">{% if solar %}{{ solar.get_features() | join('\n') }}{% endif %}</textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Photos -->
+      <div class="form-section">
+        <div class="form-section-header">📸 Photos</div>
+        <div class="form-section-body">
+          {% if solar %}
+          {% set existing_imgs = solar.get_images() %}
+          {% if existing_imgs %}
+          <div class="media-grid" style="margin-bottom:1.25rem;">
+            {% for img in existing_imgs %}
+            <div class="media-thumb">
+              <img src="{{ url_for('static', filename=img) }}" alt="photo">
+              <button type="button" class="del-btn delete-media-btn"
+                      data-path="{{ img }}" data-kind="image"
+                      data-id="{{ solar.id }}" data-type="solar">✕</button>
+            </div>
+            {% endfor %}
+          </div>
+          {% endif %}
+          {% endif %}
+          <label class="file-drop-area" for="imageInput">
+            <div style="font-size:2rem;margin-bottom:.5rem;">📸</div>
+            <div style="font-weight:600;">Click to upload photos</div>
+            <div style="font-size:.78rem;margin-top:.25rem;">PNG, JPG, WebP — multiple allowed</div>
+            <input type="file" name="images" id="imageInput" accept="image/*" multiple>
+          </label>
+          <div class="upload-preview" id="imagePreview"></div>
+        </div>
+      </div>
+
+      <!-- Videos -->
+      <div class="form-section">
+        <div class="form-section-header">🎬 Videos</div>
+        <div class="form-section-body">
+          {% if solar %}
+          {% set existing_vids = solar.get_videos() %}
+          {% if existing_vids %}
+          <div class="media-grid" style="margin-bottom:1.25rem;">
+            {% for vid in existing_vids %}
+            <div class="media-thumb">
+              <video src="{{ url_for('static', filename=vid) }}" style="width:100px;height:70px;object-fit:cover;border-radius:6px;"></video>
+              <button type="button" class="del-btn delete-media-btn"
+                      data-path="{{ vid }}" data-kind="video"
+                      data-id="{{ solar.id }}" data-type="solar">✕</button>
+            </div>
+            {% endfor %}
+          </div>
+          {% endif %}
+          {% endif %}
+          <label class="file-drop-area" for="videoInput">
+            <div style="font-size:2rem;margin-bottom:.5rem;">🎬</div>
+            <div style="font-weight:600;">Click to upload videos</div>
+            <div style="font-size:.78rem;margin-top:.25rem;">MP4, MOV, WebM</div>
+            <input type="file" name="videos" id="videoInput" accept="video/*" multiple>
+          </label>
+          <div class="upload-preview" id="videoPreview"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right sidebar -->
+    <div>
+      <div class="form-section" style="position:sticky;top:1rem;">
+        <div class="form-section-header">⚙️ Settings</div>
+        <div class="form-section-body" style="display:flex;flex-direction:column;gap:1rem;">
+          <label class="form-check">
+            <input type="checkbox" name="available" value="1"
+                   {% if not solar or solar.available %}checked{% endif %}>
+            <div>
+              <label style="font-weight:600;cursor:pointer;">Available</label>
+              <p style="font-size:.75rem;color:var(--mid);">Show on website</p>
+            </div>
+          </label>
+          <label class="form-check">
+            <input type="checkbox" name="featured" value="1"
+                   {% if solar and solar.featured %}checked{% endif %}>
+            <div>
+              <label style="font-weight:600;cursor:pointer;">Featured on Homepage</label>
+              <p style="font-size:.75rem;color:var(--mid);">Show in hero sections</p>
+            </div>
+          </label>
+        </div>
+      </div>
+
+      <div style="margin-top:1rem;display:flex;flex-direction:column;gap:.75rem;">
+        <button type="submit" class="btn btn-primary" style="width:100%;padding:.9rem;justify-content:center;font-size:.95rem;">
+          {% if solar %}💾 Save Changes{% else %}☀️ Add Solar System{% endif %}
+        </button>
+        <a href="{{ url_for('admin_solar') }}" class="btn btn-outline" style="width:100%;padding:.85rem;justify-content:center;">Cancel</a>
+      </div>
+    </div>
+
+  </div>
+</form>
+
+{% endblock %}

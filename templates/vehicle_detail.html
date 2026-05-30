@@ -1,0 +1,183 @@
+{% extends "base.html" %}
+{% block title %}{{ vehicle.name }} — {{ business.name }}{% endblock %}
+
+{% block content %}
+<div class="detail-page">
+
+  <!-- Gallery -->
+  <div class="detail-gallery">
+    {% set imgs = vehicle.get_images() %}
+    {% if imgs %}
+    <div style="position:relative;">
+      <img src="{{ url_for('static', filename=imgs[0]) }}" alt="{{ vehicle.name }}" class="detail-main-image" id="detailMainImg">
+      <div class="gallery-nav">
+        <button class="gallery-btn" id="galleryPrev">‹</button>
+        <button class="gallery-btn" id="galleryNext">›</button>
+      </div>
+    </div>
+    {% if imgs | length > 1 %}
+    <div class="gallery-thumbs">
+      {% for img in imgs %}
+      <img src="{{ url_for('static', filename=img) }}" alt="Photo {{ loop.index }}"
+           class="gallery-thumb {% if loop.first %}active{% endif %}">
+      {% endfor %}
+    </div>
+    {% endif %}
+    {% else %}
+    <div class="detail-main-placeholder">🚗</div>
+    {% endif %}
+  </div>
+
+  <!-- Content layout -->
+  <div class="detail-layout">
+    <div class="detail-main">
+      <p style="font-size:.8rem;color:var(--mid);text-transform:uppercase;letter-spacing:.08em;">
+        <a href="{{ url_for('vehicles') }}" style="color:var(--blue)">Vehicles</a> /
+        {% if vehicle.category %}<a href="{{ url_for('vehicles') }}?category={{ vehicle.category }}" style="color:var(--blue)">{{ vehicle.category }}</a> / {% endif %}
+        {{ vehicle.name }}
+      </p>
+
+      <h1 class="detail-title" style="margin-top:.75rem;">{{ vehicle.name }}</h1>
+      {% if vehicle.tagline %}<p class="detail-tagline">{{ vehicle.tagline }}</p>{% endif %}
+      <p class="detail-price">
+        <span class="c-ghs">{{ vehicle.price | ghs }}</span>
+        <span class="c-usd">{{ vehicle.price | currency }}</span>
+      </p>
+
+      <!-- Specs -->
+      <div class="detail-specs-grid reveal">
+        {% if vehicle.year %}
+        <div class="spec-cell"><span class="spec-cell-label">Year</span><span class="spec-cell-value">{{ vehicle.year }}</span></div>
+        {% endif %}
+        {% if vehicle.category %}
+        <div class="spec-cell"><span class="spec-cell-label">Type</span><span class="spec-cell-value">{{ vehicle.category }}</span></div>
+        {% endif %}
+        {% if vehicle.fuel_type %}
+        <div class="spec-cell"><span class="spec-cell-label">Fuel</span><span class="spec-cell-value">{{ vehicle.fuel_type }}</span></div>
+        {% endif %}
+        {% if vehicle.transmission %}
+        <div class="spec-cell"><span class="spec-cell-label">Transmission</span><span class="spec-cell-value">{{ vehicle.transmission }}</span></div>
+        {% endif %}
+        {% if vehicle.engine %}
+        <div class="spec-cell"><span class="spec-cell-label">Engine</span><span class="spec-cell-value">{{ vehicle.engine }}</span></div>
+        {% endif %}
+        {% if vehicle.mileage %}
+        <div class="spec-cell"><span class="spec-cell-label">Mileage</span><span class="spec-cell-value">{{ vehicle.mileage | comma }} km</span></div>
+        {% endif %}
+        {% if vehicle.color %}
+        <div class="spec-cell"><span class="spec-cell-label">Color</span><span class="spec-cell-value">{{ vehicle.color }}</span></div>
+        {% endif %}
+        {% if vehicle.seats %}
+        <div class="spec-cell"><span class="spec-cell-label">Seats</span><span class="spec-cell-value">{{ vehicle.seats }}</span></div>
+        {% endif %}
+      </div>
+
+      <!-- Description -->
+      {% if vehicle.description %}
+      <div class="reveal">
+        <h2 class="features-title">About This Vehicle</h2>
+        <p class="detail-description">{{ vehicle.description }}</p>
+      </div>
+      {% endif %}
+
+      <!-- Features -->
+      {% set feats = vehicle.get_features() %}
+      {% if feats %}
+      <div class="features-section reveal">
+        <h2 class="features-title">Features &amp; Equipment</h2>
+        <ul class="features-list">
+          {% for feat in feats %}
+          <li class="feature-item"><span class="feature-icon">✓</span> {{ feat }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+      {% endif %}
+
+      <!-- Videos -->
+      {% set vids = vehicle.get_videos() %}
+      {% if vids %}
+      <div class="videos-section reveal">
+        <h2 class="features-title">Video Gallery</h2>
+        <div class="videos-grid">
+          {% for vid in vids %}
+          <div class="video-wrap">
+            <video controls preload="none">
+              <source src="{{ url_for('static', filename=vid) }}">
+              Your browser does not support video.
+            </video>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Sticky sidebar -->
+    <div class="detail-sidebar">
+      <div class="sticky-cta">
+        <div class="sticky-cta-price">
+          <span class="c-ghs">{{ vehicle.price | ghs }}</span>
+          <span class="c-usd">{{ vehicle.price | currency }}</span>
+          <small>{{ vehicle.name }}{% if vehicle.year %} ({{ vehicle.year }}){% endif %}</small>
+        </div>
+        <div class="cta-btns">
+          <a href="{{ url_for('order_vehicle', vid=vehicle.id) }}?type=order" class="btn-full primary">
+            🚗 Order This Vehicle
+          </a>
+          <a href="{{ url_for('order_vehicle', vid=vehicle.id) }}?type=test_drive" class="btn-full dark">
+            🔑 Book Test Drive
+          </a>
+          <a href="{{ url_for('loan') }}?vehicle={{ vehicle.id }}" class="btn-full outline">
+            🏦 Apply for Loan
+          </a>
+          <a href="https://wa.me/{{ business.whatsapp }}?text=Hi!%20I'm%20interested%20in%20the%20{{ vehicle.name | urlencode }}%20listed%20at%20{{ vehicle.price | currency | urlencode }}"
+             class="btn-full outline" target="_blank">
+            💬 WhatsApp Us
+          </a>
+        </div>
+        <div class="share-btns">
+          <button class="share-btn" onclick="navigator.clipboard.writeText(window.location.href); alert('Link copied!')">🔗 Copy Link</button>
+          <a href="https://wa.me/?text={{ vehicle.name | urlencode }}%20{{ request.url | urlencode }}" class="share-btn" target="_blank">📤 Share</a>
+        </div>
+        <div style="margin-top:1.25rem; padding-top:1.25rem; border-top:1px solid #f3f4f6; font-size:.8rem; color:var(--mid); line-height:1.6;">
+          📞 Call us: <a href="tel:{{ business.phone }}" style="color:var(--blue);font-weight:600;">{{ business.phone }}</a><br>
+          🏦 Financing via <strong>Republic Bank</strong>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Related Vehicles -->
+  {% if related %}
+  <section class="related-section">
+    <h2 class="section-heading">You May Also Like</h2>
+    <div class="products-grid" style="max-width:1200px; margin:0 auto;">
+      {% for v in related %}
+      <div class="product-card reveal">
+        <div class="card-image-wrap">
+          {% if v.cover %}
+          <img src="{{ url_for('static', filename=v.cover) }}" alt="{{ v.name }}" loading="lazy">
+          {% else %}
+          <div class="card-no-image">🚗</div>
+          {% endif %}
+        </div>
+        <div class="card-body">
+          <p class="card-meta">{{ v.category }} • {{ v.year or 'N/A' }}</p>
+          <h3 class="card-title">{{ v.name }}</h3>
+          <p class="card-price">
+            <span class="c-ghs">{{ v.price | ghs }}</span>
+            <span class="c-usd">{{ v.price | currency }}</span>
+          </p>
+          <div class="card-actions">
+            <a href="{{ url_for('vehicle_detail', vid=v.id) }}" class="btn-card-primary">View</a>
+            <a href="{{ url_for('loan') }}?vehicle={{ v.id }}" class="btn-card-secondary">Finance</a>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+</div>
+{% endblock %}

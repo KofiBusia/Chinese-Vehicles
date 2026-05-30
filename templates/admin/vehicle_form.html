@@ -1,0 +1,201 @@
+{% extends "admin/base.html" %}
+{% block title %}{{ action }} Vehicle{% endblock %}
+{% block page_title %}{{ action }} Vehicle{% endblock %}
+
+{% block content %}
+
+<div class="breadcrumb">
+  <a href="{{ url_for('admin_vehicles') }}">Vehicles</a> / {{ action }} Vehicle
+  {% if vehicle %} / {{ vehicle.name }}{% endif %}
+</div>
+
+<form method="post" enctype="multipart/form-data"
+      action="{% if vehicle %}{{ url_for('admin_edit_vehicle', vid=vehicle.id) }}{% else %}{{ url_for('admin_add_vehicle') }}{% endif %}">
+
+  <div style="display:grid;grid-template-columns:1fr 300px;gap:1.5rem;">
+
+    <!-- Left column -->
+    <div>
+      <!-- Basic Info -->
+      <div class="form-section">
+        <div class="form-section-header">🚗 Basic Information</div>
+        <div class="form-section-body">
+          <div class="form-grid">
+            <div class="form-group full">
+              <label class="form-label">Vehicle Name *</label>
+              <input type="text" name="name" class="form-control" required placeholder="e.g. Toyota Land Cruiser"
+                     value="{{ vehicle.name if vehicle else '' }}">
+            </div>
+            <div class="form-group full">
+              <label class="form-label">Tagline / Short Description</label>
+              <input type="text" name="tagline" class="form-control" placeholder="e.g. The ultimate family SUV"
+                     value="{{ vehicle.tagline if vehicle else '' }}">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Category</label>
+              <select name="category" class="form-control">
+                <option value="">Select type</option>
+                {% for cat in ['SUV', 'Sedan', 'Pickup Truck', 'Van', 'Hatchback', 'Coupe', 'Convertible', 'Wagon', 'Bus', 'Truck'] %}
+                <option value="{{ cat }}" {% if vehicle and vehicle.category == cat %}selected{% endif %}>{{ cat }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Year</label>
+              <input type="number" name="year" class="form-control" placeholder="2024" min="1980" max="2030"
+                     value="{{ vehicle.year if vehicle else '' }}">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Price (USD) *</label>
+              <input type="number" name="price" class="form-control" required placeholder="0.00" step="0.01" min="0"
+                     value="{{ vehicle.price if vehicle else '' }}">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Mileage (km)</label>
+              <input type="number" name="mileage" class="form-control" placeholder="0"
+                     value="{{ vehicle.mileage if vehicle else '' }}">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Fuel Type</label>
+              <select name="fuel_type" class="form-control">
+                <option value="">Select fuel</option>
+                {% for ft in ['Petrol', 'Diesel', 'Electric', 'Hybrid', 'CNG', 'LPG'] %}
+                <option value="{{ ft }}" {% if vehicle and vehicle.fuel_type == ft %}selected{% endif %}>{{ ft }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Transmission</label>
+              <select name="transmission" class="form-control">
+                <option value="">Select transmission</option>
+                <option value="Automatic" {% if vehicle and vehicle.transmission == 'Automatic' %}selected{% endif %}>Automatic</option>
+                <option value="Manual" {% if vehicle and vehicle.transmission == 'Manual' %}selected{% endif %}>Manual</option>
+                <option value="CVT" {% if vehicle and vehicle.transmission == 'CVT' %}selected{% endif %}>CVT</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Engine</label>
+              <input type="text" name="engine" class="form-control" placeholder="e.g. 3.5L V6"
+                     value="{{ vehicle.engine if vehicle else '' }}">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Color</label>
+              <input type="text" name="color" class="form-control" placeholder="e.g. Pearl White"
+                     value="{{ vehicle.color if vehicle else '' }}">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Number of Seats</label>
+              <input type="number" name="seats" class="form-control" placeholder="5" min="1" max="50"
+                     value="{{ vehicle.seats if vehicle else '' }}">
+            </div>
+            <div class="form-group full">
+              <label class="form-label">Full Description</label>
+              <textarea name="description" class="form-control" rows="4"
+                        placeholder="Detailed description of the vehicle…">{{ vehicle.description if vehicle else '' }}</textarea>
+            </div>
+            <div class="form-group full">
+              <label class="form-label">Features (one per line)</label>
+              <textarea name="features" class="form-control" rows="6"
+                        placeholder="Leather seats&#10;Sunroof&#10;Backup camera&#10;Bluetooth&#10;…">{% if vehicle %}{{ vehicle.get_features() | join('\n') }}{% endif %}</textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Image Upload -->
+      <div class="form-section">
+        <div class="form-section-header">📸 Photos</div>
+        <div class="form-section-body">
+          {% if vehicle %}
+          {% set existing_imgs = vehicle.get_images() %}
+          {% if existing_imgs %}
+          <p style="font-size:.8rem;font-weight:600;color:var(--mid);margin-bottom:.75rem;">Current Photos (click × to remove):</p>
+          <div class="media-grid" style="margin-bottom:1.25rem;">
+            {% for img in existing_imgs %}
+            <div class="media-thumb">
+              <img src="{{ url_for('static', filename=img) }}" alt="photo">
+              <button type="button" class="del-btn delete-media-btn"
+                      data-path="{{ img }}" data-kind="image"
+                      data-id="{{ vehicle.id }}" data-type="vehicles">✕</button>
+            </div>
+            {% endfor %}
+          </div>
+          {% endif %}
+          {% endif %}
+          <label class="file-drop-area" for="imageInput">
+            <div style="font-size:2rem;margin-bottom:.5rem;">📸</div>
+            <div style="font-weight:600;">Click to upload photos</div>
+            <div style="font-size:.78rem;margin-top:.25rem;">PNG, JPG, WebP — multiple allowed</div>
+            <input type="file" name="images" id="imageInput" accept="image/*" multiple>
+          </label>
+          <div class="upload-preview" id="imagePreview"></div>
+        </div>
+      </div>
+
+      <!-- Video Upload -->
+      <div class="form-section">
+        <div class="form-section-header">🎬 Videos</div>
+        <div class="form-section-body">
+          {% if vehicle %}
+          {% set existing_vids = vehicle.get_videos() %}
+          {% if existing_vids %}
+          <p style="font-size:.8rem;font-weight:600;color:var(--mid);margin-bottom:.75rem;">Current Videos:</p>
+          <div class="media-grid" style="margin-bottom:1.25rem;">
+            {% for vid in existing_vids %}
+            <div class="media-thumb">
+              <video src="{{ url_for('static', filename=vid) }}" style="width:100px;height:70px;object-fit:cover;border-radius:6px;"></video>
+              <button type="button" class="del-btn delete-media-btn"
+                      data-path="{{ vid }}" data-kind="video"
+                      data-id="{{ vehicle.id }}" data-type="vehicles">✕</button>
+            </div>
+            {% endfor %}
+          </div>
+          {% endif %}
+          {% endif %}
+          <label class="file-drop-area" for="videoInput">
+            <div style="font-size:2rem;margin-bottom:.5rem;">🎬</div>
+            <div style="font-weight:600;">Click to upload videos</div>
+            <div style="font-size:.78rem;margin-top:.25rem;">MP4, MOV, WebM — multiple allowed</div>
+            <input type="file" name="videos" id="videoInput" accept="video/*" multiple>
+          </label>
+          <div class="upload-preview" id="videoPreview"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right column: settings -->
+    <div>
+      <div class="form-section" style="position:sticky;top:1rem;">
+        <div class="form-section-header">⚙️ Settings</div>
+        <div class="form-section-body" style="display:flex;flex-direction:column;gap:1rem;">
+          <label class="form-check">
+            <input type="checkbox" name="available" value="1"
+                   {% if not vehicle or vehicle.available %}checked{% endif %}>
+            <div>
+              <label style="font-weight:600;cursor:pointer;">Available for Sale</label>
+              <p style="font-size:.75rem;color:var(--mid);">Show this vehicle on the website</p>
+            </div>
+          </label>
+          <label class="form-check">
+            <input type="checkbox" name="featured" value="1"
+                   {% if vehicle and vehicle.featured %}checked{% endif %}>
+            <div>
+              <label style="font-weight:600;cursor:pointer;">Featured on Homepage</label>
+              <p style="font-size:.75rem;color:var(--mid);">Show in hero sections</p>
+            </div>
+          </label>
+        </div>
+      </div>
+
+      <div style="margin-top:1rem;display:flex;flex-direction:column;gap:.75rem;">
+        <button type="submit" class="btn btn-primary" style="width:100%;padding:.9rem;justify-content:center;font-size:.95rem;">
+          {% if vehicle %}💾 Save Changes{% else %}🚗 Add Vehicle{% endif %}
+        </button>
+        <a href="{{ url_for('admin_vehicles') }}" class="btn btn-outline" style="width:100%;padding:.85rem;justify-content:center;">Cancel</a>
+      </div>
+    </div>
+
+  </div>
+</form>
+
+{% endblock %}

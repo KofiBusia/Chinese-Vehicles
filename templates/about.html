@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+{% block title %}About Us — {{ business.name }}{% endblock %}
+{% block nav_class %}dark-mode{% endblock %}
+
+{% block content %}
+
+<div class="about-hero">
+  <div class="about-hero-content">
+    <p style="font-size:.8rem;letter-spacing:.15em;text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:1rem;">Our Story</p>
+    <h1>Driving Excellence.<br>Powering the Future.</h1>
+    <p>We are your trusted partner for premium vehicles and cutting-edge solar energy solutions in Trinidad & Tobago.</p>
+  </div>
+</div>
+
+<section class="about-values">
+  <div style="text-align:center;margin-bottom:1rem;">
+    <h2 class="section-title reveal">Who We Are</h2>
+    <p class="section-subtitle reveal" style="max-width:680px;margin:.75rem auto 0;">
+      {{ business.name }} is a premier dealership offering world-class vehicles and solar energy systems. We believe everyone deserves access to quality transportation and clean energy — and with Republic Bank financing, it's more accessible than ever.
+    </p>
+  </div>
+
+  <div class="values-grid">
+    <div class="value-card reveal">
+      <div class="value-icon">🏆</div>
+      <h3 class="value-title">Premium Quality</h3>
+      <p class="value-text">Every vehicle and solar system in our inventory is hand-selected, inspected, and approved by our expert team to ensure the highest quality standards.</p>
+    </div>
+    <div class="value-card reveal reveal-delay-1">
+      <div class="value-icon">🤝</div>
+      <h3 class="value-title">Trust &amp; Integrity</h3>
+      <p class="value-text">We build lasting relationships with our customers through transparency, honest pricing, and exceptional after-sales service.</p>
+    </div>
+    <div class="value-card reveal reveal-delay-2">
+      <div class="value-icon">🌍</div>
+      <h3 class="value-title">Sustainability</h3>
+      <p class="value-text">Our solar division helps you reduce your carbon footprint while saving money. We're committed to a greener future for Trinidad & Tobago.</p>
+    </div>
+    <div class="value-card reveal reveal-delay-3">
+      <div class="value-icon">💡</div>
+      <h3 class="value-title">Innovation</h3>
+      <p class="value-text">We continuously source the latest vehicles and most efficient solar technologies to offer you the best products on the market.</p>
+    </div>
+  </div>
+</section>
+
+<!-- Mission / Vision -->
+<section style="background:var(--light);padding:5rem 2rem;">
+  <div style="max-width:1100px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:4rem;align-items:center;">
+    <div class="reveal">
+      <p style="font-size:.75rem;letter-spacing:.15em;text-transform:uppercase;color:var(--blue);margin-bottom:.75rem;">Our Mission</p>
+      <h2 style="font-family:var(--font-head);font-size:2rem;font-weight:800;letter-spacing:-.03em;margin-bottom:1rem;">To make quality transportation and clean energy accessible to all.</h2>
+      <p style="color:var(--mid);line-height:1.8;">We believe that every family deserves a reliable vehicle and every home deserves affordable, clean energy. Through our partnership with Republic Bank, we make financing these dreams possible with flexible, transparent terms.</p>
+    </div>
+    <div class="reveal reveal-delay-2">
+      <p style="font-size:.75rem;letter-spacing:.15em;text-transform:uppercase;color:var(--solar);margin-bottom:.75rem;">Our Vision</p>
+      <h2 style="font-family:var(--font-head);font-size:2rem;font-weight:800;letter-spacing:-.03em;margin-bottom:1rem;">To be the #1 vehicle and solar dealership in the Caribbean.</h2>
+      <p style="color:var(--mid);line-height:1.8;">We envision a Caribbean powered by clean energy and driven by quality vehicles — and we're working every day to make that vision a reality for our customers and communities.</p>
+    </div>
+  </div>
+</section>
+
+<!-- Stats -->
+<div class="stats-section">
+  <div class="stats-grid">
+    <div class="stat-item reveal">
+      <div class="stat-number" data-target="10" data-suffix="+">0</div>
+      <div class="stat-label">Years in Business</div>
+    </div>
+    <div class="stat-item reveal reveal-delay-1">
+      <div class="stat-number" data-target="1500" data-suffix="+">0</div>
+      <div class="stat-label">Happy Customers</div>
+    </div>
+    <div class="stat-item reveal reveal-delay-2">
+      <div class="stat-number" data-target="500" data-suffix="+">0</div>
+      <div class="stat-label">Vehicles Sold</div>
+    </div>
+    <div class="stat-item reveal reveal-delay-3">
+      <div class="stat-number" data-target="200" data-suffix="+">0</div>
+      <div class="stat-label">Solar Installations</div>
+    </div>
+  </div>
+</div>
+
+<!-- Republic Bank Partnership -->
+<section style="padding:5rem 2rem;background:white;">
+  <div style="max-width:900px;margin:0 auto;text-align:center;" class="reveal">
+    <p style="font-size:.75rem;letter-spacing:.15em;text-transform:uppercase;color:var(--mid);margin-bottom:1rem;">Our Banking Partner</p>
+    <div style="display:inline-flex;align-items:center;gap:1rem;margin-bottom:2rem;padding:1rem 2rem;background:var(--light);border-radius:12px;">
+      <div style="width:50px;height:50px;background:var(--blue);border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900;color:white;font-size:.8rem;">RB</div>
+      <div style="text-align:left;">
+        <div style="font-family:var(--font-head);font-size:1.3rem;font-weight:800;">Republic Bank</div>
+        <div style="font-size:.8rem;color:var(--mid);">Trusted Financing Partner</div>
+      </div>
+    </div>
+    <h2 class="section-title" style="margin-bottom:1rem;">Loans Made Simple</h2>
+    <p style="color:var(--mid);max-width:600px;margin:0 auto 2rem;line-height:1.8;">
+      In partnership with Republic Bank, we offer competitive financing rates for both vehicles and solar systems. Get quick pre-approval, flexible terms, and transparent repayment plans — all through a trusted institution.
+    </p>
+    <a href="{{ url_for('loan') }}"
+       style="display:inline-block;padding:1rem 2.5rem;background:var(--blue);color:white;border-radius:6px;font-weight:700;font-size:.95rem;transition:transform .2s,box-shadow .2s;"
+       onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 24px rgba(26,86,219,.3)'"
+       onmouseout="this.style.transform='';this.style.boxShadow=''">
+      Apply for Financing →
+    </a>
+  </div>
+</section>
+
+<div class="about-banner">
+  <h2 class="reveal">Ready to experience the difference?</h2>
+  <p class="reveal">Visit our showroom or browse online and let us help you find your perfect vehicle or solar solution.</p>
+  <div style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;" class="reveal">
+    <a href="{{ url_for('vehicles') }}" style="display:inline-block;padding:.9rem 2rem;background:white;color:var(--dark);border-radius:4px;font-weight:700;font-size:.9rem;">Browse Vehicles</a>
+    <a href="{{ url_for('solar') }}" style="display:inline-block;padding:.9rem 2rem;background:rgba(255,255,255,.15);color:white;border-radius:4px;font-weight:700;font-size:.9rem;backdrop-filter:blur(4px);">Solar Systems</a>
+  </div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="{{ business.name }} — {{ business.tagline }}">
+  <title>{% block title %}{{ business.name }}{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+<!-- ── Navigation ── -->
+<nav class="main-nav {% block nav_class %}{% endblock %}" id="mainNav">
+  <div class="nav-container">
+    <a href="{{ url_for('index') }}" class="nav-logo">
+      <span class="logo-icon">⚡</span>
+      <span>{{ business.name }}</span>
+    </a>
+    <div class="nav-links">
+      <a href="{{ url_for('vehicles') }}" class="nav-link {% if request.endpoint == 'vehicles' or request.endpoint == 'vehicle_detail' %}active{% endif %}">Vehicles</a>
+      <a href="{{ url_for('solar') }}" class="nav-link {% if request.endpoint == 'solar' or request.endpoint == 'solar_detail' %}active{% endif %}">Solar</a>
+      <a href="{{ url_for('loan') }}" class="nav-link {% if request.endpoint == 'loan' %}active{% endif %}">Loans</a>
+      <a href="{{ url_for('about') }}" class="nav-link {% if request.endpoint == 'about' %}active{% endif %}">About</a>
+      <a href="{{ url_for('contact') }}" class="nav-link {% if request.endpoint == 'contact' %}active{% endif %}">Contact</a>
+      <a href="{{ url_for('admin_dashboard') }}" class="nav-link nav-cta">Admin</a>
+      <button id="currencyToggle" title="Switch currency display"
+              style="padding:.3rem .8rem;border:1.5px solid rgba(255,255,255,.35);border-radius:20px;background:rgba(255,255,255,.08);color:rgba(255,255,255,.85);font-size:.75rem;font-weight:700;cursor:pointer;letter-spacing:.04em;transition:all .2s;white-space:nowrap;">
+        GH₵
+      </button>
+    </div>
+    <button class="nav-hamburger" id="navHamburger" aria-label="Open menu">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</nav>
+
+<!-- Mobile overlay menu -->
+<div class="nav-overlay" id="navOverlay">
+  <button class="nav-overlay-close" id="overlayClose">✕</button>
+  <a href="{{ url_for('index') }}"    class="nav-link">Home</a>
+  <a href="{{ url_for('vehicles') }}" class="nav-link">Vehicles</a>
+  <a href="{{ url_for('solar') }}"    class="nav-link">Solar</a>
+  <a href="{{ url_for('loan') }}"     class="nav-link">Loans</a>
+  <a href="{{ url_for('about') }}"    class="nav-link">About</a>
+  <a href="{{ url_for('contact') }}"  class="nav-link">Contact</a>
+  <a href="{{ url_for('admin_dashboard') }}" class="nav-link" style="color:var(--blue-light)">Admin Panel →</a>
+</div>
+
+<!-- Flash messages -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+{% if messages %}
+<div class="flash-container" id="flashContainer">
+  {% for category, message in messages %}
+  <div class="flash flash-{{ category }}">
+    <span>{{ message }}</span>
+    <button onclick="this.parentElement.remove()">✕</button>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+{% endwith %}
+
+<!-- Main content -->
+{% block content %}{% endblock %}
+
+<!-- Footer -->
+<footer class="footer">
+  <div class="footer-inner">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <h3>⚡ {{ business.name }}</h3>
+        <p>{{ business.tagline }}<br>Your trusted partner for premium vehicles and solar energy solutions.</p>
+        <div class="footer-social">
+          <a href="{{ business.facebook }}" class="social-btn" title="Facebook">f</a>
+          <a href="{{ business.instagram }}" class="social-btn" title="Instagram">📸</a>
+          <a href="https://wa.me/{{ business.whatsapp }}" class="social-btn" title="WhatsApp">💬</a>
+        </div>
+      </div>
+      <div class="footer-col">
+        <h4>Products</h4>
+        <ul>
+          <li><a href="{{ url_for('vehicles') }}">All Vehicles</a></li>
+          <li><a href="{{ url_for('vehicles') }}?category=SUV">SUVs</a></li>
+          <li><a href="{{ url_for('vehicles') }}?category=Sedan">Sedans</a></li>
+          <li><a href="{{ url_for('solar') }}">Solar Systems</a></li>
+          <li><a href="{{ url_for('solar') }}?category=Residential">Residential Solar</a></li>
+          <li><a href="{{ url_for('solar') }}?category=Commercial">Commercial Solar</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Company</h4>
+        <ul>
+          <li><a href="{{ url_for('about') }}">About Us</a></li>
+          <li><a href="{{ url_for('loan') }}">Loans</a></li>
+          <li><a href="{{ url_for('contact') }}">Contact Us</a></li>
+          <li><a href="{{ url_for('admin_login') }}">Admin Login</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Contact</h4>
+        <div class="footer-contact-item">
+          <span class="footer-contact-icon">📍</span>
+          <span>{{ business.address }}</span>
+        </div>
+        <div class="footer-contact-item">
+          <span class="footer-contact-icon">📞</span>
+          <a href="tel:{{ business.phone }}">{{ business.phone }}</a>
+        </div>
+        <div class="footer-contact-item">
+          <span class="footer-contact-icon">✉️</span>
+          <a href="mailto:{{ business.email }}">{{ business.email }}</a>
+        </div>
+        <div class="footer-contact-item">
+          <span class="footer-contact-icon">🏦</span>
+          <span>Finance via <strong style="color:#fff">Republic Bank</strong></span>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>&copy; {{ current_year }} {{ business.name }}. All rights reserved.</span>
+      <span style="font-size:.75rem;opacity:.6;">GHS prices are indicative (approx. rate: 1 USD = GH₵ {{ USD_TO_GHS }})</span>
+      <span>Loan partner: <a href="{{ business.republic_bank_url }}">Republic Bank</a></span>
+    </div>
+  </div>
+</footer>
+
+<!-- WhatsApp FAB -->
+<a href="https://wa.me/{{ business.whatsapp }}?text=Hello%2C%20I%20am%20interested%20in%20your%20vehicles%20and%20solar%20systems."
+   class="whatsapp-fab" id="whatsappBtn" target="_blank" rel="noopener" title="Chat on WhatsApp">
+  💬
+</a>
+
+<!-- Lightbox -->
+<div class="lightbox" id="lightbox">
+  <button class="lightbox-close" id="lightboxClose">✕</button>
+  <div class="lightbox-nav">
+    <button class="lightbox-btn" id="lightboxPrev">‹</button>
+    <button class="lightbox-btn" id="lightboxNext">›</button>
+  </div>
+  <img src="" alt="Gallery" class="lightbox-img" id="lightboxImg">
+</div>
+
+<style>
+.whatsapp-fab {
+  position: fixed; bottom: 2rem; right: 2rem; z-index: 900;
+  width: 56px; height: 56px; border-radius: 50%;
+  background: #25d366; color: white;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.5rem; box-shadow: 0 4px 16px rgba(37,211,102,.5);
+  transition: transform .3s, opacity .3s;
+  opacity: 0; pointer-events: none;
+}
+.whatsapp-fab.visible { opacity: 1; pointer-events: auto; }
+.whatsapp-fab:hover { transform: scale(1.1); }
+</style>
+
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

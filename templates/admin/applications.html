@@ -1,0 +1,85 @@
+{% extends "admin/base.html" %}
+{% block title %}Loan Applications{% endblock %}
+{% block page_title %}Loan Applications{% endblock %}
+
+{% block content %}
+
+<!-- Filter tabs -->
+<div style="display:flex;gap:.5rem;margin-bottom:1.5rem;flex-wrap:wrap;">
+  {% for label, val in [('All', ''), ('Pending', 'pending'), ('Processing', 'processing'), ('Approved', 'approved'), ('Rejected', 'rejected')] %}
+  <a href="{{ url_for('admin_applications') }}{% if val %}?status={{ val }}{% endif %}"
+     style="padding:.45rem 1rem;border-radius:20px;font-size:.82rem;font-weight:600;text-decoration:none;
+            {% if current_status == val %}background:var(--blue);color:white;{% else %}background:white;color:var(--dark);border:1px solid #e5e7eb;{% endif %}">
+    {{ label }}
+  </a>
+  {% endfor %}
+</div>
+
+<div class="table-card">
+  <div class="table-header">
+    <span class="table-title">{{ applications | length }} Application{{ 's' if applications | length != 1 }}</span>
+  </div>
+  <div style="overflow-x:auto;">
+    <table>
+      <thead><tr>
+        <th>#</th>
+        <th>Applicant</th>
+        <th>Contact</th>
+        <th>Product</th>
+        <th>Loan Amount</th>
+        <th>Status</th>
+        <th>Date</th>
+        <th>Actions</th>
+      </tr></thead>
+      <tbody>
+        {% for a in applications %}
+        <tr>
+          <td style="color:var(--mid);font-size:.8rem;">#{{ a.id }}</td>
+          <td>
+            <div style="font-weight:700;">{{ a.first_name }} {{ a.last_name }}</div>
+            {% if a.id_number %}<div style="font-size:.72rem;color:var(--mid);">ID: {{ a.id_number }}</div>{% endif %}
+          </td>
+          <td>
+            <div style="font-size:.82rem;">{{ a.email }}</div>
+            <div style="font-size:.82rem;color:var(--mid);">{{ a.phone }}</div>
+          </td>
+          <td>
+            <span class="badge {% if a.product_type == 'solar' %}badge-yellow{% else %}badge-blue{% endif %}">
+              {{ '☀️' if a.product_type == 'solar' else '🚗' }} {{ a.product_type | title if a.product_type else '—' }}
+            </span>
+            {% if a.product_name %}<div style="font-size:.75rem;color:var(--mid);margin-top:.2rem;">{{ a.product_name | truncate(30) }}</div>{% endif %}
+          </td>
+          <td>
+            <div style="font-weight:700;">{{ a.loan_amount | currency if a.loan_amount else '—' }}</div>
+            {% if a.loan_term %}<div style="font-size:.72rem;color:var(--mid);">{{ a.loan_term }} months</div>{% endif %}
+          </td>
+          <td>
+            {% if a.status == 'approved' %}<span class="badge badge-green">✅ Approved</span>
+            {% elif a.status == 'rejected' %}<span class="badge badge-red">❌ Rejected</span>
+            {% elif a.status == 'processing' %}<span class="badge badge-blue">🔄 Processing</span>
+            {% else %}<span class="badge badge-yellow">⏳ Pending</span>{% endif %}
+          </td>
+          <td style="font-size:.78rem;color:var(--mid);">{{ a.created_at.strftime('%b %d, %Y') }}</td>
+          <td>
+            <div style="display:flex;gap:.4rem;flex-direction:column;min-width:140px;">
+              <a href="{{ url_for('admin_view_application', aid=a.id) }}" class="btn btn-outline btn-sm">👁 View</a>
+              <form method="post" action="{{ url_for('admin_update_app_status', aid=a.id) }}">
+                <select name="status" class="status-select" onchange="this.form.submit()" style="width:100%;">
+                  <option value="pending"    {% if a.status == 'pending' %}selected{% endif %}>⏳ Pending</option>
+                  <option value="processing" {% if a.status == 'processing' %}selected{% endif %}>🔄 Processing</option>
+                  <option value="approved"   {% if a.status == 'approved' %}selected{% endif %}>✅ Approved</option>
+                  <option value="rejected"   {% if a.status == 'rejected' %}selected{% endif %}>❌ Rejected</option>
+                </select>
+              </form>
+            </div>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="8" style="text-align:center;padding:3rem;color:var(--mid);">No applications found.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% endblock %}

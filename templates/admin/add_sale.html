@@ -1,0 +1,108 @@
+{% extends "admin/base.html" %}
+{% block title %}Record Sale{% endblock %}
+{% block page_title %}Record Sale for {{ sp.full_name }}{% endblock %}
+
+{% block content %}
+<div class="breadcrumb">
+  <a href="{{ url_for('admin_salespersons') }}">Salespersons</a> /
+  <a href="{{ url_for('admin_salesperson_sales', sid=sp.id) }}">{{ sp.full_name }}</a> / Record Sale
+</div>
+
+<div style="max-width:700px;">
+  <form method="post" action="{{ url_for('admin_add_sale', sid=sp.id) }}">
+    <div class="form-section">
+      <div class="form-section-header">🛒 Product</div>
+      <div class="form-section-body">
+        <div class="form-grid">
+          <div class="form-group full">
+            <label class="form-label">Product Type *</label>
+            <select name="product_type" class="form-control" required onchange="toggleProduct(this.value)">
+              <option value="vehicle">🚗 Vehicle</option>
+              <option value="solar">☀️ Solar System</option>
+            </select>
+          </div>
+          <div class="form-group full" id="vehicleSelect">
+            <label class="form-label">Vehicle</label>
+            <select name="product_id" class="form-control" onchange="setProductName(this)">
+              <option value="">Select vehicle</option>
+              {% for v in vehicles %}
+              <option value="{{ v.id }}" data-name="{{ v.name }}" data-price="{{ v.price }}">{{ v.name }} — {{ v.price | currency }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="form-group full" id="solarSelect" style="display:none;">
+            <label class="form-label">Solar System</label>
+            <select name="solar_product_id" class="form-control" onchange="setProductName(this)">
+              <option value="">Select system</option>
+              {% for s in solar_systems %}
+              <option value="{{ s.id }}" data-name="{{ s.name }}" data-price="{{ s.price }}">{{ s.name }} — {{ s.price | currency }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <input type="hidden" name="product_name" id="product_name_hidden">
+          <div class="form-group">
+            <label class="form-label">Sale Amount ($) *</label>
+            <input type="number" name="sale_amount" id="sale_amount" class="form-control" required step="0.01" placeholder="0.00">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Status</label>
+            <select name="status" class="form-control">
+              <option value="pending">⏳ Pending</option>
+              <option value="confirmed">✅ Confirmed</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <div class="form-section-header">👤 Customer Details</div>
+      <div class="form-section-body">
+        <div class="form-grid">
+          <div class="form-group full">
+            <label class="form-label">Customer Name *</label>
+            <input type="text" name="customer_name" class="form-control" required placeholder="Full name">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Email</label>
+            <input type="email" name="customer_email" class="form-control" placeholder="customer@example.com">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Phone</label>
+            <input type="tel" name="customer_phone" class="form-control" placeholder="+1 (868) 000-0000">
+          </div>
+          <div class="form-group full">
+            <label class="form-check">
+              <input type="checkbox" name="needs_loan" value="1">
+              <span style="font-weight:600;">Customer needs Republic Bank financing</span>
+            </label>
+            <small style="font-size:.75rem;color:var(--mid);">This will also create a loan application.</small>
+          </div>
+          <div class="form-group full">
+            <label class="form-label">Notes</label>
+            <textarea name="notes" class="form-control" rows="3" placeholder="Additional notes…"></textarea>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:.75rem;">
+      <button type="submit" class="btn btn-primary" style="padding:.85rem 2rem;">✅ Record Sale</button>
+      <a href="{{ url_for('admin_salesperson_sales', sid=sp.id) }}" class="btn btn-outline" style="padding:.85rem 1.5rem;">Cancel</a>
+    </div>
+  </form>
+</div>
+
+<script>
+function toggleProduct(val) {
+  document.getElementById('vehicleSelect').style.display = val === 'vehicle' ? '' : 'none';
+  document.getElementById('solarSelect').style.display   = val === 'solar' ? '' : 'none';
+}
+function setProductName(sel) {
+  const opt = sel.options[sel.selectedIndex];
+  document.getElementById('product_name_hidden').value = opt.dataset.name || '';
+  const price = parseFloat(opt.dataset.price || 0);
+  if (price > 0) document.getElementById('sale_amount').value = price.toFixed(2);
+}
+</script>
+{% endblock %}

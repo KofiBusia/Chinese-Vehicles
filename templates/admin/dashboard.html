@@ -1,0 +1,136 @@
+{% extends "admin/base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+
+{% block content %}
+
+<div class="stats-row">
+  <div class="stat-card blue">
+    <div class="stat-card-icon">🚗</div>
+    <div class="stat-card-value">{{ stats.vehicles }}</div>
+    <div class="stat-card-label">Total Vehicles</div>
+  </div>
+  <div class="stat-card" style="--v: #f59e0b;">
+    <div class="stat-card-icon">☀️</div>
+    <div class="stat-card-value" style="color:#f59e0b;">{{ stats.solar }}</div>
+    <div class="stat-card-label">Solar Systems</div>
+  </div>
+  <div class="stat-card green">
+    <div class="stat-card-icon">🏦</div>
+    <div class="stat-card-value">{{ stats.applications }}</div>
+    <div class="stat-card-label">Loan Applications</div>
+  </div>
+  <div class="stat-card red">
+    <div class="stat-card-icon">⏳</div>
+    <div class="stat-card-value">{{ stats.pending }}</div>
+    <div class="stat-card-label">Pending Applications</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-card-icon">✅</div>
+    <div class="stat-card-value" style="color:var(--green);">{{ stats.approved }}</div>
+    <div class="stat-card-label">Approved Applications</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-card-icon">✉️</div>
+    <div class="stat-card-value" style="color:var(--blue);">{{ stats.contacts }}</div>
+    <div class="stat-card-label">Unread Messages</div>
+  </div>
+</div>
+
+<!-- Quick Actions -->
+<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:1rem;margin-bottom:2rem;">
+  <a href="{{ url_for('admin_add_vehicle') }}" style="display:flex;align-items:center;gap:.75rem;padding:1rem 1.25rem;background:white;border-radius:10px;border:1px solid #e5e7eb;text-decoration:none;color:var(--dark);transition:box-shadow .2s;" onmouseover="this.style.boxShadow='0 4px 16px rgba(0,0,0,.08)'" onmouseout="this.style.boxShadow=''">
+    <span style="font-size:1.5rem;">🚗</span>
+    <div><div style="font-weight:700;font-size:.9rem;">Add Vehicle</div><div style="font-size:.75rem;color:var(--mid);">Upload new listing</div></div>
+  </a>
+  <a href="{{ url_for('admin_add_solar') }}" style="display:flex;align-items:center;gap:.75rem;padding:1rem 1.25rem;background:white;border-radius:10px;border:1px solid #e5e7eb;text-decoration:none;color:var(--dark);transition:box-shadow .2s;" onmouseover="this.style.boxShadow='0 4px 16px rgba(0,0,0,.08)'" onmouseout="this.style.boxShadow=''">
+    <span style="font-size:1.5rem;">☀️</span>
+    <div><div style="font-weight:700;font-size:.9rem;">Add Solar System</div><div style="font-size:.75rem;color:var(--mid);">Upload new system</div></div>
+  </a>
+  <a href="{{ url_for('admin_applications') }}?status=pending" style="display:flex;align-items:center;gap:.75rem;padding:1rem 1.25rem;background:white;border-radius:10px;border:1px solid #e5e7eb;text-decoration:none;color:var(--dark);transition:box-shadow .2s;" onmouseover="this.style.boxShadow='0 4px 16px rgba(0,0,0,.08)'" onmouseout="this.style.boxShadow=''">
+    <span style="font-size:1.5rem;">🏦</span>
+    <div><div style="font-weight:700;font-size:.9rem;">Review Applications</div><div style="font-size:.75rem;color:var(--mid);">{{ stats.pending }} pending</div></div>
+  </a>
+  <a href="{{ url_for('admin_contacts') }}" style="display:flex;align-items:center;gap:.75rem;padding:1rem 1.25rem;background:white;border-radius:10px;border:1px solid #e5e7eb;text-decoration:none;color:var(--dark);transition:box-shadow .2s;" onmouseover="this.style.boxShadow='0 4px 16px rgba(0,0,0,.08)'" onmouseout="this.style.boxShadow=''">
+    <span style="font-size:1.5rem;">✉️</span>
+    <div><div style="font-weight:700;font-size:.9rem;">View Messages</div><div style="font-size:.75rem;color:var(--mid);">{{ stats.contacts }} unread</div></div>
+  </a>
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;">
+
+  <!-- Recent Loan Applications -->
+  <div class="table-card">
+    <div class="table-header">
+      <span class="table-title">Recent Loan Applications</span>
+      <a href="{{ url_for('admin_applications') }}" class="btn btn-outline btn-sm">View All</a>
+    </div>
+    <table>
+      <thead><tr>
+        <th>Applicant</th>
+        <th>Product</th>
+        <th>Status</th>
+        <th>Date</th>
+      </tr></thead>
+      <tbody>
+        {% for app in recent_apps %}
+        <tr>
+          <td>
+            <div style="font-weight:600;">{{ app.first_name }} {{ app.last_name }}</div>
+            <div style="font-size:.75rem;color:var(--mid);">{{ app.email }}</div>
+          </td>
+          <td>
+            <span class="badge {% if app.product_type == 'solar' %}badge-yellow{% else %}badge-blue{% endif %}">
+              {{ '☀️' if app.product_type == 'solar' else '🚗' }} {{ app.product_type | title }}
+            </span>
+          </td>
+          <td>
+            {% if app.status == 'approved' %}<span class="badge badge-green">✅ Approved</span>
+            {% elif app.status == 'rejected' %}<span class="badge badge-red">❌ Rejected</span>
+            {% elif app.status == 'processing' %}<span class="badge badge-blue">🔄 Processing</span>
+            {% else %}<span class="badge badge-yellow">⏳ Pending</span>{% endif %}
+          </td>
+          <td style="font-size:.78rem;color:var(--mid);">{{ app.created_at.strftime('%b %d, %Y') }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="4" style="text-align:center;color:var(--mid);padding:2rem;">No applications yet</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Recent Messages -->
+  <div class="table-card">
+    <div class="table-header">
+      <span class="table-title">Recent Messages</span>
+      <a href="{{ url_for('admin_contacts') }}" class="btn btn-outline btn-sm">View All</a>
+    </div>
+    <table>
+      <thead><tr>
+        <th>From</th>
+        <th>Subject</th>
+        <th>Date</th>
+      </tr></thead>
+      <tbody>
+        {% for c in recent_contacts %}
+        <tr>
+          <td>
+            <div style="font-weight:600;">{{ c.name }}</div>
+            <div style="font-size:.75rem;color:var(--mid);">{{ c.email }}</div>
+          </td>
+          <td style="max-width:160px;">
+            <div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:140px;">{{ c.subject or 'No subject' }}</div>
+            {% if c.status == 'unread' %}<span class="badge badge-red" style="font-size:.6rem;">NEW</span>{% endif %}
+          </td>
+          <td style="font-size:.78rem;color:var(--mid);">{{ c.created_at.strftime('%b %d') }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="3" style="text-align:center;color:var(--mid);padding:2rem;">No messages yet</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+</div>
+
+{% endblock %}

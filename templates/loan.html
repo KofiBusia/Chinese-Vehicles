@@ -1,0 +1,284 @@
+{% extends "base.html" %}
+{% block title %}Apply for a Loan — {{ business.name }}{% endblock %}
+
+{% block content %}
+
+<div class="loan-hero">
+  <div style="display:inline-flex;align-items:center;gap:.5rem;margin-bottom:1rem;font-size:.75rem;text-transform:uppercase;letter-spacing:.1em;color:rgba(255,255,255,.5);">
+    In partnership with
+  </div>
+  <div class="bank-badge" style="margin-bottom:1.5rem;">
+    <div class="bank-logo">RB</div>
+    <span>Republic Bank — Trusted Financing Partner</span>
+  </div>
+  <h1>Apply for a Loan</h1>
+  <p>Drive your dream vehicle or power your home with solar energy. Complete the form below and we'll process your application within 24–48 hours.</p>
+</div>
+
+<section class="loan-form-section">
+  <div class="loan-form-inner">
+
+    <form method="post" action="{{ url_for('loan') }}">
+
+      <!-- Step 1: Personal Info -->
+      <div class="form-card">
+        <div class="form-card-header">
+          <div class="form-card-icon">👤</div>
+          <div>
+            <div class="form-card-title">Personal Information</div>
+            <div style="font-size:.8rem;color:var(--mid);">Your basic details for the application</div>
+          </div>
+        </div>
+        <div class="form-card-body">
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label">First Name <span class="req">*</span></label>
+              <input type="text" name="first_name" class="form-control" required placeholder="John">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Last Name <span class="req">*</span></label>
+              <input type="text" name="last_name" class="form-control" required placeholder="Smith">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Email Address <span class="req">*</span></label>
+              <input type="email" name="email" class="form-control" required placeholder="john@example.com">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Phone Number <span class="req">*</span></label>
+              <input type="tel" name="phone" class="form-control" required placeholder="+1 (868) 000-0000">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Date of Birth</label>
+              <input type="date" name="date_of_birth" class="form-control">
+            </div>
+            <div class="form-group">
+              <label class="form-label">National ID / Passport Number</label>
+              <input type="text" name="id_number" class="form-control" placeholder="ID number">
+            </div>
+            <div class="form-group full">
+              <label class="form-label">Home Address</label>
+              <textarea name="address" class="form-control" rows="2" placeholder="Street, City, Country"></textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 2: Product Selection -->
+      <div class="form-card">
+        <div class="form-card-header">
+          <div class="form-card-icon">🚗</div>
+          <div>
+            <div class="form-card-title">Product Selection</div>
+            <div style="font-size:.8rem;color:var(--mid);">Choose what you'd like to finance</div>
+          </div>
+        </div>
+        <div class="form-card-body">
+          <div class="form-grid">
+            <div class="form-group full">
+              <label class="form-label">I want to finance a… <span class="req">*</span></label>
+              <div style="display:flex;gap:1rem;flex-wrap:wrap;">
+                <label style="display:flex;align-items:center;gap:.5rem;cursor:pointer;padding:.75rem 1.25rem;border:1.5px solid #e5e7eb;border-radius:8px;flex:1;min-width:140px;">
+                  <input type="radio" name="product_type" value="vehicle" id="typeVehicle"
+                         {% if not preselect_solar %}checked{% endif %}
+                         style="accent-color:var(--blue);">
+                  <span style="font-weight:600;">🚗 Vehicle</span>
+                </label>
+                <label style="display:flex;align-items:center;gap:.5rem;cursor:pointer;padding:.75rem 1.25rem;border:1.5px solid #e5e7eb;border-radius:8px;flex:1;min-width:140px;">
+                  <input type="radio" name="product_type" value="solar" id="typeSolar"
+                         {% if preselect_solar %}checked{% endif %}
+                         style="accent-color:var(--solar);">
+                  <span style="font-weight:600;">☀️ Solar System</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Vehicle dropdown -->
+            <div class="form-group full" id="vehicleGroup">
+              <label class="form-label">Select Vehicle</label>
+              <select name="vehicle_id" id="vehicle_id" class="form-control">
+                <option value="">— Choose a vehicle —</option>
+                {% for v in vehicles %}
+                <option value="{{ v.id }}" data-price="{{ v.price }}"
+                        {% if preselect_vehicle == v.id %}selected{% endif %}>
+                  {{ v.name }} {% if v.year %}({{ v.year }}){% endif %} — {{ v.price | currency }}
+                </option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <!-- Solar dropdown -->
+            <div class="form-group full" id="solarGroup" style="display:none;">
+              <label class="form-label">Select Solar System</label>
+              <select name="solar_id" id="solar_id" class="form-control">
+                <option value="">— Choose a solar system —</option>
+                {% for s in solar_systems %}
+                <option value="{{ s.id }}" data-price="{{ s.price }}"
+                        {% if preselect_solar == s.id %}selected{% endif %}>
+                  {{ s.name }} — {{ s.price | currency }}
+                </option>
+                {% endfor %}
+              </select>
+            </div>
+            <input type="hidden" name="product_name" id="product_name">
+
+            <div class="form-group full">
+              <p style="font-size:.85rem;color:var(--mid);" id="product_price_display"></p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 3: Loan Details -->
+      <div class="form-card">
+        <div class="form-card-header">
+          <div class="form-card-icon solar">💰</div>
+          <div>
+            <div class="form-card-title">Loan Details</div>
+            <div style="font-size:.8rem;color:var(--mid);">Your preferred financing terms</div>
+          </div>
+        </div>
+        <div class="form-card-body">
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label">Deposit / Down Payment ($)</label>
+              <input type="number" name="deposit_amount" id="deposit_amount" class="form-control"
+                     placeholder="0.00" min="0" step="0.01">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Loan Amount Required ($)</label>
+              <input type="number" name="loan_amount" id="loan_amount" class="form-control"
+                     placeholder="0.00" min="0" step="0.01">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Loan Term <span class="req">*</span></label>
+              <select name="loan_term" id="loan_term" class="form-control" required>
+                <option value="12">12 months (1 year)</option>
+                <option value="24">24 months (2 years)</option>
+                <option value="36" selected>36 months (3 years)</option>
+                <option value="48">48 months (4 years)</option>
+                <option value="60">60 months (5 years)</option>
+                <option value="72">72 months (6 years)</option>
+                <option value="84">84 months (7 years)</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Live calculator preview -->
+          <div class="loan-preview" id="loanPreview">
+            <h4>📊 Estimated Repayment (indicative only)</h4>
+            <div class="loan-preview-grid">
+              <div class="loan-preview-item">
+                <div class="loan-preview-label">Loan Amount</div>
+                <div class="loan-preview-value" id="previewLoan">—</div>
+              </div>
+              <div class="loan-preview-item">
+                <div class="loan-preview-label">Term</div>
+                <div class="loan-preview-value" id="previewTerm">—</div>
+              </div>
+              <div class="loan-preview-item">
+                <div class="loan-preview-label">Est. Monthly Payment</div>
+                <div class="loan-preview-value" id="previewMonthly">—</div>
+              </div>
+              <div class="loan-preview-item">
+                <div class="loan-preview-label">Est. Total Repayment</div>
+                <div class="loan-preview-value" id="previewTotal">—</div>
+              </div>
+            </div>
+            <p style="font-size:.72rem;opacity:.5;margin-top:.75rem;">*Estimates based on ~7% p.a. Actual rates set by Republic Bank. Subject to approval.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 4: Employment -->
+      <div class="form-card">
+        <div class="form-card-header">
+          <div class="form-card-icon">💼</div>
+          <div>
+            <div class="form-card-title">Employment &amp; Income</div>
+            <div style="font-size:.8rem;color:var(--mid);">Required for bank assessment</div>
+          </div>
+        </div>
+        <div class="form-card-body">
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label">Employment Status <span class="req">*</span></label>
+              <select name="employment_status" class="form-control" required>
+                <option value="">Select status</option>
+                <option>Employed (Full-Time)</option>
+                <option>Employed (Part-Time)</option>
+                <option>Self-Employed</option>
+                <option>Business Owner</option>
+                <option>Retired</option>
+                <option>Other</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Employer / Business Name</label>
+              <input type="text" name="employer" class="form-control" placeholder="Company name">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Annual Income ($)</label>
+              <input type="number" name="annual_income" class="form-control" placeholder="0.00" min="0" step="0.01">
+            </div>
+            <div class="form-group full">
+              <label class="form-label">Additional Notes</label>
+              <textarea name="message" class="form-control" rows="3"
+                        placeholder="Any additional information you'd like to include…"></textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Consent & Submit -->
+      <div class="form-card">
+        <div class="form-card-body">
+          <div style="display:flex;gap:.75rem;align-items:flex-start;margin-bottom:1.5rem;padding:1rem;background:var(--light);border-radius:8px;">
+            <input type="checkbox" name="consent" id="consent" required style="margin-top:.25rem;accent-color:var(--blue);">
+            <label for="consent" style="font-size:.85rem;color:var(--mid);line-height:1.6;cursor:pointer;">
+              I confirm that the information provided is accurate and I consent to {{ business.name }} sharing my details with <strong>Republic Bank</strong> for the purpose of processing this loan application. I understand the bank will perform a credit assessment.
+            </label>
+          </div>
+          <button type="submit" class="btn-submit">
+            Submit Loan Application →
+          </button>
+          <p style="text-align:center;font-size:.78rem;color:var(--mid);margin-top:.75rem;">
+            🔒 Your information is kept secure and private. We will contact you within 24–48 hours.
+          </p>
+        </div>
+      </div>
+
+    </form>
+  </div>
+</section>
+
+<script>
+// Wire up product_type radio buttons to show/hide groups
+document.querySelectorAll('input[name="product_type"]').forEach(radio => {
+  radio.addEventListener('change', () => {
+    document.getElementById('product_type_val') && (document.getElementById('product_type_val').value = radio.value);
+    const vehicleGroup = document.getElementById('vehicleGroup');
+    const solarGroup   = document.getElementById('solarGroup');
+    if (radio.value === 'vehicle') {
+      vehicleGroup.style.display = '';
+      solarGroup.style.display = 'none';
+    } else {
+      vehicleGroup.style.display = 'none';
+      solarGroup.style.display = '';
+    }
+  });
+});
+// Create hidden input for product_type to ensure it's submitted
+const ptInput = document.createElement('input');
+ptInput.type = 'hidden';
+ptInput.name = 'product_type';
+ptInput.id   = 'product_type_val';
+ptInput.value = document.querySelector('input[name="product_type"]:checked')?.value || 'vehicle';
+document.querySelector('form').appendChild(ptInput);
+document.querySelectorAll('input[name="product_type"]').forEach(r => {
+  r.addEventListener('change', () => { ptInput.value = r.value; });
+});
+// Remove duplicate product_type from form
+document.querySelector('select[name="vehicle_id"]') && (document.querySelector('select[name="vehicle_id"]').name = 'vehicle_id');
+</script>
+
+{% endblock %}

@@ -1,0 +1,74 @@
+{% extends "admin/base.html" %}
+{% block title %}Manage Vehicles{% endblock %}
+{% block page_title %}Vehicles{% endblock %}
+
+{% block content %}
+
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;">
+  <div>
+    <p style="font-size:.85rem;color:var(--mid);">{{ vehicles | length }} vehicle{{ 's' if vehicles | length != 1 }} in inventory</p>
+  </div>
+  <a href="{{ url_for('admin_add_vehicle') }}" class="btn btn-primary">+ Add New Vehicle</a>
+</div>
+
+<div class="table-card">
+  <div class="table-header">
+    <span class="table-title">All Vehicles</span>
+  </div>
+  <div style="overflow-x:auto;">
+    <table>
+      <thead><tr>
+        <th>Photo</th>
+        <th>Vehicle</th>
+        <th>Category</th>
+        <th>Year</th>
+        <th>Fuel</th>
+        <th>Price</th>
+        <th>Status</th>
+        <th>Actions</th>
+      </tr></thead>
+      <tbody>
+        {% for v in vehicles %}
+        <tr>
+          <td>
+            {% set imgs = v.get_images() %}
+            {% if imgs %}
+            <img src="{{ url_for('static', filename=imgs[0]) }}" class="td-image" alt="{{ v.name }}">
+            {% else %}
+            <div class="td-image-placeholder">🚗</div>
+            {% endif %}
+          </td>
+          <td>
+            <div style="font-weight:700;">{{ v.name }}</div>
+            {% if v.tagline %}<div style="font-size:.75rem;color:var(--mid);">{{ v.tagline | truncate(50) }}</div>{% endif %}
+            <div style="font-size:.72rem;color:var(--mid);margin-top:.2rem;">{{ v.get_images()|length }} photo(s) · {{ v.get_videos()|length }} video(s)</div>
+          </td>
+          <td><span class="badge badge-gray">{{ v.category or '—' }}</span></td>
+          <td>{{ v.year or '—' }}</td>
+          <td>{{ v.fuel_type or '—' }}</td>
+          <td style="font-weight:700;">{{ v.price | currency }}</td>
+          <td>
+            {% if v.available %}<span class="badge badge-green">✅ Available</span>{% else %}<span class="badge badge-red">❌ Sold</span>{% endif %}
+            {% if v.featured %}<span class="badge badge-yellow" style="margin-top:.25rem;display:block;">⭐ Featured</span>{% endif %}
+          </td>
+          <td>
+            <div style="display:flex;gap:.4rem;flex-wrap:wrap;">
+              <a href="{{ url_for('vehicle_detail', vid=v.id) }}" target="_blank" class="btn btn-outline btn-sm">👁 View</a>
+              <a href="{{ url_for('admin_edit_vehicle', vid=v.id) }}" class="btn btn-primary btn-sm">✏️ Edit</a>
+              <form method="post" action="{{ url_for('admin_delete_vehicle', vid=v.id) }}" class="confirm-delete" style="display:inline;">
+                <button type="submit" class="btn btn-danger btn-sm">🗑</button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="8" style="text-align:center;padding:3rem;color:var(--mid);">
+          No vehicles yet. <a href="{{ url_for('admin_add_vehicle') }}" style="color:var(--blue);">Add your first vehicle →</a>
+        </td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% endblock %}

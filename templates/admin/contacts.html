@@ -1,0 +1,59 @@
+{% extends "admin/base.html" %}
+{% block title %}Messages{% endblock %}
+{% block page_title %}Customer Messages{% endblock %}
+
+{% block content %}
+
+<div class="table-card">
+  <div class="table-header">
+    <span class="table-title">{{ contacts | length }} Message{{ 's' if contacts | length != 1 }}</span>
+  </div>
+  <div style="overflow-x:auto;">
+    <table>
+      <thead><tr>
+        <th>From</th>
+        <th>Contact</th>
+        <th>Subject</th>
+        <th>Message</th>
+        <th>Date</th>
+        <th>Actions</th>
+      </tr></thead>
+      <tbody>
+        {% for c in contacts %}
+        <tr {% if c.status == 'unread' %}style="background:#fffbeb;"{% endif %}>
+          <td>
+            <div style="font-weight:700;">{{ c.name }}</div>
+            {% if c.status == 'unread' %}<span class="badge badge-red" style="font-size:.6rem;">NEW</span>{% endif %}
+          </td>
+          <td>
+            <div style="font-size:.82rem;"><a href="mailto:{{ c.email }}" style="color:var(--blue);">{{ c.email }}</a></div>
+            {% if c.phone %}<div style="font-size:.78rem;color:var(--mid);">{{ c.phone }}</div>{% endif %}
+          </td>
+          <td style="font-size:.85rem;max-width:150px;">{{ c.subject or 'No subject' }}</td>
+          <td style="max-width:250px;">
+            <div style="font-size:.82rem;color:var(--mid);overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">
+              {{ c.message }}
+            </div>
+          </td>
+          <td style="font-size:.78rem;color:var(--mid);white-space:nowrap;">{{ c.created_at.strftime('%b %d, %Y') }}</td>
+          <td>
+            <div style="display:flex;gap:.4rem;">
+              <a href="mailto:{{ c.email }}?subject=Re: {{ c.subject or 'Your Message' }}" class="btn btn-primary btn-sm">✉️ Reply</a>
+              {% if c.phone %}
+              <a href="https://wa.me/{{ c.phone | replace(' ','') | replace('+','') | replace('-','') }}" class="btn btn-outline btn-sm" target="_blank">💬</a>
+              {% endif %}
+              <form method="post" action="{{ url_for('admin_delete_contact', cid=c.id) }}" class="confirm-delete" style="display:inline;">
+                <button type="submit" class="btn btn-danger btn-sm">🗑</button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="6" style="text-align:center;padding:3rem;color:var(--mid);">No messages yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% endblock %}

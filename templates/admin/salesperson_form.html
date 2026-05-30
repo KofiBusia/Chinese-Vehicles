@@ -1,0 +1,92 @@
+{% extends "admin/base.html" %}
+{% block title %}{{ action }} Salesperson{% endblock %}
+{% block page_title %}{{ action }} Salesperson{% endblock %}
+
+{% block content %}
+<div class="breadcrumb">
+  <a href="{{ url_for('admin_salespersons') }}">Salespersons</a> / {{ action }}
+</div>
+
+<div style="max-width:700px;">
+  <form method="post" action="{% if sp %}{{ url_for('admin_edit_salesperson', sid=sp.id) }}{% else %}{{ url_for('admin_add_salesperson') }}{% endif %}">
+
+    <div class="form-section">
+      <div class="form-section-header">👤 Salesperson Details</div>
+      <div class="form-section-body">
+        <div class="form-grid">
+          <div class="form-group full">
+            <label class="form-label">Full Name *</label>
+            <input type="text" name="full_name" class="form-control" required placeholder="e.g. John Smith"
+                   value="{{ sp.full_name if sp else '' }}">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Email</label>
+            <input type="email" name="email" class="form-control" placeholder="sales@example.com"
+                   value="{{ sp.email if sp else '' }}">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Phone</label>
+            <input type="tel" name="phone" class="form-control" placeholder="+1 (868) 000-0000"
+                   value="{{ sp.phone if sp else '' }}">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <div class="form-section-header">🔑 Access Credentials</div>
+      <div class="form-section-body">
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">Unique Sales Code * <span style="font-size:.72rem;color:var(--mid);">(used to login)</span></label>
+            <input type="text" name="code" class="form-control" required
+                   placeholder="e.g. JOHN01 or SP-2024"
+                   value="{{ sp.code if sp else '' }}"
+                   style="font-family:monospace;letter-spacing:.06em;font-weight:700;"
+                   oninput="this.value=this.value.toUpperCase()">
+            <small style="font-size:.75rem;color:var(--mid);">Must be unique. Use letters and numbers only. Will be uppercased.</small>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Commission Rate (%)</label>
+            <input type="number" name="commission_pct" class="form-control"
+                   placeholder="2.0" min="0" max="100" step="0.1"
+                   value="{{ sp.commission_pct if sp else '2.0' }}">
+          </div>
+          <div class="form-group">
+            <label class="form-label">{% if sp %}New Password{% else %}Password *{% endif %}</label>
+            <input type="password" name="{% if sp %}new_password{% else %}password{% endif %}" class="form-control"
+                   {% if not sp %}required{% endif %}
+                   placeholder="{% if sp %}Leave blank to keep current{% else %}Set a password{% endif %}">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <div class="form-section-header">⚙️ Settings</div>
+      <div class="form-section-body" style="display:flex;flex-direction:column;gap:1rem;">
+        <label class="form-check">
+          <input type="checkbox" name="active" value="1" {% if not sp or sp.active %}checked{% endif %}>
+          <div>
+            <label style="font-weight:600;cursor:pointer;">Active</label>
+            <p style="font-size:.75rem;color:var(--mid);">Inactive salespersons cannot log in</p>
+          </div>
+        </label>
+        <div class="form-group">
+          <label class="form-label">Notes</label>
+          <textarea name="notes" class="form-control" rows="3"
+                    placeholder="Internal notes about this salesperson…">{{ sp.notes if sp else '' }}</textarea>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:.75rem;">
+      <button type="submit" class="btn btn-primary" style="padding:.85rem 2rem;">
+        {% if sp %}💾 Save Changes{% else %}➕ Add Salesperson{% endif %}
+      </button>
+      <a href="{{ url_for('admin_salespersons') }}" class="btn btn-outline" style="padding:.85rem 1.5rem;">Cancel</a>
+    </div>
+
+  </form>
+</div>
+{% endblock %}

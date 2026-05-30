@@ -1,0 +1,82 @@
+{% extends "admin/base.html" %}
+{% block title %}Salespersons{% endblock %}
+{% block page_title %}Salesperson Management{% endblock %}
+
+{% block content %}
+
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;">
+  <p style="font-size:.85rem;color:var(--mid);">{{ salespersons | length }} salesperson{{ 's' if salespersons | length != 1 }}</p>
+  <a href="{{ url_for('admin_add_salesperson') }}" class="btn btn-primary">+ Add Salesperson</a>
+</div>
+
+<div class="table-card">
+  <div class="table-header">
+    <span class="table-title">All Salespersons</span>
+  </div>
+  <div style="overflow-x:auto;">
+    <table>
+      <thead><tr>
+        <th>Name</th>
+        <th>Access Code</th>
+        <th>Contact</th>
+        <th>Commission</th>
+        <th>Sales</th>
+        <th>Revenue</th>
+        <th>Status</th>
+        <th>Actions</th>
+      </tr></thead>
+      <tbody>
+        {% for sp in salespersons %}
+        <tr>
+          <td>
+            <div style="font-weight:700;">{{ sp.full_name }}</div>
+            <div style="font-size:.72rem;color:var(--mid);">Since {{ sp.created_at.strftime('%b %Y') }}</div>
+          </td>
+          <td>
+            <code style="background:#f3f4f6;padding:.25rem .6rem;border-radius:4px;font-size:.9rem;font-weight:700;letter-spacing:.08em;color:var(--blue);">
+              {{ sp.code }}
+            </code>
+          </td>
+          <td>
+            <div style="font-size:.82rem;">{{ sp.email or '—' }}</div>
+            <div style="font-size:.78rem;color:var(--mid);">{{ sp.phone or '—' }}</div>
+          </td>
+          <td style="font-weight:600;">{{ sp.commission_pct }}%</td>
+          <td style="font-weight:700;color:var(--blue);">{{ sp.total_sales() }}</td>
+          <td style="font-weight:700;">{{ sp.total_revenue() | currency }}</td>
+          <td>
+            {% if sp.active %}<span class="badge badge-green">✅ Active</span>
+            {% else %}<span class="badge badge-red">❌ Inactive</span>{% endif %}
+          </td>
+          <td>
+            <div style="display:flex;gap:.4rem;flex-wrap:wrap;">
+              <a href="{{ url_for('admin_salesperson_sales', sid=sp.id) }}" class="btn btn-outline btn-sm">📊 Sales</a>
+              <a href="{{ url_for('admin_edit_salesperson', sid=sp.id) }}" class="btn btn-primary btn-sm">✏️ Edit</a>
+              <form method="post" action="{{ url_for('admin_delete_salesperson', sid=sp.id) }}" class="confirm-delete" style="display:inline;">
+                <button type="submit" class="btn btn-danger btn-sm">🗑</button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="8" style="text-align:center;padding:3rem;color:var(--mid);">
+          No salespersons yet. <a href="{{ url_for('admin_add_salesperson') }}" style="color:var(--blue);">Add your first →</a>
+        </td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Sales Portal Info -->
+<div style="margin-top:1.5rem;padding:1.25rem 1.5rem;background:linear-gradient(135deg,#0f172a,#1e3a5f);border-radius:12px;color:white;">
+  <div style="font-weight:700;margin-bottom:.5rem;">🔗 Salesperson Portal</div>
+  <p style="font-size:.85rem;color:rgba(255,255,255,.65);margin-bottom:.75rem;">
+    Salespersons can log in with their unique code + password at:
+  </p>
+  <code style="background:rgba(255,255,255,.1);padding:.4rem .75rem;border-radius:6px;font-size:.9rem;">
+    http://localhost:5000/sales/login
+  </code>
+</div>
+
+{% endblock %}

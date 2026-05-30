@@ -1,0 +1,75 @@
+{% extends "admin/base.html" %}
+{% block title %}Settings{% endblock %}
+{% block page_title %}Account Settings{% endblock %}
+
+{% block content %}
+
+<div style="max-width:700px;">
+
+  <form method="post" action="{{ url_for('admin_settings') }}">
+    <div class="form-section">
+      <div class="form-section-header">👤 Profile Information</div>
+      <div class="form-section-body">
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">Username</label>
+            <input type="text" class="form-control" value="{{ admin.username }}" disabled style="opacity:.6;">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Full Name</label>
+            <input type="text" name="full_name" class="form-control" value="{{ admin.full_name or '' }}" placeholder="Your full name">
+          </div>
+          <div class="form-group full">
+            <label class="form-label">Email Address</label>
+            <input type="email" name="email" class="form-control" value="{{ admin.email or '' }}" placeholder="admin@example.com">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <div class="form-section-header">🔐 Change Password</div>
+      <div class="form-section-body">
+        <div class="form-grid">
+          <div class="form-group full">
+            <label class="form-label">Current Password</label>
+            <input type="password" name="current_password" class="form-control" placeholder="Enter current password">
+          </div>
+          <div class="form-group">
+            <label class="form-label">New Password</label>
+            <input type="password" name="new_password" class="form-control" placeholder="New password">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Confirm New Password</label>
+            <input type="password" name="confirm_password" class="form-control" placeholder="Repeat new password">
+          </div>
+        </div>
+        <p style="font-size:.78rem;color:var(--mid);margin-top:.75rem;">Leave password fields blank to keep your current password.</p>
+      </div>
+    </div>
+
+    <button type="submit" class="btn btn-primary" style="padding:.85rem 2rem;">💾 Save Settings</button>
+  </form>
+
+  <div class="form-section" style="margin-top:1.5rem;">
+    <div class="form-section-header">ℹ️ System Info</div>
+    <div class="form-section-body" style="font-size:.85rem;color:var(--mid);line-height:2;">
+      <div>Admin since: {{ admin.created_at.strftime('%B %d, %Y') }}</div>
+      <div>Default credentials: username <strong>admin</strong> / password <strong>admin123</strong></div>
+      <div style="color:var(--red);font-weight:600;">⚠️ Change the default password immediately for security!</div>
+    </div>
+  </div>
+
+  <div class="form-section" style="margin-top:1rem;">
+    <div class="form-section-header" style="color:var(--red);">⚠️ Danger Zone</div>
+    <div class="form-section-body">
+      <p style="font-size:.85rem;color:var(--mid);margin-bottom:1rem;">
+        These actions cannot be undone. Be very careful.
+      </p>
+      <a href="{{ url_for('admin_logout') }}" class="btn btn-danger">Logout from Admin Panel</a>
+    </div>
+  </div>
+
+</div>
+
+{% endblock %}

@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+{% block title %}Solar Systems — {{ business.name }}{% endblock %}
+
+{% block content %}
+
+<div class="page-header" style="background: linear-gradient(135deg, #1a0a00, #2d1507, #451a03);">
+  <p style="font-size:.8rem;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.5);margin-bottom:.5rem;">Clean Energy</p>
+  <h1 class="page-title">Solar Systems</h1>
+  <p class="page-subtitle">{{ solar_systems | length }} system{{ 's' if solar_systems | length != 1 }} available</p>
+</div>
+
+<!-- Category filters -->
+<form method="get" action="{{ url_for('solar') }}">
+  <div class="filters-bar">
+    <div class="filters-inner">
+      <div class="filter-group">
+        <label class="filter-label">Category</label>
+        <select name="category" class="filter-select" onchange="this.form.submit()">
+          <option value="">All Systems</option>
+          {% for cat in categories %}
+          <option value="{{ cat }}" {% if cat == current_category %}selected{% endif %}>{{ cat }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      {% if current_category %}
+      <a href="{{ url_for('solar') }}" class="filter-clear">Clear Filter</a>
+      {% endif %}
+    </div>
+  </div>
+</form>
+
+<section class="products-section">
+  <div class="products-inner">
+    <p class="products-count">{{ solar_systems | length }} system{{ 's' if solar_systems | length != 1 }} found</p>
+    <div class="products-grid">
+      {% for sol in solar_systems %}
+      <div class="product-card reveal">
+        <div class="card-image-wrap">
+          {% if sol.cover %}
+          <img src="{{ url_for('static', filename=sol.cover) }}" alt="{{ sol.name }}" loading="lazy">
+          {% else %}
+          <div class="card-no-image solar">☀️<span>Solar System</span></div>
+          {% endif %}
+          <span class="card-badge solar">{{ sol.category or 'Solar' }}</span>
+          {% if sol.featured %}<span class="card-badge featured" style="left:auto;right:.75rem;">⭐</span>{% endif %}
+        </div>
+        <div class="card-body">
+          <p class="card-meta">{{ sol.category or 'Solar System' }}</p>
+          <h3 class="card-title">{{ sol.name }}</h3>
+          {% if sol.tagline %}<p class="card-tagline">{{ sol.tagline }}</p>{% endif %}
+          <div class="card-specs">
+            {% if sol.power_output %}<span class="card-spec"><span class="card-spec-icon">⚡</span>{{ sol.power_output }}</span>{% endif %}
+            {% if sol.panel_count %}<span class="card-spec"><span class="card-spec-icon">🔲</span>{{ sol.panel_count }} panels</span>{% endif %}
+            {% if sol.battery_capacity %}<span class="card-spec"><span class="card-spec-icon">🔋</span>{{ sol.battery_capacity }}</span>{% endif %}
+            {% if sol.warranty %}<span class="card-spec"><span class="card-spec-icon">🛡️</span>{{ sol.warranty }}</span>{% endif %}
+          </div>
+          <p class="card-price">
+            <span class="c-ghs">{{ sol.price | ghs }}</span>
+            <span class="c-usd">{{ sol.price | currency }}</span>
+          </p>
+          <div class="card-actions">
+            <a href="{{ url_for('solar_detail', sid=sol.id) }}" class="btn-card-primary">View Details</a>
+            <a href="{{ url_for('loan') }}?solar={{ sol.id }}" class="btn-card-secondary">💳 Finance</a>
+          </div>
+        </div>
+      </div>
+      {% else %}
+      <div class="empty-state">
+        <div class="empty-icon">☀️</div>
+        <h3>No Solar Systems Found</h3>
+        <p>Check back soon — new systems are added regularly.</p>
+        <a href="{{ url_for('contact') }}" style="color:var(--solar);margin-top:1rem;display:inline-block;">Request a Custom Quote →</a>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- Solar benefits section -->
+<section style="padding:5rem 2rem; background:var(--dark-2); color:white;">
+  <div style="max-width:1100px; margin:0 auto; text-align:center;">
+    <h2 style="font-family:var(--font-head);font-size:clamp(1.8rem,3vw,2.5rem);font-weight:800;letter-spacing:-.03em;margin-bottom:1rem;" class="reveal">
+      Why Go Solar?
+    </h2>
+    <p style="color:rgba(255,255,255,.6);max-width:540px;margin:0 auto 3rem;" class="reveal">
+      Make the switch to clean, renewable energy and enjoy long-term savings.
+    </p>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:2rem;">
+      {% set benefits = [
+        ('💡','Reduce Bills','Cut your electricity costs by up to 90% with solar power.'),
+        ('🌍','Eco-Friendly','Zero emissions — protect the environment for future generations.'),
+        ('📈','Property Value','Solar panels increase your property value significantly.'),
+        ('🔋','Energy Independence','Reliable power even during outages with battery storage.'),
+        ('🛡️','Long Warranty','Systems backed by manufacturer warranties of 10–25 years.'),
+        ('🏦','Finance Available','Get your system now and pay over time via Republic Bank.'),
+      ] %}
+      {% for icon, title, text in benefits %}
+      <div class="reveal reveal-delay-{{ loop.index0 % 4 }}" style="padding:1.5rem;background:rgba(255,255,255,.05);border-radius:12px;">
+        <div style="font-size:2rem;margin-bottom:.75rem;">{{ icon }}</div>
+        <h3 style="font-weight:700;font-size:1rem;margin-bottom:.4rem;">{{ title }}</h3>
+        <p style="font-size:.82rem;color:rgba(255,255,255,.55);line-height:1.6;">{{ text }}</p>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<section class="finance-cta" style="background:linear-gradient(135deg, #451a03, #e55a00);">
+  <div class="reveal">
+    <h2>Power Your Home Today</h2>
+    <p>Finance your solar system through Republic Bank with flexible payment plans.</p>
+    <a href="{{ url_for('loan') }}" class="btn-finance">Apply for Solar Loan</a>
+  </div>
+</section>
+
+{% endblock %}

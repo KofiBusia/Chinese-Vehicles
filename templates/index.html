@@ -1,0 +1,306 @@
+{% extends "base.html" %}
+{% block title %}{{ business.name }} — Drive Excellence. Power the Future.{% endblock %}
+{% block nav_class %}dark-mode{% endblock %}
+
+{% block content %}
+
+<!-- ── MAIN HERO ── -->
+<section class="hero-screen hero-main">
+  <div class="hero-gradient"></div>
+  <div class="hero-content reveal">
+    <p class="hero-eyebrow">Welcome to {{ business.name }}</p>
+    <h1 class="hero-title">Drive Excellence.<br>Power the Future.</h1>
+    <p class="hero-sub">Premium vehicles and solar energy solutions — engineered for your lifestyle.</p>
+    <div class="hero-actions">
+      <a href="{{ url_for('vehicles') }}" class="btn-hero-primary">Explore Vehicles</a>
+      <a href="{{ url_for('solar') }}" class="btn-hero-secondary">Solar Systems</a>
+    </div>
+  </div>
+  <div class="scroll-indicator">
+    <div class="scroll-arrow"></div>
+    <span>SCROLL</span>
+  </div>
+</section>
+
+<!-- ── LATEST ARRIVAL (newest upload) ── -->
+{% if newest_vehicle %}
+<section class="hero-screen" id="latest-arrival">
+  {% if newest_vehicle.cover %}
+  <img src="{{ url_for('static', filename=newest_vehicle.cover) }}" alt="{{ newest_vehicle.name }}" class="hero-bg">
+  <div class="hero-overlay"></div>
+  {% else %}
+  <div class="hero-gradient" style="background: linear-gradient(135deg, #0d0d14, #1a2744);"></div>
+  {% endif %}
+  <div class="hero-content reveal">
+    <p class="hero-eyebrow" style="color:rgba(255,255,255,.6);">
+      <span style="background:rgba(255,165,0,.2);color:#ffa500;border:1px solid rgba(255,165,0,.4);padding:.2rem .7rem;border-radius:20px;font-size:.75rem;font-weight:700;letter-spacing:.1em;">
+        NEW ARRIVAL
+      </span>
+    </p>
+    <h2 class="hero-title">{{ newest_vehicle.name }}</h2>
+    {% if newest_vehicle.tagline %}<p class="hero-sub">{{ newest_vehicle.tagline }}</p>{% endif %}
+    <div class="hero-specs">
+      {% if newest_vehicle.fuel_type %}<div class="hero-spec-item"><span class="hero-spec-val">{{ newest_vehicle.fuel_type }}</span><span class="hero-spec-label">Fuel Type</span></div>{% endif %}
+      {% if newest_vehicle.transmission %}<div class="hero-spec-item"><span class="hero-spec-val">{{ newest_vehicle.transmission }}</span><span class="hero-spec-label">Transmission</span></div>{% endif %}
+      {% if newest_vehicle.year %}<div class="hero-spec-item"><span class="hero-spec-val">{{ newest_vehicle.year }}</span><span class="hero-spec-label">Year</span></div>{% endif %}
+    </div>
+    <p class="hero-price">
+      {{ newest_vehicle.price | currency }}
+      <span style="font-size:.75em;opacity:.7;margin-left:.5rem;">/ {{ newest_vehicle.price | ghs }}</span>
+    </p>
+    <div class="hero-actions">
+      <a href="{{ url_for('loan') }}?vehicle={{ newest_vehicle.id }}" class="btn-hero-primary">Apply for Loan</a>
+      <a href="{{ url_for('vehicle_detail', vid=newest_vehicle.id) }}" class="btn-hero-secondary">View Details</a>
+    </div>
+  </div>
+  <div class="finance-strip">
+    Listed: {{ newest_vehicle.created_at.strftime('%B %d, %Y') }} &nbsp;|&nbsp;
+    <a href="{{ url_for('loan') }}">Loans available through Republic Bank →</a>
+  </div>
+</section>
+{% endif %}
+
+<!-- ── FEATURED VEHICLES ── -->
+{% for vehicle in featured_vehicles %}
+{% set is_light = loop.index % 2 == 0 %}
+<section class="hero-screen {% if is_light %}hero-light{% endif %}" id="vehicle-{{ vehicle.id }}">
+  {% if vehicle.cover %}
+  <img src="{{ url_for('static', filename=vehicle.cover) }}" alt="{{ vehicle.name }}" class="hero-bg">
+  <div class="hero-overlay"></div>
+  {% else %}
+  <div class="hero-gradient" style="background: linear-gradient(135deg, #0d0d14, #0f2744);"></div>
+  {% endif %}
+  <div class="hero-content reveal">
+    <p class="hero-eyebrow">{{ vehicle.category or 'Vehicle' }} — {{ vehicle.year or '' }}</p>
+    <h2 class="hero-title">{{ vehicle.name }}</h2>
+    {% if vehicle.tagline %}<p class="hero-sub">{{ vehicle.tagline }}</p>{% endif %}
+    <div class="hero-specs">
+      {% if vehicle.fuel_type %}<div class="hero-spec-item"><span class="hero-spec-val">{{ vehicle.fuel_type }}</span><span class="hero-spec-label">Fuel Type</span></div>{% endif %}
+      {% if vehicle.transmission %}<div class="hero-spec-item"><span class="hero-spec-val">{{ vehicle.transmission }}</span><span class="hero-spec-label">Transmission</span></div>{% endif %}
+      {% if vehicle.seats %}<div class="hero-spec-item"><span class="hero-spec-val">{{ vehicle.seats }}</span><span class="hero-spec-label">Seats</span></div>{% endif %}
+    </div>
+    <div class="hero-actions">
+      <a href="{{ url_for('loan') }}?vehicle={{ vehicle.id }}" class="btn-hero-primary">Apply for a Loan</a>
+      <a href="{{ url_for('vehicle_detail', vid=vehicle.id) }}" class="btn-hero-secondary">View Details</a>
+    </div>
+  </div>
+  <div class="finance-strip">Starting from <strong>{{ vehicle.price | currency }}</strong> &nbsp;|&nbsp; <a href="{{ url_for('loan') }}">Loans available through Republic Bank →</a></div>
+</section>
+{% endfor %}
+
+{% if not featured_vehicles %}
+<!-- No featured vehicles yet — show placeholder -->
+<section class="hero-screen" style="background: linear-gradient(135deg, #0d0d14 0%, #111827 50%, #0f2744 100%);">
+  <div class="hero-gradient" style="background: radial-gradient(ellipse at 50% 50%, rgba(26,86,219,.1), transparent 60%);"></div>
+  <div class="hero-content reveal">
+    <p class="hero-eyebrow">Our Inventory</p>
+    <h2 class="hero-title">Premium Vehicles<br>Await You</h2>
+    <p class="hero-sub">Explore our wide selection of quality vehicles at competitive prices.</p>
+    <div class="hero-actions">
+      <a href="{{ url_for('vehicles') }}" class="btn-hero-primary">Browse Vehicles</a>
+      <a href="{{ url_for('loan') }}" class="btn-hero-secondary">Get Financing</a>
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<!-- ── FEATURED SOLAR ── -->
+{% for solar in featured_solar %}
+<section class="hero-screen hero-solar">
+  {% if solar.cover %}
+  <img src="{{ url_for('static', filename=solar.cover) }}" alt="{{ solar.name }}" class="hero-bg">
+  <div class="hero-overlay"></div>
+  {% else %}
+  <div class="hero-gradient" style="background: radial-gradient(ellipse at 40% 60%, rgba(229,90,0,.2), transparent 60%);"></div>
+  {% endif %}
+  <div class="hero-content reveal">
+    <p class="hero-eyebrow">Solar Energy — {{ solar.category or 'System' }}</p>
+    <h2 class="hero-title">{{ solar.name }}</h2>
+    {% if solar.tagline %}<p class="hero-sub">{{ solar.tagline }}</p>{% endif %}
+    <div class="hero-specs">
+      {% if solar.power_output %}<div class="hero-spec-item"><span class="hero-spec-val">{{ solar.power_output }}</span><span class="hero-spec-label">Power Output</span></div>{% endif %}
+      {% if solar.panel_count %}<div class="hero-spec-item"><span class="hero-spec-val">{{ solar.panel_count }}</span><span class="hero-spec-label">Panels</span></div>{% endif %}
+      {% if solar.efficiency %}<div class="hero-spec-item"><span class="hero-spec-val">{{ solar.efficiency }}</span><span class="hero-spec-label">Efficiency</span></div>{% endif %}
+    </div>
+    <div class="hero-actions">
+      <a href="{{ url_for('loan') }}?solar={{ solar.id }}" class="btn-hero-primary">Finance This System</a>
+      <a href="{{ url_for('solar_detail', sid=solar.id) }}" class="btn-hero-secondary">Learn More</a>
+    </div>
+  </div>
+  <div class="finance-strip">From <strong>{{ solar.price | currency }}</strong> &nbsp;|&nbsp; <a href="{{ url_for('loan') }}">Republic Bank financing available →</a></div>
+</section>
+{% endfor %}
+
+{% if not featured_solar %}
+<section class="hero-screen hero-solar">
+  <div class="hero-gradient" style="background: radial-gradient(ellipse at 40% 60%, rgba(229,90,0,.2), transparent 60%);"></div>
+  <div class="hero-content reveal">
+    <p class="hero-eyebrow">Solar Energy Solutions</p>
+    <h2 class="hero-title">Clean Energy<br>for Every Home</h2>
+    <p class="hero-sub">Residential and commercial solar systems engineered for maximum efficiency.</p>
+    <div class="hero-actions">
+      <a href="{{ url_for('solar') }}" class="btn-hero-primary">View Solar Systems</a>
+      <a href="{{ url_for('contact') }}" class="btn-hero-secondary">Get a Quote</a>
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<!-- ── STATS ── -->
+<section class="stats-section">
+  <div class="stats-grid">
+    <div class="stat-item reveal">
+      <div class="stat-number" data-target="500" data-suffix="+">0</div>
+      <div class="stat-label">Vehicles Available</div>
+    </div>
+    <div class="stat-item reveal reveal-delay-1">
+      <div class="stat-number" data-target="200" data-suffix="+">0</div>
+      <div class="stat-label">Solar Systems Installed</div>
+    </div>
+    <div class="stat-item reveal reveal-delay-2">
+      <div class="stat-number" data-target="98" data-suffix="%">0</div>
+      <div class="stat-label">Customer Satisfaction</div>
+    </div>
+    <div class="stat-item reveal reveal-delay-3">
+      <div class="stat-number" data-target="10" data-suffix="+ yrs">0</div>
+      <div class="stat-label">Years of Service</div>
+    </div>
+  </div>
+</section>
+
+<!-- ── LATEST VEHICLES GRID ── -->
+{% if latest_vehicles %}
+<section class="products-section" style="background: var(--white);">
+  <div class="products-inner">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2rem;">
+      <div>
+        <h2 class="section-title reveal">Latest Vehicles</h2>
+        <p class="section-subtitle reveal">Fresh arrivals ready for you</p>
+      </div>
+      <a href="{{ url_for('vehicles') }}" style="color:var(--blue); font-size:.9rem; font-weight:600;">View All →</a>
+    </div>
+    <div class="products-grid">
+      {% for vehicle in latest_vehicles %}
+      <div class="product-card reveal reveal-delay-{{ loop.index0 % 4 }}">
+        <div class="card-image-wrap">
+          {% if vehicle.cover %}
+          <img src="{{ url_for('static', filename=vehicle.cover) }}" alt="{{ vehicle.name }}" loading="lazy">
+          {% else %}
+          <div class="card-no-image">🚗<span>No Image</span></div>
+          {% endif %}
+          {% if vehicle.featured %}<span class="card-badge featured">⭐ Featured</span>{% endif %}
+          {% if vehicle.fuel_type == 'Electric' %}<span class="card-badge" style="left:auto;right:.75rem;">EV</span>{% endif %}
+        </div>
+        <div class="card-body">
+          <p class="card-meta">{{ vehicle.category or 'Vehicle' }} • {{ vehicle.year or 'N/A' }}</p>
+          <h3 class="card-title">{{ vehicle.name }}</h3>
+          {% if vehicle.tagline %}<p class="card-tagline">{{ vehicle.tagline }}</p>{% endif %}
+          <div class="card-specs">
+            {% if vehicle.fuel_type %}<span class="card-spec"><span class="card-spec-icon">⛽</span>{{ vehicle.fuel_type }}</span>{% endif %}
+            {% if vehicle.transmission %}<span class="card-spec"><span class="card-spec-icon">⚙️</span>{{ vehicle.transmission }}</span>{% endif %}
+            {% if vehicle.mileage %}<span class="card-spec"><span class="card-spec-icon">📏</span>{{ vehicle.mileage | comma }} km</span>{% endif %}
+          </div>
+          <p class="card-price">
+            <span class="c-ghs">{{ vehicle.price | ghs }}</span>
+            <span class="c-usd">{{ vehicle.price | currency }}</span>
+          </p>
+          <div class="card-actions">
+            <a href="{{ url_for('vehicle_detail', vid=vehicle.id) }}" class="btn-card-primary">View Details</a>
+            <a href="{{ url_for('loan') }}?vehicle={{ vehicle.id }}" class="btn-card-secondary">Loan</a>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<!-- ── SOLAR GRID ── -->
+{% if latest_solar %}
+<section class="products-section" style="background: var(--light);">
+  <div class="products-inner">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2rem;">
+      <div>
+        <h2 class="section-title reveal">Solar Solutions</h2>
+        <p class="section-subtitle reveal">Clean energy for your home and business</p>
+      </div>
+      <a href="{{ url_for('solar') }}" style="color:var(--solar); font-size:.9rem; font-weight:600;">View All →</a>
+    </div>
+    <div class="products-grid">
+      {% for sol in latest_solar %}
+      <div class="product-card reveal reveal-delay-{{ loop.index0 % 4 }}">
+        <div class="card-image-wrap">
+          {% if sol.cover %}
+          <img src="{{ url_for('static', filename=sol.cover) }}" alt="{{ sol.name }}" loading="lazy">
+          {% else %}
+          <div class="card-no-image solar">☀️<span>Solar System</span></div>
+          {% endif %}
+          <span class="card-badge solar">Solar</span>
+          {% if sol.featured %}<span class="card-badge featured" style="left:auto;right:.75rem;">⭐</span>{% endif %}
+        </div>
+        <div class="card-body">
+          <p class="card-meta">{{ sol.category or 'Solar' }}</p>
+          <h3 class="card-title">{{ sol.name }}</h3>
+          {% if sol.tagline %}<p class="card-tagline">{{ sol.tagline }}</p>{% endif %}
+          <div class="card-specs">
+            {% if sol.power_output %}<span class="card-spec"><span class="card-spec-icon">⚡</span>{{ sol.power_output }}</span>{% endif %}
+            {% if sol.panel_count %}<span class="card-spec"><span class="card-spec-icon">🔲</span>{{ sol.panel_count }} panels</span>{% endif %}
+            {% if sol.warranty %}<span class="card-spec"><span class="card-spec-icon">🛡️</span>{{ sol.warranty }}</span>{% endif %}
+          </div>
+          <p class="card-price">
+            <span class="c-ghs">{{ sol.price | ghs }}</span>
+            <span class="c-usd">{{ sol.price | currency }}</span>
+          </p>
+          <div class="card-actions">
+            <a href="{{ url_for('solar_detail', sid=sol.id) }}" class="btn-card-primary">View Details</a>
+            <a href="{{ url_for('loan') }}?solar={{ sol.id }}" class="btn-card-secondary">Loan</a>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<!-- ── FINANCE CTA ── -->
+<section class="finance-cta">
+  <div class="reveal">
+    <p style="font-size:.8rem; letter-spacing:.15em; text-transform:uppercase; color:rgba(255,255,255,.5); margin-bottom:.75rem;">In partnership with</p>
+    <div style="display:flex; align-items:center; justify-content:center; gap:.75rem; margin-bottom:1.5rem;">
+      <div style="width:40px;height:40px;background:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:.7rem;color:var(--blue);">RB</div>
+      <span style="font-size:1.3rem;font-weight:700;color:white;">Republic Bank</span>
+    </div>
+    <h2>Drive Today.<br>Pay Over Time.</h2>
+    <p>Flexible financing solutions for vehicles and solar systems through Republic Bank. Competitive rates, quick approval.</p>
+    <a href="{{ url_for('loan') }}" class="btn-finance">Apply for a Loan</a>
+  </div>
+</section>
+
+<!-- ── WHY CHOOSE US ── -->
+<section style="padding: 5rem 2rem; background: var(--white);">
+  <div style="max-width:1200px; margin:0 auto; text-align:center;">
+    <h2 class="section-title reveal" style="margin-bottom:.5rem;">Why Choose Us?</h2>
+    <p class="section-subtitle reveal" style="margin-bottom:3rem;">The AutoPower difference</p>
+    <div style="display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:2rem;">
+      {% set perks = [
+        ('🏆', 'Premium Quality', 'Every vehicle and solar system is hand-selected and quality-checked.'),
+        ('🏦', 'Easy Financing', 'Republic Bank financing with flexible terms and competitive rates.'),
+        ('🔧', 'After-Sales Support', 'Dedicated service team to assist you long after purchase.'),
+        ('✅', 'Certified Products', 'All solar systems come with manufacturer certification and warranty.'),
+        ('⚡', 'Fast Delivery', 'Quick turnaround from approval to delivery or installation.'),
+        ('💬', 'Expert Guidance', 'Our team helps you find the perfect vehicle or solar solution.'),
+      ] %}
+      {% for icon, title, text in perks %}
+      <div class="value-card reveal reveal-delay-{{ loop.index0 % 4 }}">
+        <div class="value-icon">{{ icon }}</div>
+        <h3 class="value-title">{{ title }}</h3>
+        <p class="value-text">{{ text }}</p>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+{% endblock %}

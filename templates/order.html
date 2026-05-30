@@ -1,0 +1,214 @@
+{% extends "base.html" %}
+{% block title %}{% if order_type == 'test_drive' %}Book a Test Drive{% else %}Order{% endif %} — {{ vehicle.name }} — {{ business.name }}{% endblock %}
+
+{% block content %}
+<div style="padding-top: var(--nav-h);">
+
+  <!-- Header -->
+  <div style="background:var(--dark-2);padding:4rem 2rem 3rem;text-align:center;color:white;">
+    {% if order_type == 'test_drive' %}
+    <p style="font-size:.75rem;letter-spacing:.15em;text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:.5rem;">Experience It First</p>
+    <h1 style="font-family:var(--font-head);font-size:clamp(2rem,4vw,3rem);font-weight:800;letter-spacing:-.03em;">Book a Test Drive</h1>
+    {% else %}
+    <p style="font-size:.75rem;letter-spacing:.15em;text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:.5rem;">Reserve Yours Today</p>
+    <h1 style="font-family:var(--font-head);font-size:clamp(2rem,4vw,3rem);font-weight:800;letter-spacing:-.03em;">Order This Vehicle</h1>
+    {% endif %}
+    <p style="color:rgba(255,255,255,.6);margin-top:.5rem;font-size:1rem;">{{ vehicle.name }}{% if vehicle.year %} ({{ vehicle.year }}){% endif %}</p>
+  </div>
+
+  <div style="max-width:900px;margin:0 auto;padding:3rem 2rem;display:grid;grid-template-columns:1fr 320px;gap:2rem;">
+
+    <!-- Form -->
+    <div>
+      <form method="post" action="{{ url_for('order_vehicle', vid=vehicle.id) }}" id="orderForm">
+        <input type="hidden" name="order_type" value="{{ order_type }}">
+
+        <!-- Location (with geo) -->
+        <div class="form-card" style="margin-bottom:1.25rem;">
+          <div class="form-card-header">
+            <div class="form-card-icon">📍</div>
+            <div>
+              <div class="form-card-title">Your Location</div>
+              <div style="font-size:.8rem;color:var(--mid);">So we can arrange delivery or find the nearest showroom</div>
+            </div>
+          </div>
+          <div class="form-card-body">
+            <div style="display:flex;gap:.75rem;margin-bottom:.75rem;align-items:flex-end;">
+              <div class="form-group" style="flex:1;">
+                <label class="form-label">Address / City <span class="req">*</span></label>
+                <input type="text" name="location" id="locationInput" class="form-control" required
+                       placeholder="e.g. Accra, Greater Accra, Ghana">
+              </div>
+              <button type="button" id="detectLocationBtn"
+                      style="padding:.75rem 1rem;background:var(--blue);color:white;border:none;border-radius:8px;font-size:.82rem;font-weight:600;cursor:pointer;white-space:nowrap;flex-shrink:0;">
+                📍 Detect My Location
+              </button>
+            </div>
+            <input type="hidden" name="latitude"  id="latInput">
+            <input type="hidden" name="longitude" id="lngInput">
+            <div id="locationStatus" style="font-size:.78rem;color:var(--mid);display:none;padding:.5rem .75rem;background:var(--light);border-radius:6px;"></div>
+          </div>
+        </div>
+
+        <!-- Personal Info -->
+        <div class="form-card" style="margin-bottom:1.25rem;">
+          <div class="form-card-header">
+            <div class="form-card-icon">👤</div>
+            <div><div class="form-card-title">Your Details</div></div>
+          </div>
+          <div class="form-card-body">
+            <div class="form-grid">
+              <div class="form-group">
+                <label class="form-label">Full Name <span class="req">*</span></label>
+                <input type="text" name="name" class="form-control" required placeholder="Your full name">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Phone <span class="req">*</span></label>
+                <input type="tel" name="phone" class="form-control" required placeholder="+233 000 000 000">
+              </div>
+              <div class="form-group full">
+                <label class="form-label">Email <span class="req">*</span></label>
+                <input type="email" name="email" class="form-control" required placeholder="you@example.com">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Date & Time (test drive only) -->
+        {% if order_type == 'test_drive' %}
+        <div class="form-card" style="margin-bottom:1.25rem;">
+          <div class="form-card-header">
+            <div class="form-card-icon">📅</div>
+            <div><div class="form-card-title">Preferred Schedule</div></div>
+          </div>
+          <div class="form-card-body">
+            <div class="form-grid">
+              <div class="form-group">
+                <label class="form-label">Preferred Date</label>
+                <input type="date" name="preferred_date" class="form-control"
+                       min="{{ '' }}">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Preferred Time</label>
+                <select name="preferred_time" class="form-control">
+                  <option value="">Any time</option>
+                  <option>08:00 AM – 10:00 AM</option>
+                  <option>10:00 AM – 12:00 PM</option>
+                  <option>12:00 PM – 02:00 PM</option>
+                  <option>02:00 PM – 04:00 PM</option>
+                  <option>04:00 PM – 06:00 PM</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+        {% endif %}
+
+        <!-- Notes -->
+        <div class="form-card" style="margin-bottom:1.5rem;">
+          <div class="form-card-body">
+            <div class="form-group">
+              <label class="form-label">Additional Notes</label>
+              <textarea name="notes" class="form-control" rows="3"
+                        placeholder="{% if order_type == 'test_drive' %}Any specific routes or requirements for the test drive?{% else %}Any special requests or questions about this vehicle?{% endif %}"></textarea>
+            </div>
+          </div>
+        </div>
+
+        <button type="submit" class="btn-submit">
+          {% if order_type == 'test_drive' %}🚗 Confirm Test Drive Booking{% else %}✅ Submit Order Request{% endif %}
+        </button>
+        <p style="text-align:center;font-size:.78rem;color:var(--mid);margin-top:.75rem;">
+          We will confirm your {% if order_type == 'test_drive' %}test drive{% else %}order{% endif %} within 24 hours.
+        </p>
+      </form>
+    </div>
+
+    <!-- Vehicle summary card -->
+    <div>
+      <div style="position:sticky;top:calc(var(--nav-h) + 1rem);">
+        <div class="form-card">
+          {% if vehicle.cover %}
+          <img src="{{ url_for('static', filename=vehicle.cover) }}" alt="{{ vehicle.name }}"
+               style="width:100%;aspect-ratio:16/10;object-fit:cover;">
+          {% endif %}
+          <div style="padding:1.25rem;">
+            <p style="font-size:.72rem;color:var(--mid);text-transform:uppercase;letter-spacing:.06em;">{{ vehicle.category }}</p>
+            <h2 style="font-family:var(--font-head);font-size:1.3rem;font-weight:800;margin:.25rem 0;">{{ vehicle.name }}</h2>
+            {% if vehicle.tagline %}<p style="font-size:.85rem;color:var(--mid);">{{ vehicle.tagline }}</p>{% endif %}
+            <div style="margin:.75rem 0;padding:.75rem 0;border-top:1px solid #f3f4f6;border-bottom:1px solid #f3f4f6;">
+              <div style="font-family:var(--font-head);font-size:1.4rem;font-weight:800;">
+                <span class="c-ghs">{{ vehicle.price | ghs }}</span>
+                <span class="c-usd">{{ vehicle.price | currency }}</span>
+              </div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:.4rem;font-size:.82rem;color:var(--mid);">
+              {% if vehicle.year %}<span>📅 Year: <strong>{{ vehicle.year }}</strong></span>{% endif %}
+              {% if vehicle.fuel_type %}<span>⛽ Fuel: <strong>{{ vehicle.fuel_type }}</strong></span>{% endif %}
+              {% if vehicle.transmission %}<span>⚙️ Trans: <strong>{{ vehicle.transmission }}</strong></span>{% endif %}
+            </div>
+            <a href="{{ url_for('vehicle_detail', vid=vehicle.id) }}"
+               style="display:block;text-align:center;margin-top:1rem;padding:.6rem;border:1px solid #e5e7eb;border-radius:6px;font-size:.82rem;color:var(--blue);font-weight:600;">
+              View Full Details
+            </a>
+          </div>
+        </div>
+        <!-- Switch action -->
+        <div style="text-align:center;margin-top:.75rem;font-size:.82rem;color:var(--mid);">
+          {% if order_type == 'test_drive' %}
+          Want to order instead? <a href="{{ url_for('order_vehicle', vid=vehicle.id) }}?type=order" style="color:var(--blue);font-weight:600;">Order this vehicle →</a>
+          {% else %}
+          Want to try it first? <a href="{{ url_for('order_vehicle', vid=vehicle.id) }}?type=test_drive" style="color:var(--blue);font-weight:600;">Book a test drive →</a>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+document.getElementById('detectLocationBtn').addEventListener('click', function() {
+  const status = document.getElementById('locationStatus');
+  const btn    = this;
+  if (!navigator.geolocation) {
+    status.textContent = 'Geolocation is not supported by your browser.';
+    status.style.display = 'block';
+    return;
+  }
+  btn.textContent = '⏳ Detecting…';
+  btn.disabled = true;
+  status.style.display = 'block';
+  status.textContent = 'Getting your location…';
+
+  navigator.geolocation.getCurrentPosition(
+    async (pos) => {
+      const { latitude, longitude } = pos.coords;
+      document.getElementById('latInput').value = latitude;
+      document.getElementById('lngInput').value = longitude;
+      // Reverse geocode using browser-friendly nominatim
+      try {
+        const res  = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`);
+        const data = await res.json();
+        const addr = data.display_name || `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`;
+        document.getElementById('locationInput').value = addr;
+        status.textContent = '✓ Location detected: ' + addr;
+        status.style.color = 'var(--green)';
+      } catch {
+        document.getElementById('locationInput').value = `${latitude.toFixed(5)}, ${longitude.toFixed(5)}`;
+        status.textContent = '✓ Coordinates captured (coordinates only).';
+        status.style.color = 'var(--green)';
+      }
+      btn.textContent = '✓ Location Detected';
+    },
+    (err) => {
+      status.textContent = 'Could not detect location. Please type your address manually.';
+      status.style.color = 'var(--red)';
+      btn.textContent = '📍 Detect My Location';
+      btn.disabled = false;
+    },
+    { timeout: 10000 }
+  );
+});
+</script>
+{% endblock %}

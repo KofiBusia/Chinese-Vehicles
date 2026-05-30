@@ -1,0 +1,178 @@
+{% extends "base.html" %}
+{% block title %}{{ solar.name }} — {{ business.name }}{% endblock %}
+
+{% block content %}
+<div class="detail-page">
+
+  <!-- Gallery -->
+  <div class="detail-gallery">
+    {% set imgs = solar.get_images() %}
+    {% if imgs %}
+    <div style="position:relative;">
+      <img src="{{ url_for('static', filename=imgs[0]) }}" alt="{{ solar.name }}" class="detail-main-image" id="detailMainImg">
+      <div class="gallery-nav">
+        <button class="gallery-btn" id="galleryPrev">‹</button>
+        <button class="gallery-btn" id="galleryNext">›</button>
+      </div>
+    </div>
+    {% if imgs | length > 1 %}
+    <div class="gallery-thumbs">
+      {% for img in imgs %}
+      <img src="{{ url_for('static', filename=img) }}" alt="Photo {{ loop.index }}"
+           class="gallery-thumb {% if loop.first %}active{% endif %}">
+      {% endfor %}
+    </div>
+    {% endif %}
+    {% else %}
+    <div class="detail-main-placeholder" style="background:linear-gradient(135deg,#1a0a00,#451a03);">☀️</div>
+    {% endif %}
+  </div>
+
+  <!-- Content layout -->
+  <div class="detail-layout">
+    <div class="detail-main">
+      <p style="font-size:.8rem;color:var(--mid);text-transform:uppercase;letter-spacing:.08em;">
+        <a href="{{ url_for('solar') }}" style="color:var(--solar)">Solar Systems</a>
+        {% if solar.category %} / <a href="{{ url_for('solar') }}?category={{ solar.category }}" style="color:var(--solar)">{{ solar.category }}</a>{% endif %}
+        / {{ solar.name }}
+      </p>
+
+      <h1 class="detail-title" style="margin-top:.75rem;">{{ solar.name }}</h1>
+      {% if solar.tagline %}<p class="detail-tagline">{{ solar.tagline }}</p>{% endif %}
+      <p class="detail-price">
+        <span class="c-ghs">{{ solar.price | ghs }}</span>
+        <span class="c-usd">{{ solar.price | currency }}</span>
+      </p>
+
+      <!-- Specs -->
+      <div class="detail-specs-grid reveal">
+        {% if solar.category %}
+        <div class="spec-cell"><span class="spec-cell-label">Category</span><span class="spec-cell-value">{{ solar.category }}</span></div>
+        {% endif %}
+        {% if solar.power_output %}
+        <div class="spec-cell"><span class="spec-cell-label">Power Output</span><span class="spec-cell-value" style="color:var(--solar);">{{ solar.power_output }}</span></div>
+        {% endif %}
+        {% if solar.panel_count %}
+        <div class="spec-cell"><span class="spec-cell-label">Number of Panels</span><span class="spec-cell-value">{{ solar.panel_count }}</span></div>
+        {% endif %}
+        {% if solar.battery_capacity %}
+        <div class="spec-cell"><span class="spec-cell-label">Battery Capacity</span><span class="spec-cell-value">{{ solar.battery_capacity }}</span></div>
+        {% endif %}
+        {% if solar.efficiency %}
+        <div class="spec-cell"><span class="spec-cell-label">Efficiency</span><span class="spec-cell-value">{{ solar.efficiency }}</span></div>
+        {% endif %}
+        {% if solar.warranty %}
+        <div class="spec-cell"><span class="spec-cell-label">Warranty</span><span class="spec-cell-value">{{ solar.warranty }}</span></div>
+        {% endif %}
+      </div>
+
+      {% if solar.description %}
+      <div class="reveal">
+        <h2 class="features-title">About This System</h2>
+        <p class="detail-description">{{ solar.description }}</p>
+      </div>
+      {% endif %}
+
+      {% set feats = solar.get_features() %}
+      {% if feats %}
+      <div class="features-section reveal">
+        <h2 class="features-title">Features &amp; Benefits</h2>
+        <ul class="features-list">
+          {% for feat in feats %}
+          <li class="feature-item"><span class="feature-icon" style="color:var(--solar);">✓</span> {{ feat }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+      {% endif %}
+
+      {% set vids = solar.get_videos() %}
+      {% if vids %}
+      <div class="videos-section reveal">
+        <h2 class="features-title">Video Gallery</h2>
+        <div class="videos-grid">
+          {% for vid in vids %}
+          <div class="video-wrap">
+            <video controls preload="none">
+              <source src="{{ url_for('static', filename=vid) }}">
+            </video>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Sticky sidebar -->
+    <div class="detail-sidebar">
+      <div class="sticky-cta">
+        <div class="sticky-cta-price" style="color:var(--solar);">
+          <span class="c-ghs">{{ solar.price | ghs }}</span>
+          <span class="c-usd">{{ solar.price | currency }}</span>
+          <small style="color:var(--mid);">{{ solar.name }}</small>
+        </div>
+        <div class="cta-btns">
+          <a href="{{ url_for('loan') }}?solar={{ solar.id }}" class="btn-full primary" style="background:var(--solar);">
+            🏦 Loan for This System
+          </a>
+          <a href="https://wa.me/{{ business.whatsapp }}?text=Hi!%20I'm%20interested%20in%20the%20{{ solar.name | urlencode }}%20solar%20system."
+             class="btn-full dark" target="_blank">
+            💬 WhatsApp Us
+          </a>
+          <a href="{{ url_for('contact') }}" class="btn-full outline">
+            ✉️ Request a Quote
+          </a>
+        </div>
+        <div style="margin-top:1.25rem;padding-top:1.25rem;border-top:1px solid #f3f4f6;font-size:.8rem;color:var(--mid);line-height:1.6;">
+          📞 <a href="tel:{{ business.phone }}" style="color:var(--solar);font-weight:600;">{{ business.phone }}</a><br>
+          🏦 Financed via <strong>Republic Bank</strong>
+        </div>
+      </div>
+
+      <!-- Why solar card -->
+      <div style="margin-top:1rem;padding:1.25rem;background:linear-gradient(135deg,#1a0a00,#451a03);border-radius:12px;color:white;">
+        <h4 style="font-size:.9rem;font-weight:700;margin-bottom:1rem;">🌟 Benefits of Going Solar</h4>
+        <ul style="font-size:.82rem;color:rgba(255,255,255,.7);line-height:2;list-style:none;">
+          <li>✅ Reduce electricity bills by up to 90%</li>
+          <li>✅ Zero carbon emissions</li>
+          <li>✅ Increase property value</li>
+          <li>✅ Energy independence</li>
+          <li>✅ Low maintenance required</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Related -->
+  {% if related %}
+  <section class="related-section">
+    <h2 class="section-heading">Other Solar Systems</h2>
+    <div class="products-grid" style="max-width:1200px; margin:0 auto;">
+      {% for s in related %}
+      <div class="product-card reveal">
+        <div class="card-image-wrap">
+          {% if s.cover %}
+          <img src="{{ url_for('static', filename=s.cover) }}" alt="{{ s.name }}" loading="lazy">
+          {% else %}
+          <div class="card-no-image solar">☀️</div>
+          {% endif %}
+          <span class="card-badge solar">{{ s.category or 'Solar' }}</span>
+        </div>
+        <div class="card-body">
+          <h3 class="card-title">{{ s.name }}</h3>
+          <p class="card-price">
+            <span class="c-ghs">{{ s.price | ghs }}</span>
+            <span class="c-usd">{{ s.price | currency }}</span>
+          </p>
+          <div class="card-actions">
+            <a href="{{ url_for('solar_detail', sid=s.id) }}" class="btn-card-primary">View</a>
+            <a href="{{ url_for('loan') }}?solar={{ s.id }}" class="btn-card-secondary">Finance</a>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+</div>
+{% endblock %}

@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Admin{% endblock %} — {{ business.name }}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --sidebar-w: 240px;
+      --sidebar-bg: #0f1117;
+      --sidebar-border: rgba(255,255,255,.08);
+      --nav-h: 60px;
+      --blue: #3b82f6;
+      --blue-dark: #1d4ed8;
+      --green: #22c55e;
+      --red: #ef4444;
+      --yellow: #f59e0b;
+      --dark: #111827;
+      --mid: #6b7280;
+      --light: #f9fafb;
+      --white: #ffffff;
+      --border: #e5e7eb;
+      --font: 'Inter', system-ui, sans-serif;
+      --font-head: 'Poppins', 'Inter', sans-serif;
+    }
+    html, body { height: 100%; }
+    body { font-family: var(--font); background: var(--light); color: var(--dark); display: flex; }
+
+    /* ── Sidebar ── */
+    .sidebar {
+      width: var(--sidebar-w); min-height: 100vh;
+      background: var(--sidebar-bg); color: white;
+      display: flex; flex-direction: column;
+      position: fixed; top: 0; left: 0; bottom: 0;
+      z-index: 200;
+      transition: transform .3s;
+    }
+    .sidebar-logo {
+      padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--sidebar-border);
+      font-family: var(--font-head); font-size: 1rem; font-weight: 800;
+      color: white; display: flex; align-items: center; gap: .5rem;
+    }
+    .sidebar-logo small { font-size: .65rem; font-weight: 400; color: rgba(255,255,255,.4); display: block; margin-top: .1rem; }
+    .sidebar-nav { flex: 1; padding: 1rem 0; overflow-y: auto; }
+    .nav-section-label {
+      font-size: .65rem; font-weight: 700; text-transform: uppercase; letter-spacing: .1em;
+      color: rgba(255,255,255,.3); padding: .75rem 1.5rem .35rem;
+    }
+    .sidebar-link {
+      display: flex; align-items: center; gap: .75rem;
+      padding: .65rem 1.5rem;
+      font-size: .85rem; font-weight: 500; color: rgba(255,255,255,.65);
+      transition: all .2s; cursor: pointer; text-decoration: none;
+      border-left: 3px solid transparent;
+    }
+    .sidebar-link:hover { color: white; background: rgba(255,255,255,.06); }
+    .sidebar-link.active { color: var(--blue); border-left-color: var(--blue); background: rgba(59,130,246,.1); }
+    .sidebar-link .link-icon { font-size: 1rem; width: 20px; text-align: center; }
+    .sidebar-badge {
+      margin-left: auto; background: var(--red); color: white;
+      font-size: .65rem; font-weight: 700; padding: .15rem .45rem;
+      border-radius: 20px;
+    }
+    .sidebar-footer {
+      padding: 1rem 1.5rem; border-top: 1px solid var(--sidebar-border);
+      font-size: .8rem; color: rgba(255,255,255,.4);
+    }
+    .sidebar-footer a { color: rgba(255,255,255,.6); transition: color .2s; }
+    .sidebar-footer a:hover { color: white; }
+
+    /* ── Main area ── */
+    .main-area {
+      margin-left: var(--sidebar-w);
+      flex: 1; min-height: 100vh;
+      display: flex; flex-direction: column;
+    }
+    .top-bar {
+      height: var(--nav-h); background: white; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; padding: 0 2rem; gap: 1rem;
+      position: sticky; top: 0; z-index: 100;
+    }
+    .top-bar-title { font-family: var(--font-head); font-size: 1.1rem; font-weight: 700; flex: 1; }
+    .top-bar-actions { display: flex; align-items: center; gap: .75rem; }
+    .admin-avatar {
+      width: 32px; height: 32px; border-radius: 50%; background: var(--blue);
+      color: white; display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: .85rem;
+    }
+    .top-bar-name { font-size: .85rem; font-weight: 600; }
+
+    .page-body { flex: 1; padding: 2rem; }
+
+    /* ── Breadcrumb ── */
+    .breadcrumb { font-size: .8rem; color: var(--mid); margin-bottom: 1.5rem; display: flex; gap: .5rem; align-items: center; }
+    .breadcrumb a { color: var(--blue); }
+
+    /* ── Flash messages ── */
+    .flash-bar {
+      padding: .85rem 2rem; font-size: .85rem; font-weight: 500;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .flash-bar.success { background: #dcfce7; color: #15803d; border-bottom: 2px solid #16a34a; }
+    .flash-bar.error   { background: #fee2e2; color: #b91c1c; border-bottom: 2px solid #dc2626; }
+
+    /* ── Stats cards ── */
+    .stats-row { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
+    .stat-card {
+      background: white; border-radius: 12px; padding: 1.25rem;
+      border: 1px solid var(--border); transition: box-shadow .2s;
+    }
+    .stat-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,.08); }
+    .stat-card-icon { font-size: 1.5rem; margin-bottom: .75rem; }
+    .stat-card-value { font-family: var(--font-head); font-size: 2rem; font-weight: 800; line-height: 1; }
+    .stat-card-label { font-size: .78rem; color: var(--mid); margin-top: .35rem; }
+    .stat-card.blue  .stat-card-value { color: var(--blue); }
+    .stat-card.green .stat-card-value { color: var(--green); }
+    .stat-card.red   .stat-card-value { color: var(--red); }
+    .stat-card.gold  .stat-card-value { color: #d97706; }
+
+    /* ── Table ── */
+    .table-card { background: white; border-radius: 12px; border: 1px solid var(--border); overflow: hidden; }
+    .table-header { padding: 1rem 1.5rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+    .table-title { font-family: var(--font-head); font-size: 1rem; font-weight: 700; }
+    table { width: 100%; border-collapse: collapse; }
+    th { font-size: .75rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--mid); padding: .75rem 1.5rem; text-align: left; background: #f9fafb; border-bottom: 1px solid var(--border); }
+    td { padding: .9rem 1.5rem; border-bottom: 1px solid #f3f4f6; font-size: .875rem; vertical-align: middle; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: #fafafa; }
+    .td-image { width: 56px; height: 40px; object-fit: cover; border-radius: 6px; }
+    .td-image-placeholder { width: 56px; height: 40px; background: #f3f4f6; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
+
+    /* ── Badges ── */
+    .badge { display: inline-flex; align-items: center; gap: .3rem; padding: .25rem .65rem; border-radius: 20px; font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; }
+    .badge-blue    { background: #dbeafe; color: #1d4ed8; }
+    .badge-green   { background: #dcfce7; color: #15803d; }
+    .badge-red     { background: #fee2e2; color: #b91c1c; }
+    .badge-yellow  { background: #fef3c7; color: #92400e; }
+    .badge-gray    { background: #f3f4f6; color: #4b5563; }
+
+    /* ── Buttons ── */
+    .btn { display: inline-flex; align-items: center; gap: .4rem; padding: .5rem 1rem; border-radius: 6px; font-size: .82rem; font-weight: 600; cursor: pointer; transition: all .2s; border: none; text-decoration: none; }
+    .btn-primary { background: var(--blue); color: white; }
+    .btn-primary:hover { background: var(--blue-dark); }
+    .btn-success { background: var(--green); color: white; }
+    .btn-danger  { background: var(--red); color: white; }
+    .btn-outline { background: none; border: 1px solid var(--border); color: var(--dark); }
+    .btn-outline:hover { border-color: var(--dark); }
+    .btn-sm { padding: .35rem .7rem; font-size: .78rem; }
+
+    /* ── Forms ── */
+    .form-section { background: white; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 1.5rem; overflow: hidden; }
+    .form-section-header { padding: 1rem 1.5rem; border-bottom: 1px solid var(--border); font-family: var(--font-head); font-size: .95rem; font-weight: 700; display: flex; align-items: center; gap: .75rem; }
+    .form-section-body { padding: 1.5rem; }
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    .form-group { display: flex; flex-direction: column; gap: .4rem; }
+    .form-group.full { grid-column: 1 / -1; }
+    .form-label { font-size: .8rem; font-weight: 600; color: var(--dark); }
+    .form-control { padding: .65rem .9rem; border: 1px solid var(--border); border-radius: 6px; font-size: .875rem; font-family: var(--font); color: var(--dark); transition: border-color .2s; background: white; }
+    .form-control:focus { outline: none; border-color: var(--blue); box-shadow: 0 0 0 3px rgba(59,130,246,.1); }
+    textarea.form-control { resize: vertical; min-height: 80px; }
+    .form-check { display: flex; align-items: center; gap: .6rem; cursor: pointer; }
+    .form-check input { accent-color: var(--blue); width: 16px; height: 16px; }
+    .form-check label { font-size: .85rem; font-weight: 500; cursor: pointer; }
+
+    /* ── Media thumbs ── */
+    .media-grid { display: flex; gap: .75rem; flex-wrap: wrap; }
+    .media-thumb { position: relative; display: inline-block; }
+    .media-thumb img, .media-thumb video { width: 100px; height: 70px; object-fit: cover; border-radius: 6px; display: block; }
+    .media-thumb .del-btn { position: absolute; top: 4px; right: 4px; width: 20px; height: 20px; background: rgba(239,68,68,.85); color: white; border-radius: 50%; font-size: .7rem; display: flex; align-items: center; justify-content: center; cursor: pointer; border: none; }
+
+    /* ── Upload preview ── */
+    .upload-preview { display: flex; gap: .75rem; flex-wrap: wrap; margin-top: .75rem; }
+    .upload-preview-item { position: relative; }
+    .upload-preview-item img { width: 80px; height: 56px; object-fit: cover; border-radius: 6px; }
+    .upload-preview-item .remove-preview { position: absolute; top: 2px; right: 2px; width: 18px; height: 18px; background: rgba(0,0,0,.6); color: white; border-radius: 50%; font-size: .6rem; display: flex; align-items: center; justify-content: center; cursor: pointer; border: none; }
+    .video-preview-name { font-size: .78rem; color: var(--mid); padding: .4rem .6rem; background: #f3f4f6; border-radius: 6px; }
+    .file-drop-area { border: 2px dashed var(--border); border-radius: 8px; padding: 2rem; text-align: center; cursor: pointer; transition: border-color .2s; color: var(--mid); font-size: .85rem; }
+    .file-drop-area:hover { border-color: var(--blue); color: var(--blue); }
+    .file-drop-area input { display: none; }
+
+    /* ── Sidebar mobile toggle ── */
+    .sidebar-toggle { display: none; }
+
+    /* ── App status select ── */
+    select.status-select { padding: .3rem .6rem; border: 1px solid var(--border); border-radius: 6px; font-size: .8rem; }
+
+    @media (max-width: 768px) {
+      .sidebar { transform: translateX(-100%); }
+      .sidebar.open { transform: none; }
+      .main-area { margin-left: 0; }
+      .sidebar-toggle { display: block; background: none; border: none; font-size: 1.4rem; cursor: pointer; }
+      .form-grid { grid-template-columns: 1fr; }
+      .form-group.full { grid-column: 1; }
+      .stats-row { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<aside class="sidebar" id="adminSidebar">
+  <div class="sidebar-logo">
+    <span>⚡</span>
+    <div>
+      <div>{{ business.name }}</div>
+      <small>Admin Panel</small>
+    </div>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-section-label">Overview</div>
+    <a href="{{ url_for('admin_dashboard') }}" class="sidebar-link {% if request.endpoint == 'admin_dashboard' %}active{% endif %}">
+      <span class="link-icon">📊</span> Dashboard
+    </a>
+    <div class="nav-section-label">Inventory</div>
+    <a href="{{ url_for('admin_vehicles') }}" class="sidebar-link {% if 'vehicle' in request.endpoint %}active{% endif %}">
+      <span class="link-icon">🚗</span> Vehicles
+    </a>
+    <a href="{{ url_for('admin_solar') }}" class="sidebar-link {% if 'solar' in request.endpoint and 'admin_solar' in request.endpoint %}active{% endif %}">
+      <span class="link-icon">☀️</span> Solar Systems
+    </a>
+    <div class="nav-section-label">Finance</div>
+    <a href="{{ url_for('admin_applications') }}" class="sidebar-link {% if 'application' in request.endpoint %}active{% endif %}">
+      <span class="link-icon">🏦</span> Loan Applications
+      {% if pending_loans > 0 %}<span class="sidebar-badge">{{ pending_loans }}</span>{% endif %}
+    </a>
+    <a href="{{ url_for('admin_orders') }}" class="sidebar-link {% if request.endpoint == 'admin_orders' or request.endpoint == 'admin_update_order_status' %}active{% endif %}">
+      <span class="link-icon">🛒</span> Orders &amp; Test Drives
+      {% if pending_orders is defined and pending_orders > 0 %}<span class="sidebar-badge">{{ pending_orders }}</span>{% endif %}
+    </a>
+    <div class="nav-section-label">Communication</div>
+    <a href="{{ url_for('admin_contacts') }}" class="sidebar-link {% if request.endpoint == 'admin_contacts' %}active{% endif %}">
+      <span class="link-icon">✉️</span> Messages
+      {% if unread_contacts > 0 %}<span class="sidebar-badge">{{ unread_contacts }}</span>{% endif %}
+    </a>
+    <div class="nav-section-label">Team</div>
+    <a href="{{ url_for('admin_salespersons') }}" class="sidebar-link {% if 'salesperson' in request.endpoint or 'sale' in request.endpoint %}active{% endif %}">
+      <span class="link-icon">👥</span> Salespersons
+    </a>
+    <div class="nav-section-label">Account</div>
+    <a href="{{ url_for('admin_settings') }}" class="sidebar-link {% if request.endpoint == 'admin_settings' %}active{% endif %}">
+      <span class="link-icon">⚙️</span> Settings
+    </a>
+    <a href="{{ url_for('index') }}" class="sidebar-link" target="_blank">
+      <span class="link-icon">🌐</span> View Website ↗
+    </a>
+  </nav>
+  <div class="sidebar-footer">
+    Logged in as <strong style="color:rgba(255,255,255,.7);">{{ session.get('admin_name', 'Admin') }}</strong><br>
+    <a href="{{ url_for('admin_logout') }}">Logout →</a>
+  </div>
+</aside>
+
+<!-- Main area -->
+<div class="main-area">
+  <!-- Top bar -->
+  <div class="top-bar">
+    <button class="sidebar-toggle" onclick="document.getElementById('adminSidebar').classList.toggle('open')">☰</button>
+    <div class="top-bar-title">{% block page_title %}Dashboard{% endblock %}</div>
+    <div class="top-bar-actions">
+      <a href="{{ url_for('admin_add_vehicle') }}" class="btn btn-primary btn-sm">+ Add Vehicle</a>
+      <a href="{{ url_for('admin_add_solar') }}" class="btn btn-outline btn-sm">+ Add Solar</a>
+      <div class="admin-avatar">{{ session.get('admin_name', 'A')[0].upper() }}</div>
+      <span class="top-bar-name">{{ session.get('admin_name', 'Admin') }}</span>
+    </div>
+  </div>
+
+  <!-- Flash messages -->
+  {% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    {% for category, message in messages %}
+    <div class="flash-bar {{ category }}">
+      <span>{{ message }}</span>
+      <button onclick="this.parentElement.remove()" style="background:none;border:none;cursor:pointer;font-size:1rem;">✕</button>
+    </div>
+    {% endfor %}
+  {% endif %}
+  {% endwith %}
+
+  <div class="page-body">
+    {% block content %}{% endblock %}
+  </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

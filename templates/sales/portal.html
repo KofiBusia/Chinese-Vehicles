@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sales Portal — {{ business.name }}</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    body{font-family:'Inter',system-ui,sans-serif;background:#f9fafb;color:#111827;}
+    .topbar{background:#0f1117;color:white;padding:.75rem 1.5rem;display:flex;align-items:center;justify-content:space-between;}
+    .topbar-brand{font-family:'Poppins',sans-serif;font-weight:800;font-size:1rem;}
+    .topbar-nav{display:flex;gap:.5rem;align-items:center;}
+    .topbar-nav a{color:rgba(255,255,255,.7);font-size:.83rem;font-weight:500;padding:.4rem .8rem;border-radius:6px;text-decoration:none;transition:background .2s;}
+    .topbar-nav a:hover{background:rgba(255,255,255,.1);color:white;}
+    .topbar-nav a.active{color:#60a5fa;}
+    .main{max-width:1100px;margin:0 auto;padding:2rem 1.5rem;}
+    .greeting{font-family:'Poppins',sans-serif;font-size:1.6rem;font-weight:800;margin-bottom:.25rem;}
+    .sub{color:#6b7280;font-size:.9rem;margin-bottom:2rem;}
+    .code-badge{display:inline-flex;align-items:center;gap:.5rem;background:#dbeafe;color:#1d4ed8;padding:.4rem .9rem;border-radius:20px;font-size:.82rem;font-weight:700;letter-spacing:.06em;margin-bottom:1.5rem;}
+    .stats{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:1rem;margin-bottom:2rem;}
+    .stat-card{background:white;border-radius:12px;padding:1.25rem;border:1px solid #e5e7eb;}
+    .stat-icon{font-size:1.5rem;margin-bottom:.5rem;}
+    .stat-val{font-family:'Poppins',sans-serif;font-size:2rem;font-weight:800;line-height:1;}
+    .stat-lbl{font-size:.78rem;color:#6b7280;margin-top:.35rem;}
+    .actions{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:1rem;margin-bottom:2rem;}
+    .action-card{background:white;border-radius:12px;padding:1.25rem;border:1px solid #e5e7eb;text-decoration:none;color:#111827;display:flex;align-items:center;gap:1rem;transition:box-shadow .2s;}
+    .action-card:hover{box-shadow:0 4px 16px rgba(0,0,0,.08);}
+    .action-icon{font-size:1.8rem;}
+    .action-title{font-weight:700;font-size:.95rem;}
+    .action-sub{font-size:.78rem;color:#6b7280;margin-top:.15rem;}
+    .table-card{background:white;border-radius:12px;border:1px solid #e5e7eb;overflow:hidden;}
+    .table-header{padding:1rem 1.25rem;border-bottom:1px solid #f3f4f6;display:flex;justify-content:space-between;align-items:center;}
+    .table-title{font-family:'Poppins',sans-serif;font-weight:700;font-size:.95rem;}
+    table{width:100%;border-collapse:collapse;}
+    th{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#6b7280;padding:.65rem 1rem;text-align:left;background:#f9fafb;border-bottom:1px solid #f3f4f6;}
+    td{padding:.85rem 1rem;border-bottom:1px solid #f9fafb;font-size:.875rem;}
+    tr:last-child td{border-bottom:none;}
+    .badge{display:inline-flex;align-items:center;gap:.3rem;padding:.2rem .55rem;border-radius:20px;font-size:.7rem;font-weight:700;}
+    .badge-green{background:#dcfce7;color:#15803d;}
+    .badge-yellow{background:#fef3c7;color:#92400e;}
+    .badge-red{background:#fee2e2;color:#b91c1c;}
+    .flash{padding:.75rem 1.5rem;font-size:.85rem;font-weight:500;}
+    .flash.success{background:#dcfce7;color:#15803d;border-bottom:2px solid #16a34a;}
+    .flash.error{background:#fee2e2;color:#b91c1c;border-bottom:2px solid #dc2626;}
+  </style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-brand">⚡ {{ business.name }}</div>
+  <div class="topbar-nav">
+    <a href="{{ url_for('sales_portal') }}" class="active">Dashboard</a>
+    <a href="{{ url_for('sales_inventory') }}">Inventory</a>
+    <a href="{{ url_for('sales_submit_lead') }}">Submit Lead</a>
+    <a href="{{ url_for('index') }}" target="_blank">Website ↗</a>
+    <a href="{{ url_for('sales_logout') }}" style="color:#f87171;">Logout</a>
+  </div>
+</div>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+{% if messages %}{% for cat, msg in messages %}<div class="flash {{ cat }}">{{ msg }}</div>{% endfor %}{% endif %}
+{% endwith %}
+
+<div class="main">
+  <div class="greeting">Hello, {{ sp.full_name }}! 👋</div>
+  <div class="sub">Welcome to your sales dashboard.</div>
+  <div><span class="code-badge">🔑 Your Code: {{ sp.code }}</span></div>
+
+  <div class="stats">
+    <div class="stat-card">
+      <div class="stat-icon">📊</div>
+      <div class="stat-val" style="color:#3b82f6;">{{ sp.total_sales() }}</div>
+      <div class="stat-lbl">Total Sales</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon">💰</div>
+      <div class="stat-val" style="font-size:1.2rem;">{{ sp.total_revenue() | currency }}</div>
+      <div class="stat-lbl">Total Revenue</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon">🏆</div>
+      <div class="stat-val" style="color:#22c55e;font-size:1.2rem;">{{ sp.commission_earned() | currency }}</div>
+      <div class="stat-lbl">Commission Earned ({{ sp.commission_pct }}%)</div>
+    </div>
+  </div>
+
+  <div class="actions">
+    <a href="{{ url_for('sales_submit_lead') }}" class="action-card">
+      <div class="action-icon">➕</div>
+      <div>
+        <div class="action-title">Submit a Lead</div>
+        <div class="action-sub">Record a new customer sale</div>
+      </div>
+    </a>
+    <a href="{{ url_for('sales_inventory') }}" class="action-card">
+      <div class="action-icon">🚗</div>
+      <div>
+        <div class="action-title">View Inventory</div>
+        <div class="action-sub">Browse available vehicles & solar</div>
+      </div>
+    </a>
+    <a href="{{ url_for('loan') }}" class="action-card" target="_blank">
+      <div class="action-icon">🏦</div>
+      <div>
+        <div class="action-title">Loan Application</div>
+        <div class="action-sub">Republic Bank finance form</div>
+      </div>
+    </a>
+  </div>
+
+  <div class="table-card">
+    <div class="table-header">
+      <span class="table-title">My Recent Sales</span>
+    </div>
+    <table>
+      <thead><tr>
+        <th>Date</th>
+        <th>Customer</th>
+        <th>Product</th>
+        <th>Amount</th>
+        <th>Commission</th>
+        <th>Status</th>
+      </tr></thead>
+      <tbody>
+        {% for sale in recent_sales %}
+        <tr>
+          <td style="font-size:.78rem;color:#6b7280;">{{ sale.created_at.strftime('%b %d, %Y') }}</td>
+          <td>
+            <div style="font-weight:600;">{{ sale.customer_name or '—' }}</div>
+            <div style="font-size:.75rem;color:#6b7280;">{{ sale.customer_phone or '' }}</div>
+          </td>
+          <td>{{ '☀️' if sale.product_type == 'solar' else '🚗' }} {{ sale.product_name or '—' }}</td>
+          <td style="font-weight:700;">{{ sale.sale_amount | currency if sale.sale_amount else '—' }}</td>
+          <td style="color:#22c55e;font-weight:600;">
+            {% if sale.sale_amount %}{{ (sale.sale_amount * sp.commission_pct / 100) | currency }}{% else %}—{% endif %}
+          </td>
+          <td>
+            {% if sale.status == 'confirmed' %}<span class="badge badge-green">✅ Confirmed</span>
+            {% elif sale.status == 'cancelled' %}<span class="badge badge-red">❌ Cancelled</span>
+            {% else %}<span class="badge badge-yellow">⏳ Pending</span>{% endif %}
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="6" style="text-align:center;padding:2rem;color:#6b7280;">No sales yet. Submit your first lead!</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+</body>
+</html>

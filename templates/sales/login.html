@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sales Portal Login — {{ business.name }}</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@700;800&display=swap" rel="stylesheet">
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    body{font-family:'Inter',sans-serif;background:linear-gradient(135deg,#0f1117,#1a1d27);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:1rem;}
+    .wrap{background:#1a1d27;border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:2.5rem;width:100%;max-width:400px;}
+    .logo{text-align:center;margin-bottom:2rem;}
+    .logo .icon{font-size:2.5rem;}
+    .logo h1{font-family:'Poppins',sans-serif;font-size:1.3rem;font-weight:800;color:white;margin-top:.5rem;}
+    .logo p{font-size:.82rem;color:rgba(255,255,255,.4);margin-top:.25rem;}
+    .badge{display:inline-block;padding:.25rem .75rem;background:rgba(59,130,246,.15);color:#60a5fa;border:1px solid rgba(59,130,246,.3);border-radius:20px;font-size:.78rem;font-weight:600;margin-bottom:1.5rem;}
+    .form-group{margin-bottom:1.25rem;}
+    label{font-size:.8rem;font-weight:600;color:rgba(255,255,255,.7);display:block;margin-bottom:.4rem;}
+    input{width:100%;padding:.8rem 1rem;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:8px;color:white;font-size:.9rem;font-family:inherit;transition:border-color .2s;}
+    input:focus{outline:none;border-color:#3b82f6;background:rgba(59,130,246,.08);}
+    input::placeholder{color:rgba(255,255,255,.25);}
+    .btn{width:100%;padding:.9rem;background:#3b82f6;color:white;border:none;border-radius:8px;font-size:.95rem;font-weight:700;cursor:pointer;transition:background .2s;margin-top:.5rem;}
+    .btn:hover{background:#2563eb;}
+    .flash{padding:.75rem 1rem;border-radius:8px;font-size:.85rem;margin-bottom:1rem;}
+    .flash.error{background:rgba(239,68,68,.15);color:#fca5a5;border:1px solid rgba(239,68,68,.3);}
+    .links{text-align:center;margin-top:1.5rem;font-size:.82rem;color:rgba(255,255,255,.35);}
+    .links a{color:#60a5fa;}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="logo">
+      <div class="icon">⚡</div>
+      <h1>{{ business.name }}</h1>
+      <p>Salesperson Portal</p>
+    </div>
+    <div style="text-align:center;"><span class="badge">🔑 Use your assigned Sales Code</span></div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}{% for cat, msg in messages %}<div class="flash {{ cat }}">{{ msg }}</div>{% endfor %}{% endif %}
+    {% endwith %}
+
+    <form method="post" action="{{ url_for('sales_login') }}">
+      <div class="form-group">
+        <label>Sales Code</label>
+        <input type="text" name="code" required autofocus placeholder="e.g. JOHN01" style="letter-spacing:.08em;font-weight:700;" oninput="this.value=this.value.toUpperCase()">
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" name="password" required placeholder="••••••••">
+      </div>
+      <button type="submit" class="btn">Sign In →</button>
+    </form>
+    <div class="links"><a href="{{ url_for('index') }}">← Back to website</a></div>
+  </div>
+</body>
+</html>

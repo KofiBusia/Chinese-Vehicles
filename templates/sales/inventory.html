@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Inventory — Sales Portal</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@700;800&display=swap" rel="stylesheet">
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    body{font-family:'Inter',sans-serif;background:#f9fafb;color:#111827;}
+    .topbar{background:#0f1117;color:white;padding:.75rem 1.5rem;display:flex;align-items:center;justify-content:space-between;}
+    .topbar-brand{font-family:'Poppins',sans-serif;font-weight:800;font-size:1rem;}
+    .topbar-nav{display:flex;gap:.5rem;align-items:center;}
+    .topbar-nav a{color:rgba(255,255,255,.7);font-size:.83rem;font-weight:500;padding:.4rem .8rem;border-radius:6px;text-decoration:none;}
+    .topbar-nav a:hover{background:rgba(255,255,255,.1);color:white;}
+    .main{max-width:1200px;margin:0 auto;padding:2rem 1.5rem;}
+    h1{font-family:'Poppins',sans-serif;font-size:1.5rem;font-weight:800;margin-bottom:1.5rem;}
+    .tabs{display:flex;gap:.5rem;margin-bottom:1.5rem;}
+    .tab{padding:.45rem 1.2rem;border-radius:20px;font-size:.85rem;font-weight:600;cursor:pointer;border:1px solid #e5e7eb;background:white;color:#374151;}
+    .tab.active{background:#1d4ed8;color:white;border-color:#1d4ed8;}
+    .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1.25rem;}
+    .card{background:white;border-radius:12px;border:1px solid #e5e7eb;overflow:hidden;}
+    .card-img{aspect-ratio:16/10;background:#111827;overflow:hidden;}
+    .card-img img{width:100%;height:100%;object-fit:cover;}
+    .card-body{padding:1rem;}
+    .card-meta{font-size:.72rem;color:#6b7280;text-transform:uppercase;letter-spacing:.06em;}
+    .card-title{font-family:'Poppins',sans-serif;font-weight:700;font-size:1.05rem;margin:.25rem 0;}
+    .card-specs{font-size:.8rem;color:#6b7280;margin:.4rem 0;}
+    .card-price{font-family:'Poppins',sans-serif;font-size:1.3rem;font-weight:800;margin:.5rem 0;}
+    .btn{display:inline-block;padding:.55rem 1.1rem;border-radius:6px;font-size:.82rem;font-weight:600;text-decoration:none;transition:opacity .2s;}
+    .btn-blue{background:#1d4ed8;color:white;}
+    .btn-blue:hover{opacity:.85;}
+    .btn-outline{border:1px solid #d1d5db;color:#374151;}
+    .btn-outline:hover{border-color:#374151;}
+    .btns{display:flex;gap:.5rem;margin-top:.75rem;}
+    .no-img{display:flex;align-items:center;justify-content:center;font-size:3rem;color:rgba(255,255,255,.2);}
+  </style>
+</head>
+<body>
+<div class="topbar">
+  <div class="topbar-brand">⚡ {{ business.name }}</div>
+  <div class="topbar-nav">
+    <a href="{{ url_for('sales_portal') }}">Dashboard</a>
+    <a href="{{ url_for('sales_inventory') }}" style="color:#60a5fa;">Inventory</a>
+    <a href="{{ url_for('sales_submit_lead') }}">Submit Lead</a>
+    <a href="{{ url_for('sales_logout') }}" style="color:#f87171;">Logout</a>
+  </div>
+</div>
+
+<div class="main">
+  <h1>Current Inventory</h1>
+
+  <h2 style="font-size:1rem;font-weight:700;margin-bottom:1rem;color:#374151;">🚗 Vehicles ({{ vehicles | length }})</h2>
+  <div class="grid" style="margin-bottom:2.5rem;">
+    {% for v in vehicles %}
+    <div class="card">
+      <div class="card-img">
+        {% set imgs = v.get_images() %}
+        {% if imgs %}<img src="{{ url_for('static', filename=imgs[0]) }}" alt="{{ v.name }}">
+        {% else %}<div class="no-img" style="aspect-ratio:16/10;background:#1f2937;">🚗</div>{% endif %}
+      </div>
+      <div class="card-body">
+        <div class="card-meta">{{ v.category or 'Vehicle' }} • {{ v.year or 'N/A' }}</div>
+        <div class="card-title">{{ v.name }}</div>
+        <div class="card-specs">{{ v.fuel_type or '' }} {% if v.transmission %}• {{ v.transmission }}{% endif %} {% if v.mileage %}• {{ "{:,}".format(v.mileage) }} km{% endif %}</div>
+        <div class="card-price">${{ "{:,.2f}".format(v.price) }}</div>
+        <div class="btns">
+          <a href="{{ url_for('vehicle_detail', vid=v.id) }}" target="_blank" class="btn btn-outline">👁 View</a>
+          <a href="{{ url_for('sales_submit_lead') }}?type=vehicle&id={{ v.id }}" class="btn btn-blue">Submit Lead</a>
+        </div>
+      </div>
+    </div>
+    {% else %}
+    <p style="color:#6b7280;grid-column:1/-1;">No vehicles available.</p>
+    {% endfor %}
+  </div>
+
+  <h2 style="font-size:1rem;font-weight:700;margin-bottom:1rem;color:#374151;">☀️ Solar Systems ({{ solar_systems | length }})</h2>
+  <div class="grid">
+    {% for s in solar_systems %}
+    <div class="card">
+      <div class="card-img">
+        {% set imgs = s.get_images() %}
+        {% if imgs %}<img src="{{ url_for('static', filename=imgs[0]) }}" alt="{{ s.name }}">
+        {% else %}<div class="no-img" style="aspect-ratio:16/10;background:#451a03;">☀️</div>{% endif %}
+      </div>
+      <div class="card-body">
+        <div class="card-meta">{{ s.category or 'Solar' }}</div>
+        <div class="card-title">{{ s.name }}</div>
+        <div class="card-specs">{{ s.power_output or '' }} {% if s.panel_count %}• {{ s.panel_count }} panels{% endif %}</div>
+        <div class="card-price">${{ "{:,.2f}".format(s.price) }}</div>
+        <div class="btns">
+          <a href="{{ url_for('solar_detail', sid=s.id) }}" target="_blank" class="btn btn-outline">👁 View</a>
+          <a href="{{ url_for('sales_submit_lead') }}?type=solar&id={{ s.id }}" class="btn btn-blue">Submit Lead</a>
+        </div>
+      </div>
+    </div>
+    {% else %}
+    <p style="color:#6b7280;grid-column:1/-1;">No solar systems available.</p>
+    {% endfor %}
+  </div>
+</div>
+</body>
+</html>

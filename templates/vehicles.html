@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+{% block title %}Vehicles — {{ business.name }}{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+  <p style="font-size:.8rem;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.5);margin-bottom:.5rem;">Our Inventory</p>
+  <h1 class="page-title">Vehicles</h1>
+  <p class="page-subtitle">{{ vehicles | length }} vehicle{{ 's' if vehicles | length != 1 }} available</p>
+</div>
+
+<!-- Filters -->
+<form method="get" action="{{ url_for('vehicles') }}">
+  <div class="filters-bar">
+    <div class="filters-inner">
+      <div class="filter-group">
+        <label class="filter-label">Category</label>
+        <select name="category" class="filter-select" onchange="this.form.submit()">
+          <option value="">All Types</option>
+          {% for cat in categories %}
+          <option value="{{ cat }}" {% if cat == current_category %}selected{% endif %}>{{ cat }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="filter-group">
+        <label class="filter-label">Fuel</label>
+        <select name="fuel" class="filter-select" onchange="this.form.submit()">
+          <option value="">All Fuels</option>
+          {% for f in fuels %}
+          <option value="{{ f }}" {% if f == current_fuel %}selected{% endif %}>{{ f }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="filter-group">
+        <label class="filter-label">Min Price</label>
+        <input type="number" name="min" class="filter-select" placeholder="$ Min" style="width:100px;"
+               value="{{ request.args.get('min', '') }}">
+      </div>
+      <div class="filter-group">
+        <label class="filter-label">Max Price</label>
+        <input type="number" name="max" class="filter-select" placeholder="$ Max" style="width:100px;"
+               value="{{ request.args.get('max', '') }}">
+      </div>
+      <div class="filter-group">
+        <label class="filter-label">Sort</label>
+        <select name="sort" class="filter-select" onchange="this.form.submit()">
+          <option value="newest"     {% if current_sort=='newest' %}selected{% endif %}>Newest First</option>
+          <option value="price_asc"  {% if current_sort=='price_asc' %}selected{% endif %}>Price: Low–High</option>
+          <option value="price_desc" {% if current_sort=='price_desc' %}selected{% endif %}>Price: High–Low</option>
+        </select>
+      </div>
+      <div class="filter-search">
+        <input type="text" name="q" class="filter-input" placeholder="🔍 Search vehicles…" value="{{ search }}">
+        <button type="submit" class="filter-btn">Search</button>
+        {% if search or current_category or current_fuel %}
+        <a href="{{ url_for('vehicles') }}" class="filter-clear">Clear</a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</form>
+
+<section class="products-section">
+  <div class="products-inner">
+    <p class="products-count">{{ vehicles | length }} vehicle{{ 's' if vehicles | length != 1 }} found</p>
+    <div class="products-grid">
+      {% for vehicle in vehicles %}
+      <div class="product-card reveal">
+        <div class="card-image-wrap">
+          {% if vehicle.cover %}
+          <img src="{{ url_for('static', filename=vehicle.cover) }}" alt="{{ vehicle.name }}" loading="lazy">
+          {% else %}
+          <div class="card-no-image">🚗<span>No Image Yet</span></div>
+          {% endif %}
+          {% if vehicle.featured %}<span class="card-badge featured">⭐ Featured</span>{% endif %}
+          {% if not vehicle.featured and vehicle.fuel_type == 'Electric' %}<span class="card-badge">EV</span>{% endif %}
+        </div>
+        <div class="card-body">
+          <p class="card-meta">{{ vehicle.category or '—' }} &bull; {{ vehicle.year or 'N/A' }}</p>
+          <h3 class="card-title">{{ vehicle.name }}</h3>
+          {% if vehicle.tagline %}<p class="card-tagline">{{ vehicle.tagline }}</p>{% endif %}
+          <div class="card-specs">
+            {% if vehicle.fuel_type %}<span class="card-spec"><span class="card-spec-icon">⛽</span>{{ vehicle.fuel_type }}</span>{% endif %}
+            {% if vehicle.transmission %}<span class="card-spec"><span class="card-spec-icon">⚙️</span>{{ vehicle.transmission }}</span>{% endif %}
+            {% if vehicle.mileage %}<span class="card-spec"><span class="card-spec-icon">📏</span>{{ vehicle.mileage | comma }} km</span>{% endif %}
+            {% if vehicle.engine %}<span class="card-spec"><span class="card-spec-icon">🔧</span>{{ vehicle.engine }}</span>{% endif %}
+          </div>
+          <p class="card-price">
+            <span class="c-ghs">{{ vehicle.price | ghs }}</span>
+            <span class="c-usd">{{ vehicle.price | currency }}</span>
+          </p>
+          <div class="card-actions">
+            <a href="{{ url_for('vehicle_detail', vid=vehicle.id) }}" class="btn-card-primary">View Details</a>
+            <a href="{{ url_for('loan') }}?vehicle={{ vehicle.id }}" class="btn-card-secondary">💳 Finance</a>
+          </div>
+        </div>
+      </div>
+      {% else %}
+      <div class="empty-state">
+        <div class="empty-icon">🚗</div>
+        <h3>No Vehicles Found</h3>
+        <p>Try adjusting your search filters.</p>
+        <a href="{{ url_for('vehicles') }}" style="color:var(--blue);margin-top:1rem;display:inline-block;">Clear All Filters</a>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<section class="finance-cta">
+  <div class="reveal">
+    <h2>Ready to Drive?</h2>
+    <p>Apply for a loan through Republic Bank and get behind the wheel today.</p>
+    <a href="{{ url_for('loan') }}" class="btn-finance">Apply for Loan</a>
+  </div>
+</section>
+
+{% endblock %}

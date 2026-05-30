@@ -1,0 +1,70 @@
+{% extends "admin/base.html" %}
+{% block title %}Manage Solar Systems{% endblock %}
+{% block page_title %}Solar Systems{% endblock %}
+
+{% block content %}
+
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;">
+  <p style="font-size:.85rem;color:var(--mid);">{{ solar_systems | length }} system{{ 's' if solar_systems | length != 1 }}</p>
+  <a href="{{ url_for('admin_add_solar') }}" class="btn btn-primary">+ Add Solar System</a>
+</div>
+
+<div class="table-card">
+  <div class="table-header">
+    <span class="table-title">All Solar Systems</span>
+  </div>
+  <div style="overflow-x:auto;">
+    <table>
+      <thead><tr>
+        <th>Photo</th>
+        <th>System Name</th>
+        <th>Category</th>
+        <th>Power</th>
+        <th>Price</th>
+        <th>Status</th>
+        <th>Actions</th>
+      </tr></thead>
+      <tbody>
+        {% for s in solar_systems %}
+        <tr>
+          <td>
+            {% set imgs = s.get_images() %}
+            {% if imgs %}
+            <img src="{{ url_for('static', filename=imgs[0]) }}" class="td-image" alt="{{ s.name }}">
+            {% else %}
+            <div class="td-image-placeholder">☀️</div>
+            {% endif %}
+          </td>
+          <td>
+            <div style="font-weight:700;">{{ s.name }}</div>
+            {% if s.tagline %}<div style="font-size:.75rem;color:var(--mid);">{{ s.tagline | truncate(50) }}</div>{% endif %}
+            <div style="font-size:.72rem;color:var(--mid);margin-top:.2rem;">{{ s.get_images()|length }} photo(s) · {{ s.get_videos()|length }} video(s)</div>
+          </td>
+          <td><span class="badge badge-yellow">{{ s.category or '—' }}</span></td>
+          <td>{{ s.power_output or '—' }}</td>
+          <td style="font-weight:700;">{{ s.price | currency }}</td>
+          <td>
+            {% if s.available %}<span class="badge badge-green">✅ Available</span>{% else %}<span class="badge badge-red">❌ Unavailable</span>{% endif %}
+            {% if s.featured %}<span class="badge badge-yellow" style="margin-top:.25rem;display:block;">⭐ Featured</span>{% endif %}
+          </td>
+          <td>
+            <div style="display:flex;gap:.4rem;flex-wrap:wrap;">
+              <a href="{{ url_for('solar_detail', sid=s.id) }}" target="_blank" class="btn btn-outline btn-sm">👁 View</a>
+              <a href="{{ url_for('admin_edit_solar', sid=s.id) }}" class="btn btn-primary btn-sm">✏️ Edit</a>
+              <form method="post" action="{{ url_for('admin_delete_solar', sid=s.id) }}" class="confirm-delete" style="display:inline;">
+                <button type="submit" class="btn btn-danger btn-sm">🗑</button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="7" style="text-align:center;padding:3rem;color:var(--mid);">
+          No solar systems yet. <a href="{{ url_for('admin_add_solar') }}" style="color:var(--blue);">Add your first system →</a>
+        </td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% endblock %}

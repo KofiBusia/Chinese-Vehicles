@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+{% block title %}Contact Us — {{ business.name }}{% endblock %}
+
+{% block content %}
+<div class="contact-page">
+
+  <div class="contact-hero">
+    <h1>Get In Touch</h1>
+    <p>We'd love to hear from you. Send us a message or visit us today.</p>
+  </div>
+
+  <div class="contact-grid">
+    <!-- Contact Info -->
+    <div class="contact-info reveal">
+      <h2>Contact Information</h2>
+
+      <div class="contact-item">
+        <div class="contact-icon">📍</div>
+        <div>
+          <div class="contact-item-label">Location</div>
+          <div class="contact-item-value">{{ business.address }}</div>
+        </div>
+      </div>
+
+      <div class="contact-item">
+        <div class="contact-icon">📞</div>
+        <div>
+          <div class="contact-item-label">Phone</div>
+          <div class="contact-item-value">
+            <a href="tel:{{ business.phone }}" style="color:var(--blue);">{{ business.phone }}</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="contact-item">
+        <div class="contact-icon">✉️</div>
+        <div>
+          <div class="contact-item-label">Email</div>
+          <div class="contact-item-value">
+            <a href="mailto:{{ business.email }}" style="color:var(--blue);">{{ business.email }}</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="contact-item">
+        <div class="contact-icon">💬</div>
+        <div>
+          <div class="contact-item-label">WhatsApp</div>
+          <div class="contact-item-value">
+            <a href="https://wa.me/{{ business.whatsapp }}" target="_blank" style="color:#25d366;font-weight:600;">
+              Chat with us →
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top:2rem;">
+        <h3 style="font-family:var(--font-head);font-size:1rem;font-weight:700;margin-bottom:1rem;">Business Hours</h3>
+        <div class="hours-grid">
+          <div class="hour-item"><span class="hour-day">Monday</span><span class="hour-time">8:00 AM – 6:00 PM</span></div>
+          <div class="hour-item"><span class="hour-day">Tuesday</span><span class="hour-time">8:00 AM – 6:00 PM</span></div>
+          <div class="hour-item"><span class="hour-day">Wednesday</span><span class="hour-time">8:00 AM – 6:00 PM</span></div>
+          <div class="hour-item"><span class="hour-day">Thursday</span><span class="hour-time">8:00 AM – 6:00 PM</span></div>
+          <div class="hour-item"><span class="hour-day">Friday</span><span class="hour-time">8:00 AM – 6:00 PM</span></div>
+          <div class="hour-item"><span class="hour-day">Saturday</span><span class="hour-time">9:00 AM – 4:00 PM</span></div>
+          <div class="hour-item"><span class="hour-day">Sunday</span><span class="hour-time">Closed</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Contact Form -->
+    <div class="reveal reveal-delay-2">
+      <div class="form-card" style="margin-bottom:0;">
+        <div class="form-card-header">
+          <div class="form-card-icon">✉️</div>
+          <div>
+            <div class="form-card-title">Send a Message</div>
+            <div style="font-size:.8rem;color:var(--mid);">We'll respond within 24 hours</div>
+          </div>
+        </div>
+        <div class="form-card-body">
+          <form method="post" action="{{ url_for('contact') }}">
+            <div class="form-grid">
+              <div class="form-group">
+                <label class="form-label">Your Name <span class="req">*</span></label>
+                <input type="text" name="name" class="form-control" required placeholder="Full name">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Phone Number</label>
+                <input type="tel" name="phone" class="form-control" placeholder="+1 (868) 000-0000">
+              </div>
+              <div class="form-group full">
+                <label class="form-label">Email Address <span class="req">*</span></label>
+                <input type="email" name="email" class="form-control" required placeholder="you@example.com">
+              </div>
+              <div class="form-group full">
+                <label class="form-label">Subject</label>
+                <select name="subject" class="form-control">
+                  <option value="">Select a subject</option>
+                  <option>Vehicle Enquiry</option>
+                  <option>Solar System Enquiry</option>
+                  <option>Loan / Finance Enquiry</option>
+                  <option>Test Drive Request</option>
+                  <option>After-Sales Support</option>
+                  <option>General Enquiry</option>
+                </select>
+              </div>
+              <div class="form-group full">
+                <label class="form-label">Message <span class="req">*</span></label>
+                <textarea name="message" class="form-control" rows="5" required
+                          placeholder="How can we help you?"></textarea>
+              </div>
+            </div>
+            <button type="submit" class="btn-submit" style="margin-top:1rem;">Send Message →</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Map placeholder -->
+  <div style="background:var(--light);height:300px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:1rem;color:var(--mid);">
+    <div style="font-size:3rem;">📍</div>
+    <p style="font-weight:600;">{{ business.address }}</p>
+    <a href="https://maps.google.com/?q={{ business.address | urlencode }}" target="_blank"
+       style="color:var(--blue);font-size:.9rem;font-weight:600;">Open in Google Maps →</a>
+  </div>
+
+</div>
+{% endblock %}
