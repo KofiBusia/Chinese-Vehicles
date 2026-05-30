@@ -1591,6 +1591,15 @@ def init_db():
                     pass
             db.session.commit()
 
+            # Set default 10-year warranty on all solar systems that have none
+            try:
+                db.session.execute(db.text(
+                    "UPDATE solar_system SET warranty = '10 Years' WHERE warranty IS NULL OR warranty = ''"
+                ))
+                db.session.commit()
+            except Exception:
+                pass
+
             if not AdminUser.query.first():
                 a = AdminUser(username='admin', full_name='Administrator', email='admin@autopowerdealership.com')
                 a.set_password('admin123')

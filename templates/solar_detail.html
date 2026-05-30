@@ -76,9 +76,7 @@
         {% if solar.efficiency %}
         <div class="spec-cell"><span class="spec-cell-label">Efficiency</span><span class="spec-cell-value">{{ solar.efficiency }}</span></div>
         {% endif %}
-        {% if solar.warranty %}
-        <div class="spec-cell"><span class="spec-cell-label">Warranty</span><span class="spec-cell-value">{{ solar.warranty }}</span></div>
-        {% endif %}
+        <div class="spec-cell"><span class="spec-cell-label">Warranty</span><span class="spec-cell-value">{{ solar.warranty or '10 Years' }}</span></div>
       </div>
 
       {% if solar.description %}
