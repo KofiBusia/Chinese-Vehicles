@@ -1590,18 +1590,10 @@ def sales_register(token=None):
         return '<h2 style="font-family:sans-serif;text-align:center;padding:3rem;color:#dc2626;">No registration token provided.</h2>', 400
     try:
         setting = SiteSettings.query.filter_by(key='sp_reg_token').first()
-        expiry_row = SiteSettings.query.filter_by(key='sp_reg_token_expiry').first()
     except Exception:
-        setting = expiry_row = None
+        setting = None
     if not setting or setting.value != token:
-        return '<h2 style="font-family:sans-serif;text-align:center;padding:3rem;color:#dc2626;">Invalid or expired registration link. Ask the admin to generate a new one.</h2>', 403
-    if expiry_row:
-        try:
-            expiry_dt = datetime.strptime(expiry_row.value, '%Y-%m-%d %H:%M:%S')
-            if datetime.utcnow() > expiry_dt:
-                return '<h2 style="font-family:sans-serif;text-align:center;padding:3rem;color:#dc2626;">This registration link has expired (valid 7 days). Ask the admin to generate a new one.</h2>', 403
-        except Exception:
-            pass
+        return '<h2 style="font-family:sans-serif;text-align:center;padding:3rem;color:#dc2626;">This registration link is no longer valid. Please contact the admin for a new one.</h2>', 403
 
     if request.method == 'POST':
         full_name = request.form.get('full_name', '').strip()
@@ -1649,17 +1641,15 @@ def sales_register(token=None):
 @admin_required
 def admin_gen_reg_link():
     """Generate a new salesperson registration link (valid 7 days)."""
-    token  = uuid.uuid4().hex
-    expiry = (datetime.utcnow() + timedelta(days=7)).strftime('%Y-%m-%d %H:%M:%S')
-    for key, val in [('sp_reg_token', token), ('sp_reg_token_expiry', expiry)]:
-        row = SiteSettings.query.filter_by(key=key).first()
-        if row:
-            row.value = val
-        else:
-            db.session.add(SiteSettings(key=key, value=val))
+    token = uuid.uuid4().hex
+    row   = SiteSettings.query.filter_by(key='sp_reg_token').first()
+    if row:
+        row.value = token
+    else:
+        db.session.add(SiteSettings(key='sp_reg_token', value=token))
     db.session.commit()
     link = f"https://chinacarsinghana.com/sales/register/{token}"
-    return jsonify({'link': link, 'expiry': expiry})
+    return jsonify({'link': link})
 
 
 # ── Salesperson Portal (their own login) ── #
