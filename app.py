@@ -2235,6 +2235,19 @@ The following organisations are excellent prospects — they have staff, fleets,
 
 Focus on their procurement, fleet management, facilities, or HR departments. A well-placed introduction can lead to bulk vehicle orders, corporate solar installations, or group loan applications through Republic Bank.
 
+YOUR SALES DASHBOARD
+─────────────────────
+Log in to your dashboard for the full target company list, Ghana sales tips,
+and to download this proposal again at any time:
+
+  🖥  https://chinacarsinghana.com/sales/portal
+
+Your dashboard also lets you:
+  • Browse current vehicle & solar inventory
+  • Submit new customer leads
+  • Track your sales and commission in real time
+  • Re-download this proposal whenever you need it
+
 NEED HELP OR HAVE QUESTIONS?
 ──────────────────────────────
 Contact the admin team directly at:
