@@ -1747,6 +1747,78 @@ def admin_gen_reg_link():
     return jsonify({'link': link})
 
 
+@app.route('/admin/team/email', methods=['GET', 'POST'])
+@admin_required
+def admin_team_email():
+    """Compose and send a custom email to selected salespersons."""
+    salespersons = Salesperson.query.filter_by(active=True).order_by(Salesperson.full_name).all()
+
+    if request.method == 'POST':
+        subject    = request.form.get('subject', '').strip()
+        body_tpl   = request.form.get('body', '').strip()
+        recipient_ids = request.form.getlist('recipients')
+
+        if not subject or not body_tpl:
+            flash('Subject and message body are required.', 'error')
+            return render_template('admin/team_email.html', salespersons=salespersons)
+
+        if not recipient_ids:
+            flash('Please select at least one recipient.', 'error')
+            return render_template('admin/team_email.html', salespersons=salespersons)
+
+        if not SMTP_USER or not SMTP_PASSWORD:
+            flash('SMTP is not configured — emails cannot be sent.', 'error')
+            return render_template('admin/team_email.html', salespersons=salespersons)
+
+        targets = [sp for sp in salespersons if str(sp.id) in recipient_ids and sp.email]
+        no_email = [sp for sp in salespersons if str(sp.id) in recipient_ids and not sp.email]
+
+        sent = 0
+        failed = 0
+        for sp in targets:
+            # Replace merge tags
+            personalised_body = (body_tpl
+                .replace('{name}', sp.full_name)
+                .replace('{code}', sp.code)
+                .replace('{ref_link}', f'https://chinacarsinghana.com?ref={sp.code}')
+                .replace('{login_url}', 'https://chinacarsinghana.com/sales/login')
+                .replace('{commission}', f'{sp.commission_pct}%'))
+
+            personalised_body += (
+                f"\n\n{'─' * 50}"
+                f"\nChina Cars in Ghana — Sales Team"
+                f"\nhttps://chinacarsinghana.com/sales/login"
+            )
+
+            msg = MIMEMultipart('alternative')
+            msg['Subject'] = subject
+            msg['From']    = SMTP_USER
+            msg['To']      = sp.email
+            msg.attach(MIMEText(personalised_body, 'plain'))
+            try:
+                with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
+                    server.ehlo(); server.starttls()
+                    server.login(SMTP_USER, SMTP_PASSWORD)
+                    server.sendmail(SMTP_USER, [sp.email], msg.as_string())
+                sent += 1
+            except Exception as e:
+                print(f'[EMAIL] Team email to {sp.email} failed: {e}')
+                failed += 1
+
+        parts = []
+        if sent:
+            parts.append(f'Email sent to {sent} salesperson{"s" if sent != 1 else ""}.')
+        if failed:
+            parts.append(f'{failed} failed (check server logs).')
+        if no_email:
+            names = ', '.join(sp.full_name for sp in no_email)
+            parts.append(f'Skipped (no email on file): {names}.')
+        flash(' '.join(parts), 'success' if sent else 'error')
+        return redirect(url_for('admin_team_email'))
+
+    return render_template('admin/team_email.html', salespersons=salespersons)
+
+
 # ── Salesperson Portal (their own login) ── #
 
 @app.route('/sales/login', methods=['GET', 'POST'])

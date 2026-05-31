@@ -1,0 +1,105 @@
+{% extends "admin/base.html" %}
+{% block title %}Send Team Email{% endblock %}
+{% block page_title %}Send Email to Sales Team{% endblock %}
+
+{% block content %}
+<div style="max-width:800px;">
+
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;">
+    <p style="font-size:.85rem;color:var(--mid);">Compose and send a personalised email to your salespersons.</p>
+    <a href="{{ url_for('admin_salespersons') }}" class="btn btn-outline btn-sm">← Back to Team</a>
+  </div>
+
+  <form method="post" action="{{ url_for('admin_team_email') }}">
+
+    <!-- Recipients -->
+    <div class="form-section">
+      <div class="form-section-header">👥 Recipients</div>
+      <div class="form-section-body">
+        <div style="display:flex;gap:.75rem;align-items:center;margin-bottom:1rem;flex-wrap:wrap;">
+          <button type="button" onclick="selectAll(true)"
+                  style="padding:.35rem .8rem;background:#f1f5f9;border:1px solid var(--border);border-radius:6px;font-size:.78rem;font-weight:600;cursor:pointer;">
+            ✅ Select All
+          </button>
+          <button type="button" onclick="selectAll(false)"
+                  style="padding:.35rem .8rem;background:#f1f5f9;border:1px solid var(--border);border-radius:6px;font-size:.78rem;font-weight:600;cursor:pointer;">
+            Deselect All
+          </button>
+          <span id="countLabel" style="font-size:.8rem;color:var(--mid);margin-left:auto;"></span>
+        </div>
+
+        {% if salespersons %}
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:.6rem;">
+          {% for sp in salespersons %}
+          <label style="display:flex;align-items:center;gap:.65rem;padding:.65rem .9rem;border:1.5px solid var(--border);border-radius:8px;cursor:pointer;transition:border-color .2s;"
+                 onmouseover="this.style.borderColor='var(--blue)'" onmouseout="this.style.borderColor=this.querySelector('input').checked?'var(--blue)':'var(--border)'">
+            <input type="checkbox" name="recipients" value="{{ sp.id }}" class="sp-check"
+                   style="accent-color:var(--blue);width:16px;height:16px;" checked
+                   onchange="updateCount()">
+            <div style="min-width:0;">
+              <div style="font-weight:600;font-size:.85rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ sp.full_name }}</div>
+              <div style="font-size:.72rem;color:var(--mid);">
+                {{ sp.email or '⚠ No email' }}
+              </div>
+            </div>
+          </label>
+          {% endfor %}
+        </div>
+        {% else %}
+        <p style="color:var(--mid);font-size:.85rem;">No active salespersons found.</p>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Subject -->
+    <div class="form-section">
+      <div class="form-section-header">✉️ Message</div>
+      <div class="form-section-body">
+        <div class="form-group" style="margin-bottom:1rem;">
+          <label class="form-label">Subject <span style="color:var(--red);">*</span></label>
+          <input type="text" name="subject" class="form-control" required
+                 placeholder="e.g. Important update from the team" maxlength="200">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Message Body <span style="color:var(--red);">*</span></label>
+          <textarea name="body" class="form-control" rows="12" required
+                    placeholder="Write your message here…"></textarea>
+          <p style="font-size:.75rem;color:var(--mid);margin-top:.5rem;line-height:1.8;">
+            <strong>Personalisation tags</strong> — automatically replaced for each recipient:<br>
+            <code style="background:#f1f5f9;padding:.1rem .35rem;border-radius:4px;">{name}</code> Full name &nbsp;
+            <code style="background:#f1f5f9;padding:.1rem .35rem;border-radius:4px;">{code}</code> Sales code &nbsp;
+            <code style="background:#f1f5f9;padding:.1rem .35rem;border-radius:4px;">{ref_link}</code> Referral link &nbsp;
+            <code style="background:#f1f5f9;padding:.1rem .35rem;border-radius:4px;">{commission}</code> Commission % &nbsp;
+            <code style="background:#f1f5f9;padding:.1rem .35rem;border-radius:4px;">{login_url}</code> Portal login URL
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:1rem;align-items:center;">
+      <button type="submit" class="btn btn-primary" style="padding:.85rem 2rem;">
+        📤 Send Email
+      </button>
+      <span id="sendNote" style="font-size:.8rem;color:var(--mid);"></span>
+    </div>
+
+  </form>
+</div>
+
+<script>
+function selectAll(checked) {
+  document.querySelectorAll('.sp-check').forEach(cb => cb.checked = checked);
+  updateCount();
+}
+function updateCount() {
+  const total   = document.querySelectorAll('.sp-check').length;
+  const selected = document.querySelectorAll('.sp-check:checked').length;
+  document.getElementById('countLabel').textContent = `${selected} of ${total} selected`;
+  document.getElementById('sendNote').textContent   = selected
+    ? `Will send to ${selected} recipient${selected === 1 ? '' : 's'}.`
+    : '';
+}
+updateCount();
+</script>
+{% endblock %}

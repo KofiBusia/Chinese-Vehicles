@@ -236,8 +236,11 @@
       {% if unread_contacts > 0 %}<span class="sidebar-badge">{{ unread_contacts }}</span>{% endif %}
     </a>
     <div class="nav-section-label">Team</div>
-    <a href="{{ url_for('admin_salespersons') }}" class="sidebar-link {% if 'salesperson' in request.endpoint or 'sale' in request.endpoint %}active{% endif %}">
+    <a href="{{ url_for('admin_salespersons') }}" class="sidebar-link {% if 'salesperson' in request.endpoint or ('sale' in request.endpoint and 'team_email' not in request.endpoint) %}active{% endif %}">
       <span class="link-icon">👥</span> Salespersons
+    </a>
+    <a href="{{ url_for('admin_team_email') }}" class="sidebar-link {% if request.endpoint == 'admin_team_email' %}active{% endif %}">
+      <span class="link-icon">📨</span> Email Team
     </a>
     <div class="nav-section-label">Account</div>
     <a href="{{ url_for('admin_settings') }}" class="sidebar-link {% if request.endpoint == 'admin_settings' %}active{% endif %}">
