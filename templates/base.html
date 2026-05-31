@@ -87,6 +87,14 @@
 {% endif %}
 {% endwith %}
 
+<!-- Referral discount banner -->
+{% if ref_sp_code %}
+<div id="refBanner" style="background:linear-gradient(90deg,#16a34a,#15803d);color:white;padding:.7rem 1.5rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.5rem;font-size:.85rem;">
+  <span>🎉 <strong>Exclusive Discount Unlocked!</strong> You were referred by <strong>{{ ref_sp_name or 'one of our sales agents' }}</strong> — mention code <strong style="background:rgba(255,255,255,.2);padding:.1rem .45rem;border-radius:4px;letter-spacing:.06em;">{{ ref_sp_code }}</strong> when you order or apply for a loan to claim your discount.</span>
+  <button onclick="document.getElementById('refBanner').style.display='none'" style="background:none;border:none;color:rgba(255,255,255,.7);cursor:pointer;font-size:1rem;padding:0 .25rem;">✕</button>
+</div>
+{% endif %}
+
 <!-- Main content -->
 {% block content %}{% endblock %}
 
