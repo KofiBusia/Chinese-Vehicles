@@ -705,17 +705,18 @@ def send_new_listing_alert(listing_type, name, price, listing_url):
     if not SMTP_USER or not SMTP_PASSWORD:
         return
     try:
-        salespersons = Salesperson.query.filter_by(active=True).all()
-        recipients   = [sp for sp in salespersons if sp.email]
-        if not recipients:
-            return
+        with app.app_context():
+            salespersons = Salesperson.query.filter_by(active=True).all()
+            recipients   = [sp for sp in salespersons if sp.email]
+            if not recipients:
+                return
 
-        emoji    = '☀️' if listing_type == 'solar' else '🚗'
-        type_lbl = 'Solar System' if listing_type == 'solar' else 'Vehicle'
+            emoji    = '☀️' if listing_type == 'solar' else '🚗'
+            type_lbl = 'Solar System' if listing_type == 'solar' else 'Vehicle'
 
-        for sp in recipients:
-            ref_link = f'https://chinacarsinghana.com?ref={sp.code}'
-            body = f"""\
+            for sp in recipients:
+                ref_link = f'https://chinacarsinghana.com?ref={sp.code}'
+                body = f"""\
 {emoji} NEW {type_lbl.upper()} LISTING — China Cars in Ghana
 {'=' * 54}
 
@@ -740,19 +741,19 @@ Good luck!
 {'=' * 54}
 chinacarsinghana.com · Accra, Ghana
 """
-            msg = MIMEMultipart('alternative')
-            msg['Subject'] = f'{emoji} New {type_lbl}: {name} — Start Sharing!'
-            msg['From']    = SMTP_USER
-            msg['To']      = sp.email
-            msg.attach(MIMEText(body, 'plain'))
+                msg = MIMEMultipart('alternative')
+                msg['Subject'] = f'{emoji} New {type_lbl}: {name} — Start Sharing!'
+                msg['From']    = SMTP_USER
+                msg['To']      = sp.email
+                msg.attach(MIMEText(body, 'plain'))
 
-            try:
-                with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
-                    server.ehlo(); server.starttls()
-                    server.login(SMTP_USER, SMTP_PASSWORD)
-                    server.sendmail(SMTP_USER, [sp.email], msg.as_string())
-            except Exception as e:
-                print(f'[EMAIL] Listing alert to {sp.email} failed: {e}')
+                try:
+                    with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
+                        server.ehlo(); server.starttls()
+                        server.login(SMTP_USER, SMTP_PASSWORD)
+                        server.sendmail(SMTP_USER, [sp.email], msg.as_string())
+                except Exception as e:
+                    print(f'[EMAIL] Listing alert to {sp.email} failed: {e}')
 
     except Exception as e:
         print(f'[EMAIL] send_new_listing_alert failed: {e}')
