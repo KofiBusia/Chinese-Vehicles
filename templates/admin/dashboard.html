@@ -188,7 +188,7 @@
             </td>
             <td style="font-weight:700;color:var(--blue);">{{ sp.total_sales() }}</td>
             <td style="font-weight:700;">{{ sp.total_revenue() | currency }}</td>
-            <td style="font-weight:700;color:var(--green);">{{ sp.commission_earned() | currency }}</td>
+            <td style="font-weight:700;color:var(--green);">{{ sp.commission_earned() | ghs }}</td>
             <td>
               {% if sp.active %}<span class="badge badge-green">Active</span>
               {% else %}<span class="badge badge-red">Inactive</span>{% endif %}

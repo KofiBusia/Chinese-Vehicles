@@ -105,7 +105,7 @@
     </div>
     <div class="stat-card">
       <div class="stat-icon">🏆</div>
-      <div class="stat-val" style="color:#22c55e;font-size:1.2rem;">{{ sp.commission_earned() | currency }}</div>
+      <div class="stat-val" style="color:#22c55e;font-size:1.2rem;">{{ sp.commission_earned() | ghs }}</div>
       <div class="stat-lbl">Commission Earned ({{ sp.commission_pct }}%)</div>
     </div>
   </div>
@@ -158,7 +158,7 @@
           <td>{{ '☀️' if sale.product_type == 'solar' else '🚗' }} {{ sale.product_name or '—' }}</td>
           <td style="font-weight:700;">{{ sale.sale_amount | currency if sale.sale_amount else '—' }}</td>
           <td style="color:#22c55e;font-weight:600;">
-            {% if sale.sale_amount %}{{ (sale.sale_amount * sp.commission_pct / 100) | currency }}{% else %}—{% endif %}
+            {% if sale.sale_amount %}{{ (sale.sale_amount * sp.commission_pct / 100) | ghs }}{% else %}—{% endif %}
           </td>
           <td>
             {% if sale.status == 'confirmed' %}<span class="badge badge-green">✅ Confirmed</span>
