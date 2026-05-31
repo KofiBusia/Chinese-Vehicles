@@ -100,24 +100,28 @@
       🏢 Suggested Target Companies (included in email to salespersons)
     </div>
     <div style="padding:1.25rem 1.5rem;">
-      <p style="font-size:.8rem;color:var(--mid);margin-bottom:1rem;">These companies are listed in the email as suggestions for salespersons to approach:</p>
-      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:.4rem;font-size:.82rem;color:var(--dark);">
-        {% for company in [
-          'GCB Bank','Ecobank Ghana','Fidelity Bank Ghana','Absa Bank Ghana',
-          'Standard Chartered Ghana','Republic Bank Ghana','UBA Ghana',
-          'Zenith Bank Ghana','Access Bank Ghana','Consolidated Bank Ghana',
-          'MTN Ghana','Vodafone Ghana','AirtelTigo',
-          'Ghana Ports & Harbours Authority','Ghana Highways Authority',
-          'Accra Metropolitan Assembly','Ghana Health Service',
-          'University of Ghana','KNUST','Ghana Revenue Authority',
-          'SSNIT','ECG (Electricity Company of Ghana)','Ghana Water Company',
-          'Tullow Oil Ghana','AngloGold Ashanti','Newmont Ghana',
-          'Kosmos Energy','Total Energies Ghana',
-          'Unilever Ghana','Nestlé Ghana','Fan Milk (Danone)'
-        ] %}
-        <div style="padding:.3rem .6rem;background:#f8fafc;border-radius:5px;border:1px solid #e2e8f0;">{{ company }}</div>
-        {% endfor %}
+      <p style="font-size:.8rem;color:var(--mid);margin-bottom:1rem;">These organisations are listed in the email as suggestions for salespersons to approach. Government workers are a major segment — many receive car loans as staff benefits.</p>
+
+      {% set categories = [
+        ('🏦 Banks & Financial Institutions', ['GCB Bank','Ecobank Ghana','Fidelity Bank Ghana','Absa Bank Ghana','Standard Chartered Ghana','Republic Bank Ghana','UBA Ghana','Zenith Bank Ghana','Access Bank Ghana','Consolidated Bank Ghana','First Atlantic Bank','OmniBank Ghana','CalBank']),
+        ('📡 Telecoms & Technology', ['MTN Ghana','Vodafone Ghana','AirtelTigo','Huawei Ghana']),
+        ('🏛 Government Agencies & Civil Service', ['Ghana Revenue Authority','SSNIT','ECG (Electricity Co. of Ghana)','Ghana Water Company','Ghana Ports & Harbours Authority','Ghana Highways Authority','Accra Metropolitan Assembly','Ghana Health Service','Ghana Police Service','Ghana Armed Forces','Ghana Immigration Service','DVLA Ghana','Ministry of Roads & Highways','Ministry of Finance','Lands Commission','Ghana National Fire Service']),
+        ('⚡ Energy & Mining', ['Tullow Oil Ghana','AngloGold Ashanti','Newmont Ghana','Kosmos Energy','Total Energies Ghana','GNPC']),
+        ('🎓 Education', ['University of Ghana','KNUST','Ashesi University','University of Cape Coast','University of Professional Studies']),
+        ('🏥 Healthcare', ['Korle Bu Teaching Hospital','37 Military Hospital','Ridge Hospital','Catholic Health Service']),
+        ('🏭 FMCG & Corporates', ['Unilever Ghana','Nestlé Ghana','Fan Milk (Danone)','PZ Cussons','Guinness Ghana','Olam Ghana','Kasapreko'])
+      ] %}
+
+      {% for cat_name, companies in categories %}
+      <div style="margin-bottom:1rem;">
+        <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--blue);margin-bottom:.4rem;">{{ cat_name }}</div>
+        <div style="display:flex;flex-wrap:wrap;gap:.3rem;">
+          {% for company in companies %}
+          <span style="padding:.25rem .6rem;background:#f8fafc;border:1px solid #e2e8f0;border-radius:20px;font-size:.76rem;color:#334155;">{{ company }}</span>
+          {% endfor %}
+        </div>
       </div>
+      {% endfor %}
     </div>
   </div>
 

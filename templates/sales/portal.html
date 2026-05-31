@@ -8,16 +8,16 @@
   <style>
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
     body{font-family:'Inter',system-ui,sans-serif;background:#f9fafb;color:#111827;}
-    .topbar{background:#0f1117;color:white;padding:.75rem 1.5rem;display:flex;align-items:center;justify-content:space-between;}
+    .topbar{background:#0f1117;color:white;padding:.75rem 1.5rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.5rem;}
     .topbar-brand{font-family:'Poppins',sans-serif;font-weight:800;font-size:1rem;}
-    .topbar-nav{display:flex;gap:.5rem;align-items:center;}
+    .topbar-nav{display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;}
     .topbar-nav a{color:rgba(255,255,255,.7);font-size:.83rem;font-weight:500;padding:.4rem .8rem;border-radius:6px;text-decoration:none;transition:background .2s;}
     .topbar-nav a:hover{background:rgba(255,255,255,.1);color:white;}
     .topbar-nav a.active{color:#60a5fa;}
     .main{max-width:1100px;margin:0 auto;padding:2rem 1.5rem;}
     .greeting{font-family:'Poppins',sans-serif;font-size:1.6rem;font-weight:800;margin-bottom:.25rem;}
     .sub{color:#6b7280;font-size:.9rem;margin-bottom:2rem;}
-    .code-badge{display:inline-flex;align-items:center;gap:.5rem;background:#2563eb;color:white;padding:.45rem 1rem;border-radius:20px;font-size:.85rem;font-weight:700;letter-spacing:.08em;margin-bottom:1.5rem;box-shadow:0 2px 8px rgba(37,99,235,.3);}
+    .code-badge{display:inline-flex;align-items:center;gap:.5rem;background:#2563eb;color:white;padding:.45rem 1rem;border-radius:20px;font-size:.85rem;font-weight:700;letter-spacing:.08em;box-shadow:0 2px 8px rgba(37,99,235,.3);}
     .stats{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:1rem;margin-bottom:2rem;}
     .stat-card{background:white;border-radius:12px;padding:1.25rem;border:1px solid #e5e7eb;}
     .stat-icon{font-size:1.5rem;margin-bottom:.5rem;}
@@ -43,6 +43,13 @@
     .flash{padding:.75rem 1.5rem;font-size:.85rem;font-weight:500;}
     .flash.success{background:#dcfce7;color:#15803d;border-bottom:2px solid #16a34a;}
     .flash.error{background:#fee2e2;color:#b91c1c;border-bottom:2px solid #dc2626;}
+    .section-head{font-family:'Poppins',sans-serif;font-size:1.05rem;font-weight:800;color:#111827;margin-bottom:1rem;display:flex;align-items:center;gap:.5rem;}
+    .tip-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1rem;margin-bottom:2rem;}
+    .tip-card{background:white;border-radius:12px;border:1px solid #e5e7eb;padding:1.15rem 1.25rem;display:flex;gap:.9rem;align-items:flex-start;}
+    .tip-num{font-family:'Poppins',sans-serif;font-size:1.4rem;font-weight:800;color:#e5e7eb;line-height:1;min-width:2rem;}
+    .tip-title{font-weight:700;font-size:.88rem;color:#111827;margin-bottom:.25rem;}
+    .tip-body{font-size:.8rem;color:#6b7280;line-height:1.6;}
+    .company-pill{display:inline-block;padding:.25rem .7rem;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:20px;font-size:.75rem;color:#334155;margin:.2rem;}
   </style>
 </head>
 <body>
@@ -69,7 +76,7 @@
     <span class="code-badge">🔑 Your Code: {{ sp.code }}</span>
   </div>
 
-  <!-- Shareable referral link card -->
+  <!-- Referral link card -->
   <div style="background:linear-gradient(135deg,#2563eb,#1d4ed8);border-radius:14px;padding:1.5rem;margin-bottom:2rem;color:white;box-shadow:0 4px 20px rgba(37,99,235,.3);">
     <div style="font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.7);margin-bottom:.35rem;">🔗 Your Referral Link</div>
     <div style="font-size:.95rem;font-weight:700;margin-bottom:1rem;color:white;">Share this link — every order, loan &amp; enquiry is tracked back to you and earns you commission</div>
@@ -92,6 +99,7 @@
     </div>
   </div>
 
+  <!-- Stats -->
   <div class="stats">
     <div class="stat-card">
       <div class="stat-icon">📊</div>
@@ -110,6 +118,7 @@
     </div>
   </div>
 
+  <!-- Quick actions -->
   <div class="actions">
     <a href="{{ url_for('sales_submit_lead') }}" class="action-card">
       <div class="action-icon">➕</div>
@@ -122,7 +131,7 @@
       <div class="action-icon">🚗</div>
       <div>
         <div class="action-title">View Inventory</div>
-        <div class="action-sub">Browse available vehicles & solar</div>
+        <div class="action-sub">Browse available vehicles &amp; solar</div>
       </div>
     </a>
     <a href="{{ url_for('loan') }}" class="action-card" target="_blank">
@@ -134,7 +143,181 @@
     </a>
   </div>
 
-  <div class="table-card">
+  <!-- ── BUSINESS PROPOSAL ───────────────────────────────────────────────── -->
+  <div class="section-head" style="margin-top:.5rem;">📊 Your Business Proposal</div>
+
+  <div style="background:linear-gradient(135deg,#0f172a 0%,#1e3a5f 100%);border-radius:16px;padding:1.75rem;margin-bottom:2rem;display:grid;grid-template-columns:1fr auto;gap:1.5rem;align-items:center;flex-wrap:wrap;">
+    <div>
+      <div style="font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.5);margin-bottom:.4rem;">Ready-to-use PowerPoint Presentation</div>
+      <div style="font-family:'Poppins',sans-serif;font-size:1.15rem;font-weight:800;color:white;margin-bottom:.4rem;">China Cars in Ghana — Company Proposal</div>
+      <div style="font-size:.82rem;color:rgba(255,255,255,.65);line-height:1.75;margin-bottom:1.1rem;">
+        Your name and sales code are already filled in.<br>
+        Open in PowerPoint or Google Slides, add the <strong style="color:#f59e0b;">[COMPANY NAME]</strong> on the cover,
+        then send or present it to your client.
+      </div>
+      <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:1rem;">
+        <span style="padding:.22rem .65rem;background:rgba(245,158,11,.15);border:1px solid rgba(245,158,11,.4);border-radius:20px;font-size:.7rem;font-weight:700;color:#f59e0b;">Slide 1 — Cover + Company Name</span>
+        <span style="padding:.22rem .65rem;background:rgba(37,99,235,.15);border:1px solid rgba(37,99,235,.4);border-radius:20px;font-size:.7rem;font-weight:700;color:#60a5fa;">Slide 2 — Vehicles, Solar &amp; Finance</span>
+        <span style="padding:.22rem .65rem;background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.4);border-radius:20px;font-size:.7rem;font-weight:700;color:#34d399;">Slide 3 — Your Contact Info</span>
+      </div>
+      <a href="{{ url_for('sales_download_proposal') }}"
+         style="display:inline-flex;align-items:center;gap:.6rem;padding:.8rem 1.75rem;background:#f59e0b;color:#0f172a;border-radius:8px;font-weight:800;text-decoration:none;font-size:.9rem;">
+        ⬇ Download Proposal (.pptx)
+      </a>
+    </div>
+    <div style="text-align:center;background:rgba(255,255,255,.06);border-radius:12px;padding:1.5rem 2rem;display:none;" id="pptIcon">
+      <div style="font-size:3rem;line-height:1;">📊</div>
+      <div style="font-size:.7rem;color:rgba(255,255,255,.45);margin-top:.4rem;font-weight:700;">.PPTX</div>
+    </div>
+  </div>
+
+  <!-- Target companies -->
+  <div style="background:white;border:1px solid #e5e7eb;border-radius:12px;margin-bottom:2rem;overflow:hidden;">
+    <div style="padding:.9rem 1.25rem;border-bottom:1px solid #f3f4f6;display:flex;justify-content:space-between;align-items:center;cursor:pointer;"
+         onclick="toggleCompanies()">
+      <span style="font-family:'Poppins',sans-serif;font-weight:700;font-size:.92rem;">🏢 Suggested Companies to Send Proposals To</span>
+      <span id="companiesArrow" style="font-size:.9rem;color:#6b7280;transition:transform .2s;">▼</span>
+    </div>
+    <div id="companiesBody" style="padding:1.1rem 1.25rem;">
+      <p style="font-size:.8rem;color:#6b7280;margin-bottom:.85rem;">These are high-value organisations in Ghana. Target their procurement, fleet, HR, or facilities departments:</p>
+      <div style="margin-bottom:1rem;">
+        <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#3b82f6;margin-bottom:.4rem;">🏦 Banks &amp; Financial Institutions</div>
+        {% for c in ['GCB Bank','Ecobank Ghana','Fidelity Bank Ghana','Absa Bank Ghana','Standard Chartered Ghana','Republic Bank Ghana','UBA Ghana','Zenith Bank Ghana','Access Bank Ghana','Consolidated Bank Ghana','First Atlantic Bank','OmniBank Ghana','CalBank'] %}
+        <span class="company-pill">{{ c }}</span>{% endfor %}
+      </div>
+      <div style="margin-bottom:1rem;">
+        <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#f59e0b;margin-bottom:.4rem;">📡 Telecoms &amp; Technology</div>
+        {% for c in ['MTN Ghana','Vodafone Ghana','AirtelTigo','Huawei Ghana','Samsung Ghana'] %}
+        <span class="company-pill">{{ c }}</span>{% endfor %}
+      </div>
+      <div style="margin-bottom:1rem;">
+        <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#22c55e;margin-bottom:.4rem;">🏛 Government &amp; Agencies</div>
+        {% for c in ['Ghana Ports & Harbours Authority','Ghana Highways Authority','Accra Metropolitan Assembly','Ghana Revenue Authority','SSNIT','Ghana Health Service','Ghana Education Service','Ministry of Roads & Highways'] %}
+        <span class="company-pill">{{ c }}</span>{% endfor %}
+      </div>
+      <div style="margin-bottom:1rem;">
+        <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#8b5cf6;margin-bottom:.4rem;">⚡ Energy &amp; Mining</div>
+        {% for c in ['ECG (Electricity Company of Ghana)','Ghana Water Company','Tullow Oil Ghana','AngloGold Ashanti','Newmont Ghana','Kosmos Energy','Total Energies Ghana','GNPC'] %}
+        <span class="company-pill">{{ c }}</span>{% endfor %}
+      </div>
+      <div style="margin-bottom:1rem;">
+        <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#ef4444;margin-bottom:.4rem;">🏭 FMCG &amp; Corporates</div>
+        {% for c in ['Unilever Ghana','Nestlé Ghana','Fan Milk (Danone)','PZ Cussons','Guinness Ghana','Accra Brewery','Olam Ghana','Kasapreko'] %}
+        <span class="company-pill">{{ c }}</span>{% endfor %}
+      </div>
+      <div>
+        <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#0891b2;margin-bottom:.4rem;">🎓 Education &amp; Health</div>
+        {% for c in ['University of Ghana','KNUST','Ashesi University','University of Cape Coast','Korle Bu Teaching Hospital','37 Military Hospital','Ridge Hospital','Catholic Health Service'] %}
+        <span class="company-pill">{{ c }}</span>{% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SALES TIPS ──────────────────────────────────────────────────────── -->
+  <div class="section-head">💡 Sales Tips for the Ghanaian Market</div>
+
+  <div class="tip-grid">
+
+    <div class="tip-card">
+      <div class="tip-num">01</div>
+      <div>
+        <div class="tip-title">Lead with the Loan — Price is Not the Barrier</div>
+        <div class="tip-body">Most Ghanaians can't buy outright. Don't open with the full price — open with the <em>monthly payment</em>. "You can drive this car for less than GH₵ X per month through Republic Bank." Financing unlocks buyers who would otherwise walk away.</div>
+      </div>
+    </div>
+
+    <div class="tip-card">
+      <div class="tip-num">02</div>
+      <div>
+        <div class="tip-title">WhatsApp is Your Showroom</div>
+        <div class="tip-body">Ghana runs on WhatsApp. Post vehicle photos, videos and prices in relevant groups every day. Use your referral link in every message. Status updates reach your entire contact list — use them consistently. Short video walkthroughs convert better than still photos.</div>
+      </div>
+    </div>
+
+    <div class="tip-card">
+      <div class="tip-num">03</div>
+      <div>
+        <div class="tip-title">Target Employers, Not Just Individuals</div>
+        <div class="tip-body">A single HR or procurement officer at a bank, NGO or mining company can place an order for 5–20 vehicles at once. Use the proposal PPTX to pitch to companies. One corporate deal is worth more than 20 individual sales. Go where the money is managed.</div>
+      </div>
+    </div>
+
+    <div class="tip-card">
+      <div class="tip-num">04</div>
+      <div>
+        <div class="tip-title">Relationships First — Trust Before Transaction</div>
+        <div class="tip-body">In Ghana, people buy from people they trust. Visit prospects in person when you can. Greet them properly, ask about their family, show genuine interest. Follow up with a WhatsApp message the same day. A relationship built over weeks converts better than a cold pitch.</div>
+      </div>
+    </div>
+
+    <div class="tip-card">
+      <div class="tip-num">05</div>
+      <div>
+        <div class="tip-title">Sell the Cost-Saving Story for Solar</div>
+        <div class="tip-body">ECG outages cost Ghanaian businesses thousands per month in generator fuel, downtime and spoilage. Show the solar system as an investment, not an expense: "You spend GH₵ X on fuel every month — this system pays itself off in Y months and then it's free power." That framing closes deals.</div>
+      </div>
+    </div>
+
+    <div class="tip-card">
+      <div class="tip-num">06</div>
+      <div>
+        <div class="tip-title">Churches &amp; Religious Organisations are Major Buyers</div>
+        <div class="tip-body">Large churches in Ghana have significant purchasing power — buses for congregation transport, vehicles for pastors, solar for their complexes. Approach church administrators and deacons. They often make fast decisions and pay reliably. Don't overlook this segment.</div>
+      </div>
+    </div>
+
+    <div class="tip-card">
+      <div class="tip-num">07</div>
+      <div>
+        <div class="tip-title">Leverage Returning Diaspora</div>
+        <div class="tip-body">Ghanaians returning from abroad (UK, US, Europe) often need a vehicle immediately and have funds to spend. They want something reliable and well-priced. Reach them through diaspora Facebook groups, WhatsApp groups, and friends/family networks. They trust recommendations from home.</div>
+      </div>
+    </div>
+
+    <div class="tip-card">
+      <div class="tip-num">08</div>
+      <div>
+        <div class="tip-title">Use Video Testimonials &amp; Social Proof</div>
+        <div class="tip-body">Ask satisfied customers to record a 30-second WhatsApp video about their purchase. Ghanaians are heavily influenced by peer recommendations. Share these short clips in groups and on your status. "See what Mr Kwame said about his new SUV" is far more powerful than any ad you can write.</div>
+      </div>
+    </div>
+
+    <div class="tip-card">
+      <div class="tip-num">09</div>
+      <div>
+        <div class="tip-title">Handle Objections with the Comparison</div>
+        <div class="tip-body">"Is it not foreign used (Obroni Wawu)?" is the most common objection. Be ready: explain that these are <em>brand new</em> Chinese-manufactured vehicles with full documentation, manufacturer warranty, and competitive pricing vs Tokunbo. Show specs vs equivalent Japanese or European models at double the price.</div>
+      </div>
+    </div>
+
+    <div class="tip-card">
+      <div class="tip-num">10</div>
+      <div>
+        <div class="tip-title">Follow Up — Most Sales Happen on the 3rd–5th Contact</div>
+        <div class="tip-body">A prospect who didn't buy today is not a lost sale. In Ghana, decisions often involve family discussions, finances, and prayer. Follow up politely every 3–5 days with new inventory, a special offer, or just a "Good morning, just checking in." Persistence — without being pushy — wins.</div>
+      </div>
+    </div>
+
+    <div class="tip-card">
+      <div class="tip-num">11</div>
+      <div>
+        <div class="tip-title">Target Taxi &amp; Ride-Hailing Operators</div>
+        <div class="tip-body">Bolt and Uber drivers and fleet operators are always looking for affordable, fuel-efficient vehicles. A saloon car or SUV on finance that earns income from day one is an easy sell. Target drivers who are currently renting vehicles — show them how owning through a loan is cheaper than renting long-term.</div>
+      </div>
+    </div>
+
+    <div class="tip-card">
+      <div class="tip-num">12</div>
+      <div>
+        <div class="tip-title">Your Referral Link Works 24/7 — Use It Everywhere</div>
+        <div class="tip-body">Put your link in your WhatsApp bio, Instagram bio, Facebook about section, and email signature. Every click through your link is tracked — even if they buy 3 months later. Passive sharing while you sleep is one of the easiest ways to earn commission without active selling.</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Recent sales table -->
+  <div class="table-card" style="margin-top:.5rem;">
     <div class="table-header">
       <span class="table-title">My Recent Sales</span>
     </div>
@@ -172,6 +355,12 @@
       </tbody>
     </table>
   </div>
+
+  <div style="margin-top:1.5rem;padding:1rem 1.25rem;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;font-size:.82rem;color:#15803d;">
+    <strong>Need help?</strong> Contact the admin team at
+    <a href="mailto:kofi@chinacarsinghana.com" style="color:#16a34a;font-weight:700;">kofi@chinacarsinghana.com</a>
+    — we're here to support you close deals.
+  </div>
 </div>
 
 <script>
@@ -181,10 +370,19 @@ function copyRef() {
   navigator.clipboard.writeText(inp.value).then(() => {
     const btn = document.getElementById('copyBtn');
     btn.textContent = '✓ Copied!';
-    btn.style.background = '#16a34a';
-    setTimeout(() => { btn.textContent = '📋 Copy Link'; btn.style.background = '#2563eb'; }, 2500);
+    btn.style.background = '#16a34a'; btn.style.color = 'white';
+    setTimeout(() => { btn.textContent = '📋 Copy Link'; btn.style.background = 'white'; btn.style.color = '#1d4ed8'; }, 2500);
   });
 }
+function toggleCompanies() {
+  const body  = document.getElementById('companiesBody');
+  const arrow = document.getElementById('companiesArrow');
+  const open  = body.style.display !== 'none';
+  body.style.display  = open ? 'none' : 'block';
+  arrow.style.transform = open ? 'rotate(-90deg)' : '';
+}
+// Show PPT icon only on wider screens
+if (window.innerWidth > 600) document.getElementById('pptIcon').style.display = 'block';
 </script>
 </body>
 </html>

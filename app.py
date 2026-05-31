@@ -1821,7 +1821,8 @@ def admin_team_email():
     return render_template('admin/team_email.html', salespersons=salespersons)
 
 
-def _build_proposal_pptx():
+def _build_proposal_pptx(sp_name='[YOUR FULL NAME]', sp_code='[YOUR CODE]',
+                          sp_phone='[YOUR PHONE NUMBER]', sp_email='[YOUR EMAIL ADDRESS]'):
     """Generate the China Cars in Ghana business proposal as a PPTX in memory."""
     from pptx import Presentation
     from pptx.util import Inches, Pt, Emu
@@ -1996,18 +1997,24 @@ def _build_proposal_pptx():
              font_size=10, bold=True, color=WHITE, align=PP_ALIGN.LEFT)
 
     v_lines = [
-        'SUVs, Sedans, Trucks, Buses & Minivans',
+        'CATEGORIES AVAILABLE:',
+        '  Saloon / Sedan Cars',
+        '  SUVs & Crossovers',
+        '  Pick-Up Trucks & 4x4s',
+        '  Minivans & MPVs',
+        '  Buses & Minibuses',
+        '  Farm & Off-Road Vehicles',
+        '  Electric Vehicles (EV)',
+        '  Petrol & Diesel Options',
         '',
-        '• Brand-new & certified Chinese vehicles',
-        '• All popular brands available',
-        '• Competitive factory-direct pricing',
-        '• Full documentation & import clearance',
+        '• Brand-new, factory-direct pricing',
+        '• Full Ghana documentation & customs clearance',
         '• Test drives available on request',
-        '• Corporate fleet packages & bulk pricing',
-        '• Available for outright purchase or finance',
+        '• Corporate fleet & bulk order pricing',
+        '• Finance via Republic Bank available',
     ]
-    add_multiline(s2, v_lines, 0.45, 2.1, 3.65, 4.6,
-                  font_size=10.5, color=DKGRAY, align=PP_ALIGN.LEFT)
+    add_multiline(s2, v_lines, 0.45, 2.1, 3.65, 4.8,
+                  font_size=9.8, color=DKGRAY, align=PP_ALIGN.LEFT)
 
     # ── Card 2: Solar ──
     add_rect(s2, 4.55, 1.5, 3.85, 5.5, fill_rgb=WHITE)
@@ -2081,10 +2088,10 @@ def _build_proposal_pptx():
              font_size=9, bold=True, color=RGBColor(0x94, 0xA3, 0xB8), align=PP_ALIGN.LEFT)
 
     sp_fields = [
-        ('Name',          '[YOUR FULL NAME]'),
-        ('Phone',         '[YOUR PHONE NUMBER]'),
-        ('Email',         '[YOUR EMAIL ADDRESS]'),
-        ('Sales Code',    '[YOUR CODE]'),
+        ('Name',          sp_name),
+        ('Phone',         sp_phone),
+        ('Email',         sp_email),
+        ('Sales Code',    sp_code),
         ('Website',       'www.chinacarsinghana.com'),
         ('Email Enquiry', 'kofi@chinacarsinghana.com'),
     ]
@@ -2156,19 +2163,47 @@ def admin_team_proposal():
             flash(f'Failed to generate presentation: {e}', 'error')
             return render_template('admin/team_proposal.html', salespersons=salespersons)
 
-        target_companies = [
-            'GCB Bank', 'Ecobank Ghana', 'Fidelity Bank Ghana', 'Absa Bank Ghana',
-            'Standard Chartered Ghana', 'Republic Bank Ghana', 'UBA Ghana',
-            'Zenith Bank Ghana', 'Access Bank Ghana', 'Consolidated Bank Ghana',
-            'MTN Ghana', 'Vodafone Ghana', 'AirtelTigo', 'Ghana Ports & Harbours Authority',
-            'Ghana Highways Authority', 'Accra Metropolitan Assembly',
-            'Ghana Health Service', 'University of Ghana', 'KNUST',
-            'Ghana Revenue Authority', 'SSNIT', 'ECG (Electricity Company of Ghana)',
-            'Ghana Water Company', 'Tullow Oil Ghana', 'AngloGold Ashanti',
-            'Newmont Ghana', 'Kosmos Energy', 'Total Energies Ghana',
-            'Unilever Ghana', 'Nestlé Ghana', 'Fan Milk (Danone)',
-        ]
-        companies_text = '\n'.join(f'  • {c}' for c in target_companies)
+        target_companies = {
+            'Banks & Financial Institutions': [
+                'GCB Bank', 'Ecobank Ghana', 'Fidelity Bank Ghana', 'Absa Bank Ghana',
+                'Standard Chartered Ghana', 'Republic Bank Ghana', 'UBA Ghana',
+                'Zenith Bank Ghana', 'Access Bank Ghana', 'Consolidated Bank Ghana',
+                'First Atlantic Bank', 'OmniBank Ghana', 'CalBank',
+            ],
+            'Telecoms & Technology': [
+                'MTN Ghana', 'Vodafone Ghana', 'AirtelTigo', 'Huawei Ghana',
+            ],
+            'Government Agencies & Civil Service': [
+                'Ghana Revenue Authority', 'SSNIT', 'ECG (Electricity Company of Ghana)',
+                'Ghana Water Company', 'Ghana Ports & Harbours Authority',
+                'Ghana Highways Authority', 'Accra Metropolitan Assembly',
+                'Ghana Health Service', 'Ghana Police Service', 'Ghana Armed Forces',
+                'Ghana Immigration Service', 'Passport Office', 'DVLA Ghana',
+                'Ministry of Roads & Highways', 'Ministry of Finance',
+                'Lands Commission', 'Ghana National Fire Service',
+            ],
+            'Energy & Mining': [
+                'Tullow Oil Ghana', 'AngloGold Ashanti', 'Newmont Ghana',
+                'Kosmos Energy', 'Total Energies Ghana', 'GNPC',
+            ],
+            'Education': [
+                'University of Ghana', 'KNUST', 'Ashesi University',
+                'University of Cape Coast', 'University of Professional Studies',
+            ],
+            'Healthcare': [
+                'Korle Bu Teaching Hospital', '37 Military Hospital',
+                'Ridge Hospital', 'Catholic Health Service',
+            ],
+            'FMCG & Corporates': [
+                'Unilever Ghana', 'Nestlé Ghana', 'Fan Milk (Danone)',
+                'PZ Cussons', 'Guinness Ghana', 'Olam Ghana', 'Kasapreko',
+            ],
+        }
+        companies_text = ''
+        for category, names in target_companies.items():
+            companies_text += f'\n[{category}]\n'
+            companies_text += '\n'.join(f'  • {c}' for c in names)
+            companies_text += '\n'
 
         sent = 0
         failed = 0
@@ -2297,6 +2332,24 @@ def sales_portal():
     sp     = Salesperson.query.get_or_404(session['sales_id'])
     sales  = SalespersonSale.query.filter_by(salesperson_id=sp.id).order_by(SalespersonSale.created_at.desc()).limit(10).all()
     return render_template('sales/portal.html', sp=sp, recent_sales=sales)
+
+
+@app.route('/sales/proposal/download')
+@sales_required
+def sales_download_proposal():
+    sp = Salesperson.query.get_or_404(session['sales_id'])
+    buf = _build_proposal_pptx(
+        sp_name  = sp.full_name,
+        sp_code  = sp.code,
+        sp_phone = sp.phone  or '[YOUR PHONE NUMBER]',
+        sp_email = sp.email  or '[YOUR EMAIL ADDRESS]',
+    )
+    return send_file(
+        buf,
+        as_attachment=True,
+        download_name='ChinaCarsGhana_Proposal.pptx',
+        mimetype='application/vnd.openxmlformats-officedocument.presentationml.presentation',
+    )
 
 
 @app.route('/sales/inventory')
