@@ -700,8 +700,8 @@ https://chinacarsinghana.com/admin/salespersons
         print(f'[EMAIL] Salesperson welcome failed: {e}')
 
 
-def send_new_listing_alert(listing_type, name, price, listing_url):
-    """Email all active salespersons when a new vehicle or solar system is listed."""
+def send_new_listing_alert(listing_type, name, price, listing_url, action='new'):
+    """Email all active salespersons when a listing is added or updated."""
     if not SMTP_USER or not SMTP_PASSWORD:
         return
     try:
@@ -713,16 +713,19 @@ def send_new_listing_alert(listing_type, name, price, listing_url):
 
             emoji    = '☀️' if listing_type == 'solar' else '🚗'
             type_lbl = 'Solar System' if listing_type == 'solar' else 'Vehicle'
+            is_new   = action == 'new'
+            verb     = 'added to' if is_new else 'updated in'
+            subj_pfx = f'{emoji} New {type_lbl}' if is_new else f'{emoji} Updated {type_lbl}'
 
             for sp in recipients:
                 ref_link = f'https://chinacarsinghana.com?ref={sp.code}'
                 body = f"""\
-{emoji} NEW {type_lbl.upper()} LISTING — China Cars in Ghana
+{emoji} {type_lbl.upper()} {'LISTING' if is_new else 'UPDATE'} — China Cars in Ghana
 {'=' * 54}
 
 Hi {sp.full_name},
 
-A new {type_lbl.lower()} has just been added to the inventory:
+A {type_lbl.lower()} has just been {verb} the inventory:
 
   {type_lbl.upper()} : {name}
   PRICE      : ${price:,.2f}
@@ -742,7 +745,7 @@ Good luck!
 chinacarsinghana.com · Accra, Ghana
 """
                 msg = MIMEMultipart('alternative')
-                msg['Subject'] = f'{emoji} New {type_lbl}: {name} — Start Sharing!'
+                msg['Subject'] = f'{subj_pfx}: {name} — Start Sharing!'
                 msg['From']    = SMTP_USER
                 msg['To']      = sp.email
                 msg.attach(MIMEText(body, 'plain'))
@@ -1327,6 +1330,12 @@ def admin_edit_vehicle(vid):
         v.videos = json.dumps(existing_vids)
 
         db.session.commit()
+        listing_url = f'https://chinacarsinghana.com/vehicles/{v.id}'
+        threading.Thread(
+            target=send_new_listing_alert,
+            args=('vehicle', v.name, v.price, listing_url, 'updated'),
+            daemon=True
+        ).start()
         flash(f'Vehicle "{v.name}" updated successfully!', 'success')
         return redirect(url_for('admin_vehicles'))
     return render_template('admin/vehicle_form.html', vehicle=v, action='Edit')
@@ -1457,6 +1466,12 @@ def admin_edit_solar(sid):
         s.videos = json.dumps(existing_vids)
 
         db.session.commit()
+        listing_url = f'https://chinacarsinghana.com/solar/{s.id}'
+        threading.Thread(
+            target=send_new_listing_alert,
+            args=('solar', s.name, s.price, listing_url, 'updated'),
+            daemon=True
+        ).start()
         flash(f'Solar system "{s.name}" updated successfully!', 'success')
         return redirect(url_for('admin_solar'))
     return render_template('admin/solar_form.html', solar=s, action='Edit')
