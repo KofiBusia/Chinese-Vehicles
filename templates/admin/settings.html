@@ -72,6 +72,30 @@
       </div>
     </div>
 
+    <!-- Loan Interest Rate -->
+    <div class="form-section">
+      <div class="form-section-header">🏦 Loan Calculator Rate</div>
+      <div class="form-section-body">
+        <div style="display:flex;align-items:flex-end;gap:1rem;flex-wrap:wrap;">
+          <div class="form-group" style="flex:1;min-width:200px;">
+            <label class="form-label">Annual Interest Rate (% p.a.) <span style="color:var(--red);">*</span></label>
+            <div style="display:flex;align-items:center;gap:.5rem;">
+              <input type="number" name="loan_interest_rate" class="form-control" step="0.1" min="0.1" max="100"
+                     value="{{ current_loan_rate }}" placeholder="e.g. 7"
+                     style="font-size:1.1rem;font-weight:700;">
+              <span style="font-weight:700;color:var(--mid);font-size:1rem;">%</span>
+            </div>
+          </div>
+          <div style="padding-bottom:.5rem;">
+            <div style="font-size:.8rem;color:var(--mid);line-height:1.6;">
+              Current rate: <strong style="color:var(--blue);">{{ current_loan_rate }}% p.a.</strong><br>
+              Used in the loan calculator estimates on the Apply page.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <button type="submit" class="btn btn-primary" style="padding:.85rem 2rem;">💾 Save Settings</button>
   </form>
 

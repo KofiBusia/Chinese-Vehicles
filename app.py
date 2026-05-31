@@ -997,11 +997,14 @@ def loan():
     preselect_type = request.args.get('product_type', '')  # 'vehicle' or 'solar'
     if preselect_type == 'solar' and not preselect_s:
         preselect_s = -1  # flag to pre-check solar radio without a specific item
+    loan_rate_row = SiteSettings.query.filter_by(key='loan_interest_rate').first()
+    loan_interest_rate = float(loan_rate_row.value) if loan_rate_row else 7.0
     return render_template('loan.html',
                            vehicles=all_vehicles,
                            solar_systems=all_solar,
                            preselect_vehicle=preselect_v,
-                           preselect_solar=preselect_s)
+                           preselect_solar=preselect_s,
+                           loan_interest_rate=loan_interest_rate)
 
 
 @app.route('/contact', methods=['GET', 'POST'])
@@ -1777,18 +1780,34 @@ def admin_settings():
         try:
             rate_val = float(rate_str)
             if rate_val > 0:
-                row = SiteSettings.query.get('usd_to_ghs_rate')
+                row = SiteSettings.query.filter_by(key='usd_to_ghs_rate').first()
                 if row:
                     row.value = str(rate_val)
                 else:
                     db.session.add(SiteSettings(key='usd_to_ghs_rate', value=str(rate_val)))
         except (ValueError, TypeError):
             pass
+        # Save loan interest rate
+        loan_rate_str = request.form.get('loan_interest_rate', '').strip()
+        try:
+            loan_rate_val = float(loan_rate_str)
+            if 0 < loan_rate_val <= 100:
+                row = SiteSettings.query.filter_by(key='loan_interest_rate').first()
+                if row:
+                    row.value = str(loan_rate_val)
+                else:
+                    db.session.add(SiteSettings(key='loan_interest_rate', value=str(loan_rate_val)))
+        except (ValueError, TypeError):
+            pass
         db.session.commit()
         session['admin_name'] = admin.full_name or admin.username
         flash('Settings saved successfully.', 'success')
-    current_rate = get_ghs_rate()
-    return render_template('admin/settings.html', admin=admin, current_rate=current_rate)
+    current_rate      = get_ghs_rate()
+    loan_rate_row     = SiteSettings.query.filter_by(key='loan_interest_rate').first()
+    current_loan_rate = float(loan_rate_row.value) if loan_rate_row else 7.0
+    return render_template('admin/settings.html', admin=admin,
+                           current_rate=current_rate,
+                           current_loan_rate=current_loan_rate)
 
 
 # ─────────────────────────── INIT ───────────────────────────────────────── #

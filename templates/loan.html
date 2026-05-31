@@ -185,7 +185,7 @@
                 <div class="loan-preview-value" id="previewTotal">—</div>
               </div>
             </div>
-            <p style="font-size:.72rem;opacity:.5;margin-top:.75rem;">*Estimates based on ~7% p.a. Actual rates set by Republic Bank. Subject to approval.</p>
+            <p style="font-size:.72rem;opacity:.5;margin-top:.75rem;">*Estimates based on ~{{ loan_interest_rate }}% p.a. Actual rates set by Republic Bank. Subject to approval.</p>
           </div>
         </div>
       </div>
@@ -252,6 +252,7 @@
   </div>
 </section>
 
+<script>window.LOAN_ANNUAL_RATE = {{ loan_interest_rate }};</script>
 <script>
 // Wire up product_type radio buttons to show/hide groups
 document.querySelectorAll('input[name="product_type"]').forEach(radio => {

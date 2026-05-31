@@ -184,7 +184,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function updateLoanPreview() {
     const loan   = parseFloat(loanAmountEl?.value || 0);
     const term   = parseInt(document.getElementById('loan_term')?.value || 12);
-    const rate   = 0.07 / 12;
+    const rate   = (window.LOAN_ANNUAL_RATE || 7.0) / 100 / 12;
     let monthly  = 0;
     if (loan > 0 && term > 0) {
       monthly = (loan * rate * Math.pow(1+rate, term)) / (Math.pow(1+rate, term) - 1);
