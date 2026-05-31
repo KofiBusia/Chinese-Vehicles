@@ -109,7 +109,8 @@
     </div>
     <div class="stat-card">
       <div class="stat-icon">💰</div>
-      <div class="stat-val" style="font-size:1.2rem;">{{ sp.total_revenue() | currency }}</div>
+      <div class="stat-val" style="font-size:1.1rem;">{{ sp.total_revenue() | ghs }}</div>
+      <div style="font-size:.75rem;color:#6b7280;margin-top:.15rem;">{{ sp.total_revenue() | currency }}</div>
       <div class="stat-lbl">Total Revenue</div>
     </div>
     <div class="stat-card">
@@ -340,7 +341,12 @@
             <div style="font-size:.75rem;color:#6b7280;">{{ sale.customer_phone or '' }}</div>
           </td>
           <td>{{ '☀️' if sale.product_type == 'solar' else '🚗' }} {{ sale.product_name or '—' }}</td>
-          <td style="font-weight:700;">{{ sale.sale_amount | currency if sale.sale_amount else '—' }}</td>
+          <td style="font-weight:700;">
+            {% if sale.sale_amount %}
+              {{ sale.sale_amount | ghs }}<br>
+              <span style="font-size:.72rem;color:#6b7280;font-weight:400;">{{ sale.sale_amount | currency }}</span>
+            {% else %}—{% endif %}
+          </td>
           <td style="color:#22c55e;font-weight:600;">
             {% if sale.sale_amount %}{{ (sale.sale_amount * sp.commission_pct / 100) | ghs }}{% else %}—{% endif %}
           </td>
