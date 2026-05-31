@@ -3,6 +3,7 @@ import io
 import json
 import uuid
 import smtplib
+import threading
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from datetime import datetime, timedelta
@@ -699,6 +700,64 @@ https://chinacarsinghana.com/admin/salespersons
         print(f'[EMAIL] Salesperson welcome failed: {e}')
 
 
+def send_new_listing_alert(listing_type, name, price, listing_url):
+    """Email all active salespersons when a new vehicle or solar system is listed."""
+    if not SMTP_USER or not SMTP_PASSWORD:
+        return
+    try:
+        salespersons = Salesperson.query.filter_by(active=True).all()
+        recipients   = [sp for sp in salespersons if sp.email]
+        if not recipients:
+            return
+
+        emoji    = '☀️' if listing_type == 'solar' else '🚗'
+        type_lbl = 'Solar System' if listing_type == 'solar' else 'Vehicle'
+
+        for sp in recipients:
+            ref_link = f'https://chinacarsinghana.com?ref={sp.code}'
+            body = f"""\
+{emoji} NEW {type_lbl.upper()} LISTING — China Cars in Ghana
+{'=' * 54}
+
+Hi {sp.full_name},
+
+A new {type_lbl.lower()} has just been added to the inventory:
+
+  {type_lbl.upper()} : {name}
+  PRICE      : ${price:,.2f}
+  VIEW LINK  : {listing_url}
+
+Share it with your customers using your referral link
+and earn 1% commission on every confirmed sale:
+
+  {ref_link}
+
+Log in to your dashboard:
+  https://chinacarsinghana.com/sales/login
+
+Good luck!
+— China Cars in Ghana Team
+{'=' * 54}
+chinacarsinghana.com · Accra, Ghana
+"""
+            msg = MIMEMultipart('alternative')
+            msg['Subject'] = f'{emoji} New {type_lbl}: {name} — Start Sharing!'
+            msg['From']    = SMTP_USER
+            msg['To']      = sp.email
+            msg.attach(MIMEText(body, 'plain'))
+
+            try:
+                with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
+                    server.ehlo(); server.starttls()
+                    server.login(SMTP_USER, SMTP_PASSWORD)
+                    server.sendmail(SMTP_USER, [sp.email], msg.as_string())
+            except Exception as e:
+                print(f'[EMAIL] Listing alert to {sp.email} failed: {e}')
+
+    except Exception as e:
+        print(f'[EMAIL] send_new_listing_alert failed: {e}')
+
+
 # ────────────────────────── PUBLIC ROUTES ───────────────────────────────── #
 
 @app.route('/static/img/og-sales.jpg')
@@ -1217,6 +1276,12 @@ def admin_add_vehicle():
         v.videos = json.dumps(vids)
 
         db.session.commit()
+        listing_url = f'https://chinacarsinghana.com/vehicles/{v.id}'
+        threading.Thread(
+            target=send_new_listing_alert,
+            args=('vehicle', v.name, v.price, listing_url),
+            daemon=True
+        ).start()
         flash(f'Vehicle "{v.name}" added successfully!', 'success')
         return redirect(url_for('admin_vehicles'))
     return render_template('admin/vehicle_form.html', vehicle=None, action='Add')
@@ -1343,6 +1408,12 @@ def admin_add_solar():
         s.videos = json.dumps(vids)
 
         db.session.commit()
+        listing_url = f'https://chinacarsinghana.com/solar/{s.id}'
+        threading.Thread(
+            target=send_new_listing_alert,
+            args=('solar', s.name, s.price, listing_url),
+            daemon=True
+        ).start()
         flash(f'Solar system "{s.name}" added successfully!', 'success')
         return redirect(url_for('admin_solar'))
     return render_template('admin/solar_form.html', solar=None, action='Add')
