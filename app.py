@@ -6,6 +6,8 @@ import smtplib
 import threading
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+from email.mime.base import MIMEBase
+from email import encoders
 from datetime import datetime, timedelta
 from functools import wraps
 from flask import (Flask, render_template, request, redirect, url_for,
@@ -1817,6 +1819,439 @@ def admin_team_email():
         return redirect(url_for('admin_team_email'))
 
     return render_template('admin/team_email.html', salespersons=salespersons)
+
+
+def _build_proposal_pptx():
+    """Generate the China Cars in Ghana business proposal as a PPTX in memory."""
+    from pptx import Presentation
+    from pptx.util import Inches, Pt, Emu
+    from pptx.dml.color import RGBColor
+    from pptx.enum.text import PP_ALIGN
+
+    NAVY   = RGBColor(0x0F, 0x17, 0x2A)
+    GOLD   = RGBColor(0xF5, 0x9E, 0x0B)
+    WHITE  = RGBColor(0xFF, 0xFF, 0xFF)
+    LGRAY  = RGBColor(0xF1, 0xF5, 0xF9)
+    BLUE   = RGBColor(0x1D, 0x4E, 0xD8)
+    GREEN  = RGBColor(0x16, 0xA3, 0x4A)
+    DKGRAY = RGBColor(0x1E, 0x29, 0x3B)
+
+    prs = Presentation()
+    prs.slide_width  = Inches(13.33)
+    prs.slide_height = Inches(7.5)
+    blank_layout = prs.slide_layouts[6]  # fully blank
+
+    def px(val): return Inches(val)
+
+    def add_rect(slide, l, t, w, h, fill_rgb=None, line_rgb=None, line_width=None):
+        shape = slide.shapes.add_shape(1, px(l), px(t), px(w), px(h))
+        shape.line.fill.background()
+        if fill_rgb:
+            shape.fill.solid()
+            shape.fill.fore_color.rgb = fill_rgb
+        else:
+            shape.fill.background()
+        if line_rgb:
+            from pptx.util import Pt as Pt2
+            shape.line.color.rgb = line_rgb
+            shape.line.width = Pt2(line_width or 1)
+        else:
+            shape.line.fill.background()
+        return shape
+
+    def add_text(slide, text, l, t, w, h,
+                 font_size=16, bold=False, color=WHITE,
+                 align=PP_ALIGN.LEFT, italic=False, wrap=True):
+        txb = slide.shapes.add_textbox(px(l), px(t), px(w), px(h))
+        txb.word_wrap = wrap
+        tf = txb.text_frame
+        tf.word_wrap = wrap
+        p = tf.paragraphs[0]
+        p.alignment = align
+        run = p.add_run()
+        run.text = text
+        run.font.size = Pt(font_size)
+        run.font.bold = bold
+        run.font.italic = italic
+        run.font.color.rgb = color
+        run.font.name = 'Calibri'
+        return txb
+
+    def add_multiline(slide, lines, l, t, w, h,
+                      font_size=13, bold_first=False, color=WHITE,
+                      align=PP_ALIGN.LEFT, line_spacing=1.1):
+        from pptx.util import Pt as Pt2
+        from pptx.oxml.ns import qn
+        import lxml.etree as etree
+        txb = slide.shapes.add_textbox(px(l), px(t), px(w), px(h))
+        txb.word_wrap = True
+        tf = txb.text_frame
+        tf.word_wrap = True
+        for i, line in enumerate(lines):
+            p = tf.paragraphs[0] if i == 0 else tf.add_paragraph()
+            p.alignment = align
+            run = p.add_run()
+            run.text = line
+            run.font.size = Pt2(font_size)
+            run.font.bold = (bold_first and i == 0)
+            run.font.color.rgb = color
+            run.font.name = 'Calibri'
+        return txb
+
+    # ── SLIDE 1: COVER ────────────────────────────────────────────────────── #
+    s1 = prs.slides.add_slide(blank_layout)
+
+    # Full navy background
+    add_rect(s1, 0, 0, 13.33, 7.5, fill_rgb=NAVY)
+
+    # Gold accent bar left edge
+    add_rect(s1, 0, 0, 0.18, 7.5, fill_rgb=GOLD)
+
+    # Gold accent bar bottom
+    add_rect(s1, 0, 6.9, 13.33, 0.6, fill_rgb=GOLD)
+
+    # Dark panel right side
+    add_rect(s1, 8.5, 0, 4.83, 7.5, fill_rgb=DKGRAY)
+
+    # Top-left: "PARTNERSHIP PROPOSAL"
+    add_text(s1, 'BUSINESS PARTNERSHIP PROPOSAL',
+             0.45, 0.35, 7.8, 0.55,
+             font_size=11, bold=True, color=GOLD, align=PP_ALIGN.LEFT)
+
+    # Main headline
+    add_text(s1, 'China Cars\nin Ghana',
+             0.45, 0.85, 7.5, 2.2,
+             font_size=54, bold=True, color=WHITE, align=PP_ALIGN.LEFT)
+
+    # Tag line
+    add_text(s1, 'Premium Vehicles · Solar Energy Systems · Flexible Finance',
+             0.45, 3.15, 7.8, 0.5,
+             font_size=13, bold=False, color=GOLD, align=PP_ALIGN.LEFT)
+
+    # Divider line under tag
+    add_rect(s1, 0.45, 3.72, 4.5, 0.04, fill_rgb=GOLD)
+
+    # Prepared for block
+    add_text(s1, 'PREPARED FOR:',
+             0.45, 3.9, 4, 0.35,
+             font_size=9, bold=True, color=RGBColor(0x94, 0xA3, 0xB8), align=PP_ALIGN.LEFT)
+    add_text(s1, '[COMPANY NAME]',
+             0.45, 4.2, 6, 0.6,
+             font_size=22, bold=True, color=WHITE, align=PP_ALIGN.LEFT)
+
+    # Date
+    add_text(s1, datetime.utcnow().strftime('%B %Y'),
+             0.45, 4.85, 4, 0.35,
+             font_size=10, bold=False, color=RGBColor(0x94, 0xA3, 0xB8), align=PP_ALIGN.LEFT)
+
+    # Website bottom bar
+    add_text(s1, 'www.chinacarsinghana.com',
+             0.45, 7.0, 5, 0.35,
+             font_size=10, bold=True, color=NAVY, align=PP_ALIGN.LEFT)
+
+    # Right panel content
+    add_text(s1, '⭐ WHY US',
+             8.75, 0.6, 4.2, 0.4,
+             font_size=10, bold=True, color=GOLD, align=PP_ALIGN.LEFT)
+
+    right_points = [
+        '✔  Wide range of premium Chinese vehicles',
+        '✔  Solar energy systems for homes & business',
+        '✔  Republic Bank financing — easy approval',
+        '✔  Flexible payment plans available',
+        '✔  Trusted dealer in Accra, Ghana',
+        '✔  Dedicated sales support team',
+        '✔  After-sales service & warranty',
+    ]
+    add_multiline(s1, right_points,
+                  8.75, 1.1, 4.2, 4.5,
+                  font_size=11, color=LGRAY, align=PP_ALIGN.LEFT)
+
+    add_text(s1, 'Your Trusted Partner in Ghana',
+             8.75, 6.3, 4.2, 0.45,
+             font_size=10, bold=True, color=GOLD, align=PP_ALIGN.LEFT)
+
+    # ── SLIDE 2: SERVICES & LOAN PACKAGE ──────────────────────────────────── #
+    s2 = prs.slides.add_slide(blank_layout)
+
+    # Background
+    add_rect(s2, 0, 0, 13.33, 7.5, fill_rgb=LGRAY)
+
+    # Header band
+    add_rect(s2, 0, 0, 13.33, 1.25, fill_rgb=NAVY)
+    add_rect(s2, 0, 1.25, 13.33, 0.06, fill_rgb=GOLD)
+
+    add_text(s2, 'Our Products & Services',
+             0.4, 0.25, 9, 0.7,
+             font_size=28, bold=True, color=WHITE, align=PP_ALIGN.LEFT)
+    add_text(s2, 'SLIDE 2 OF 3  |  chinacarsinghana.com',
+             10.0, 0.45, 3.0, 0.4,
+             font_size=8, bold=False, color=RGBColor(0x94, 0xA3, 0xB8), align=PP_ALIGN.RIGHT)
+
+    # ── Card 1: Vehicles ──
+    add_rect(s2, 0.35, 1.5, 3.85, 5.5, fill_rgb=WHITE)
+    add_rect(s2, 0.35, 1.5, 3.85, 0.45, fill_rgb=BLUE)
+    add_text(s2, '🚗  PREMIUM VEHICLES',
+             0.45, 1.55, 3.65, 0.35,
+             font_size=10, bold=True, color=WHITE, align=PP_ALIGN.LEFT)
+
+    v_lines = [
+        'SUVs, Sedans, Trucks, Buses & Minivans',
+        '',
+        '• Brand-new & certified Chinese vehicles',
+        '• All popular brands available',
+        '• Competitive factory-direct pricing',
+        '• Full documentation & import clearance',
+        '• Test drives available on request',
+        '• Corporate fleet packages & bulk pricing',
+        '• Available for outright purchase or finance',
+    ]
+    add_multiline(s2, v_lines, 0.45, 2.1, 3.65, 4.6,
+                  font_size=10.5, color=DKGRAY, align=PP_ALIGN.LEFT)
+
+    # ── Card 2: Solar ──
+    add_rect(s2, 4.55, 1.5, 3.85, 5.5, fill_rgb=WHITE)
+    add_rect(s2, 4.55, 1.5, 3.85, 0.45, fill_rgb=GOLD)
+    add_text(s2, '☀️  SOLAR ENERGY SYSTEMS',
+             4.65, 1.55, 3.65, 0.35,
+             font_size=10, bold=True, color=NAVY, align=PP_ALIGN.LEFT)
+
+    s_lines = [
+        'Residential, Commercial & Industrial',
+        '',
+        '• Complete solar panel installations',
+        '• Battery backup & inverter systems',
+        '• High-efficiency panels & equipment',
+        '• Energy independence from grid outages',
+        '• Reduce electricity bills significantly',
+        '• Ideal for offices, factories & estates',
+        '• Maintenance & warranty support',
+    ]
+    add_multiline(s2, s_lines, 4.65, 2.1, 3.65, 4.6,
+                  font_size=10.5, color=DKGRAY, align=PP_ALIGN.LEFT)
+
+    # ── Card 3: Finance ──
+    add_rect(s2, 8.75, 1.5, 4.2, 5.5, fill_rgb=WHITE)
+    add_rect(s2, 8.75, 1.5, 4.2, 0.45, fill_rgb=GREEN)
+    add_text(s2, '🏦  REPUBLIC BANK FINANCE',
+             8.85, 1.55, 4.0, 0.35,
+             font_size=10, bold=True, color=WHITE, align=PP_ALIGN.LEFT)
+
+    f_lines = [
+        'Flexible Loan Packages',
+        '',
+        '• Finance up to 100% of vehicle/system cost',
+        '• Loan terms: 12 – 84 months',
+        '• Competitive interest rates',
+        '• Fast approval — 24 to 48 hours',
+        '• Minimal documentation required',
+        '• Available to employed & self-employed',
+        '• Joint applications accepted',
+        '',
+        'Apply online at:',
+        'chinacarsinghana.com/loan',
+    ]
+    add_multiline(s2, f_lines, 8.85, 2.1, 3.95, 4.6,
+                  font_size=10.5, color=DKGRAY, align=PP_ALIGN.LEFT)
+
+    # ── SLIDE 3: CONTACT & NEXT STEPS ─────────────────────────────────────── #
+    s3 = prs.slides.add_slide(blank_layout)
+
+    # Navy background full
+    add_rect(s3, 0, 0, 13.33, 7.5, fill_rgb=NAVY)
+
+    # Gold side bar
+    add_rect(s3, 0, 0, 0.18, 7.5, fill_rgb=GOLD)
+
+    # Gold bottom bar
+    add_rect(s3, 0, 6.9, 13.33, 0.6, fill_rgb=GOLD)
+
+    # Header
+    add_text(s3, "LET'S WORK TOGETHER",
+             0.45, 0.3, 9, 0.45,
+             font_size=11, bold=True, color=GOLD, align=PP_ALIGN.LEFT)
+    add_text(s3, 'Get in Touch',
+             0.45, 0.72, 9, 0.85,
+             font_size=36, bold=True, color=WHITE, align=PP_ALIGN.LEFT)
+    add_rect(s3, 0.45, 1.6, 4.0, 0.05, fill_rgb=GOLD)
+
+    # Left: Salesperson contact block
+    add_text(s3, 'YOUR DEDICATED SALES REPRESENTATIVE',
+             0.45, 1.8, 6.2, 0.35,
+             font_size=9, bold=True, color=RGBColor(0x94, 0xA3, 0xB8), align=PP_ALIGN.LEFT)
+
+    sp_fields = [
+        ('Name',          '[YOUR FULL NAME]'),
+        ('Phone',         '[YOUR PHONE NUMBER]'),
+        ('Email',         '[YOUR EMAIL ADDRESS]'),
+        ('Sales Code',    '[YOUR CODE]'),
+        ('Website',       'www.chinacarsinghana.com'),
+        ('Email Enquiry', 'kofi@chinacarsinghana.com'),
+    ]
+    y = 2.2
+    for label, val in sp_fields:
+        add_text(s3, label.upper(),
+                 0.45, y, 2.0, 0.28,
+                 font_size=8, bold=True, color=RGBColor(0x94, 0xA3, 0xB8), align=PP_ALIGN.LEFT)
+        add_text(s3, val,
+                 2.5, y, 4.5, 0.32,
+                 font_size=11, bold=(val.startswith('[')), color=GOLD if val.startswith('[') else WHITE,
+                 align=PP_ALIGN.LEFT)
+        y += 0.45
+
+    # Right: Next steps
+    add_rect(s3, 7.2, 1.7, 5.7, 4.8, fill_rgb=DKGRAY)
+    add_text(s3, 'NEXT STEPS',
+             7.45, 1.95, 5.2, 0.4,
+             font_size=11, bold=True, color=GOLD, align=PP_ALIGN.LEFT)
+
+    steps = [
+        '01  Schedule a product demonstration',
+        '02  Explore our full vehicle & solar inventory',
+        '03  Receive a tailored corporate quote',
+        '04  Apply for Republic Bank financing',
+        '05  Place your order — delivery in days',
+    ]
+    add_multiline(s3, steps, 7.45, 2.45, 5.1, 3.5,
+                  font_size=11.5, color=WHITE, align=PP_ALIGN.LEFT)
+
+    add_text(s3, 'Visit us online to browse inventory,\napply for finance & get instant quotes.',
+             7.45, 5.5, 5.1, 0.7,
+             font_size=10, bold=False, color=RGBColor(0x94, 0xA3, 0xB8), align=PP_ALIGN.LEFT)
+
+    # Bottom bar text
+    add_text(s3, 'chinacarsinghana.com  |  Accra, Ghana  |  Trusted Dealer Since Establishment',
+             0.45, 7.0, 9, 0.35,
+             font_size=9, bold=True, color=NAVY, align=PP_ALIGN.LEFT)
+
+    buf = io.BytesIO()
+    prs.save(buf)
+    buf.seek(0)
+    return buf
+
+
+@app.route('/admin/team/proposal', methods=['GET', 'POST'])
+@admin_required
+def admin_team_proposal():
+    """Send the business proposal PPTX to selected salespersons."""
+    salespersons = Salesperson.query.filter_by(active=True).order_by(Salesperson.full_name).all()
+
+    if request.method == 'POST':
+        recipient_ids = request.form.getlist('recipients')
+
+        if not recipient_ids:
+            flash('Please select at least one recipient.', 'error')
+            return render_template('admin/team_proposal.html', salespersons=salespersons)
+
+        if not SMTP_USER or not SMTP_PASSWORD:
+            flash('SMTP is not configured — emails cannot be sent.', 'error')
+            return render_template('admin/team_proposal.html', salespersons=salespersons)
+
+        targets  = [sp for sp in salespersons if str(sp.id) in recipient_ids and sp.email]
+        no_email = [sp for sp in salespersons if str(sp.id) in recipient_ids and not sp.email]
+
+        try:
+            pptx_buf = _build_proposal_pptx()
+        except Exception as e:
+            flash(f'Failed to generate presentation: {e}', 'error')
+            return render_template('admin/team_proposal.html', salespersons=salespersons)
+
+        target_companies = [
+            'GCB Bank', 'Ecobank Ghana', 'Fidelity Bank Ghana', 'Absa Bank Ghana',
+            'Standard Chartered Ghana', 'Republic Bank Ghana', 'UBA Ghana',
+            'Zenith Bank Ghana', 'Access Bank Ghana', 'Consolidated Bank Ghana',
+            'MTN Ghana', 'Vodafone Ghana', 'AirtelTigo', 'Ghana Ports & Harbours Authority',
+            'Ghana Highways Authority', 'Accra Metropolitan Assembly',
+            'Ghana Health Service', 'University of Ghana', 'KNUST',
+            'Ghana Revenue Authority', 'SSNIT', 'ECG (Electricity Company of Ghana)',
+            'Ghana Water Company', 'Tullow Oil Ghana', 'AngloGold Ashanti',
+            'Newmont Ghana', 'Kosmos Energy', 'Total Energies Ghana',
+            'Unilever Ghana', 'Nestlé Ghana', 'Fan Milk (Danone)',
+        ]
+        companies_text = '\n'.join(f'  • {c}' for c in target_companies)
+
+        sent = 0
+        failed = 0
+        pptx_buf.seek(0)
+        pptx_bytes = pptx_buf.read()
+
+        for sp in targets:
+            email_body = f"""\
+Hi {sp.full_name},
+
+Please find attached a business proposal presentation (PowerPoint) for China Cars in Ghana.
+
+HOW TO USE THIS PROPOSAL
+─────────────────────────
+1. Open the attached file in Microsoft PowerPoint or Google Slides.
+2. On the COVER slide, replace [COMPANY NAME] with the name of the company you are pitching to.
+3. On the CONTACT slide (Slide 3), fill in your:
+     • Full Name
+     • Phone Number
+     • Email Address
+     • Your Sales Code: {sp.code}
+4. Save the file and send or present it professionally.
+
+SUGGESTED TARGET COMPANIES IN GHANA
+─────────────────────────────────────
+The following organisations are excellent prospects — they have staff, fleets, and energy needs:
+
+{companies_text}
+
+Focus on their procurement, fleet management, facilities, or HR departments. A well-placed introduction can lead to bulk vehicle orders, corporate solar installations, or group loan applications through Republic Bank.
+
+NEED HELP OR HAVE QUESTIONS?
+──────────────────────────────
+Contact the admin team directly at:
+  📧  kofi@chinacarsinghana.com
+
+We are happy to assist you with custom quotes, additional materials, or to join a client meeting.
+
+Your referral link:
+  🔗  https://chinacarsinghana.com?ref={sp.code}
+
+Good luck — let's close some big deals!
+— China Cars in Ghana Admin Team
+{'─' * 54}
+www.chinacarsinghana.com · Accra, Ghana
+"""
+            msg = MIMEMultipart()
+            msg['Subject'] = 'Your Business Proposal — China Cars in Ghana [Ready to Send]'
+            msg['From']    = SMTP_USER
+            msg['To']      = sp.email
+            msg.attach(MIMEText(email_body, 'plain'))
+
+            part = MIMEBase('application',
+                            'vnd.openxmlformats-officedocument.presentationml.presentation')
+            part.set_payload(pptx_bytes)
+            encoders.encode_base64(part)
+            part.add_header('Content-Disposition',
+                            'attachment',
+                            filename='ChinaCarsGhana_Proposal.pptx')
+            msg.attach(part)
+
+            try:
+                with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
+                    server.ehlo(); server.starttls()
+                    server.login(SMTP_USER, SMTP_PASSWORD)
+                    server.sendmail(SMTP_USER, [sp.email], msg.as_string())
+                sent += 1
+            except Exception as e:
+                print(f'[EMAIL] Proposal to {sp.email} failed: {e}')
+                failed += 1
+
+        parts = []
+        if sent:
+            parts.append(f'Proposal sent to {sent} salesperson{"s" if sent != 1 else ""}.')
+        if failed:
+            parts.append(f'{failed} failed (check server logs).')
+        if no_email:
+            names = ', '.join(sp.full_name for sp in no_email)
+            parts.append(f'Skipped (no email on file): {names}.')
+        flash(' '.join(parts), 'success' if sent else 'error')
+        return redirect(url_for('admin_team_proposal'))
+
+    return render_template('admin/team_proposal.html', salespersons=salespersons)
 
 
 # ── Salesperson Portal (their own login) ── #

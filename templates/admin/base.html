@@ -242,6 +242,9 @@
     <a href="{{ url_for('admin_team_email') }}" class="sidebar-link {% if request.endpoint == 'admin_team_email' %}active{% endif %}">
       <span class="link-icon">📨</span> Email Team
     </a>
+    <a href="{{ url_for('admin_team_proposal') }}" class="sidebar-link {% if request.endpoint == 'admin_team_proposal' %}active{% endif %}">
+      <span class="link-icon">📊</span> Send Proposal
+    </a>
     <div class="nav-section-label">Account</div>
     <a href="{{ url_for('admin_settings') }}" class="sidebar-link {% if request.endpoint == 'admin_settings' %}active{% endif %}">
       <span class="link-icon">⚙️</span> Settings

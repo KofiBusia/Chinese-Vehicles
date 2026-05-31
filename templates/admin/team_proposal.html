@@ -1,0 +1,141 @@
+{% extends "admin/base.html" %}
+{% block title %}Send Proposal{% endblock %}
+{% block page_title %}Send Business Proposal{% endblock %}
+
+{% block content %}
+<div style="max-width:860px;">
+
+  <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.75rem;margin-bottom:1.5rem;">
+    <p style="font-size:.85rem;color:var(--mid);">Send the company proposal PowerPoint to your sales team — they fill in the client name and their contact details.</p>
+    <a href="{{ url_for('admin_salespersons') }}" class="btn btn-outline btn-sm">← Back to Team</a>
+  </div>
+
+  <!-- Proposal preview card -->
+  <div style="background:linear-gradient(135deg,#0f172a 0%,#1e3a5f 100%);border-radius:16px;padding:2rem;margin-bottom:2rem;color:white;display:grid;grid-template-columns:1fr auto;gap:1.5rem;align-items:center;">
+    <div>
+      <div style="font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.5);margin-bottom:.4rem;">Attached Presentation</div>
+      <div style="font-family:var(--font-head);font-size:1.3rem;font-weight:800;margin-bottom:.35rem;">China Cars in Ghana — Business Proposal</div>
+      <div style="font-size:.82rem;color:rgba(255,255,255,.65);line-height:1.7;">
+        3-slide PowerPoint · Auto-generated on send<br>
+        Covers: Vehicles &amp; Solar Products · Republic Bank Finance · Contact page with blanks
+      </div>
+      <div style="margin-top:1rem;display:flex;gap:.6rem;flex-wrap:wrap;">
+        <span style="padding:.25rem .75rem;background:rgba(245,158,11,.15);border:1px solid rgba(245,158,11,.4);border-radius:20px;font-size:.72rem;font-weight:700;color:#f59e0b;">Slide 1 — Cover</span>
+        <span style="padding:.25rem .75rem;background:rgba(37,99,235,.15);border:1px solid rgba(37,99,235,.4);border-radius:20px;font-size:.72rem;font-weight:700;color:#60a5fa;">Slide 2 — Products &amp; Finance</span>
+        <span style="padding:.25rem .75rem;background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.4);border-radius:20px;font-size:.72rem;font-weight:700;color:#34d399;">Slide 3 — Contact &amp; Next Steps</span>
+      </div>
+    </div>
+    <div style="text-align:center;background:rgba(255,255,255,.06);border-radius:12px;padding:1.5rem 2rem;">
+      <div style="font-size:3rem;line-height:1;">📊</div>
+      <div style="font-size:.72rem;color:rgba(255,255,255,.5);margin-top:.5rem;font-weight:600;">.PPTX</div>
+    </div>
+  </div>
+
+  <!-- Instructions -->
+  <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:1.25rem 1.5rem;margin-bottom:2rem;">
+    <div style="font-weight:700;font-size:.88rem;color:#92400e;margin-bottom:.6rem;">📋 What salespersons need to fill in before sending to a client:</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:.5rem;font-size:.82rem;color:#78350f;">
+      <div>📄 <strong>Slide 1</strong> — Replace <code style="background:#fef3c7;padding:.1rem .3rem;border-radius:3px;">[COMPANY NAME]</code></div>
+      <div>📞 <strong>Slide 3</strong> — Their phone number</div>
+      <div>✉️ <strong>Slide 3</strong> — Their email address</div>
+      <div>🔑 <strong>Slide 3</strong> — Their sales code</div>
+    </div>
+  </div>
+
+  <form method="post" action="{{ url_for('admin_team_proposal') }}">
+
+    <!-- Recipients -->
+    <div class="form-section">
+      <div class="form-section-header">👥 Select Recipients</div>
+      <div class="form-section-body">
+        <div style="display:flex;gap:.75rem;align-items:center;margin-bottom:1rem;flex-wrap:wrap;">
+          <button type="button" onclick="selectAll(true)"
+                  style="padding:.35rem .8rem;background:#f1f5f9;border:1px solid var(--border);border-radius:6px;font-size:.78rem;font-weight:600;cursor:pointer;">
+            ✅ Select All
+          </button>
+          <button type="button" onclick="selectAll(false)"
+                  style="padding:.35rem .8rem;background:#f1f5f9;border:1px solid var(--border);border-radius:6px;font-size:.78rem;font-weight:600;cursor:pointer;">
+            Deselect All
+          </button>
+          <span id="countLabel" style="font-size:.8rem;color:var(--mid);margin-left:auto;"></span>
+        </div>
+
+        {% if salespersons %}
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:.6rem;">
+          {% for sp in salespersons %}
+          <label style="display:flex;align-items:center;gap:.65rem;padding:.7rem .9rem;border:1.5px solid var(--border);border-radius:8px;cursor:pointer;transition:border-color .2s;"
+                 onmouseover="this.style.borderColor='var(--blue)'"
+                 onmouseout="this.style.borderColor=this.querySelector('input').checked?'var(--blue)':'var(--border)'">
+            <input type="checkbox" name="recipients" value="{{ sp.id }}" class="sp-check"
+                   style="accent-color:var(--blue);width:16px;height:16px;" checked
+                   onchange="updateCount()">
+            <div style="min-width:0;">
+              <div style="font-weight:600;font-size:.85rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ sp.full_name }}</div>
+              <div style="font-size:.72rem;color:var(--mid);">
+                {% if sp.email %}{{ sp.email }}{% else %}<span style="color:var(--red);">⚠ No email — will be skipped</span>{% endif %}
+              </div>
+              <code style="font-size:.68rem;background:#f1f5f9;padding:.1rem .3rem;border-radius:3px;color:var(--blue);">{{ sp.code }}</code>
+            </div>
+          </label>
+          {% endfor %}
+        </div>
+        {% else %}
+        <p style="color:var(--mid);font-size:.85rem;">No active salespersons found.</p>
+        {% endif %}
+      </div>
+    </div>
+
+    <div style="display:flex;gap:1rem;align-items:center;flex-wrap:wrap;">
+      <button type="submit" class="btn btn-primary" style="padding:.9rem 2.5rem;font-size:.95rem;">
+        📤 Send Proposal to Selected
+      </button>
+      <span id="sendNote" style="font-size:.82rem;color:var(--mid);"></span>
+    </div>
+
+  </form>
+
+  <!-- Target companies reference -->
+  <div style="margin-top:2.5rem;background:white;border:1px solid var(--border);border-radius:12px;overflow:hidden;">
+    <div style="padding:1rem 1.5rem;border-bottom:1px solid var(--border);background:#f9fafb;font-family:var(--font-head);font-weight:700;font-size:.95rem;">
+      🏢 Suggested Target Companies (included in email to salespersons)
+    </div>
+    <div style="padding:1.25rem 1.5rem;">
+      <p style="font-size:.8rem;color:var(--mid);margin-bottom:1rem;">These companies are listed in the email as suggestions for salespersons to approach:</p>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:.4rem;font-size:.82rem;color:var(--dark);">
+        {% for company in [
+          'GCB Bank','Ecobank Ghana','Fidelity Bank Ghana','Absa Bank Ghana',
+          'Standard Chartered Ghana','Republic Bank Ghana','UBA Ghana',
+          'Zenith Bank Ghana','Access Bank Ghana','Consolidated Bank Ghana',
+          'MTN Ghana','Vodafone Ghana','AirtelTigo',
+          'Ghana Ports & Harbours Authority','Ghana Highways Authority',
+          'Accra Metropolitan Assembly','Ghana Health Service',
+          'University of Ghana','KNUST','Ghana Revenue Authority',
+          'SSNIT','ECG (Electricity Company of Ghana)','Ghana Water Company',
+          'Tullow Oil Ghana','AngloGold Ashanti','Newmont Ghana',
+          'Kosmos Energy','Total Energies Ghana',
+          'Unilever Ghana','Nestlé Ghana','Fan Milk (Danone)'
+        ] %}
+        <div style="padding:.3rem .6rem;background:#f8fafc;border-radius:5px;border:1px solid #e2e8f0;">{{ company }}</div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+function selectAll(checked) {
+  document.querySelectorAll('.sp-check').forEach(cb => cb.checked = checked);
+  updateCount();
+}
+function updateCount() {
+  const total    = document.querySelectorAll('.sp-check').length;
+  const selected = document.querySelectorAll('.sp-check:checked').length;
+  document.getElementById('countLabel').textContent = `${selected} of ${total} selected`;
+  document.getElementById('sendNote').textContent   = selected
+    ? `Will email the proposal to ${selected} recipient${selected === 1 ? '' : 's'}.`
+    : '';
+}
+updateCount();
+</script>
+{% endblock %}
