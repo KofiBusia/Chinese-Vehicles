@@ -16,11 +16,12 @@
 <div id="regLinkModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;align-items:center;justify-content:center;">
   <div style="background:white;border-radius:14px;padding:2rem;max-width:520px;width:90%;box-shadow:0 8px 32px rgba(0,0,0,.2);">
     <h3 style="font-size:1rem;font-weight:700;margin-bottom:.5rem;">🔗 Salesperson Registration Link</h3>
-    <p style="font-size:.82rem;color:#64748b;margin-bottom:1rem;">Share this link with new salespersons. They can self-register and their code is auto-generated. This link expires when you generate a new one.</p>
+    <p style="font-size:.82rem;color:#64748b;margin-bottom:1rem;">Share this link with new salespersons. They can self-register and their unique code is auto-generated. <strong>Valid for 7 days</strong> — generate a new one when it expires.</p>
     <div style="display:flex;gap:.5rem;">
       <input id="regLinkInput" readonly style="flex:1;padding:.65rem .9rem;border:1.5px solid #e2e8f0;border-radius:8px;font-size:.82rem;font-family:monospace;">
       <button onclick="copyRegLink()" style="padding:.65rem 1rem;background:#2563eb;color:white;border:none;border-radius:8px;font-weight:700;cursor:pointer;">Copy</button>
     </div>
+    <p id="regLinkExpiry" style="font-size:.75rem;color:#64748b;margin-top:.5rem;"></p>
     <div style="margin-top:.75rem;display:flex;gap:.5rem;justify-content:flex-end;">
       <button onclick="document.getElementById('regLinkModal').style.display='none'" style="padding:.5rem 1rem;background:#f3f4f6;border:none;border-radius:8px;cursor:pointer;font-size:.83rem;">Close</button>
     </div>
@@ -32,6 +33,9 @@ async function genRegLink() {
   const res  = await fetch('{{ url_for("admin_gen_reg_link") }}', {method:'POST'});
   const data = await res.json();
   document.getElementById('regLinkInput').value = data.link;
+  if (data.expiry) {
+    document.getElementById('regLinkExpiry').textContent = '⏳ Expires: ' + data.expiry + ' UTC (7 days)';
+  }
   const modal = document.getElementById('regLinkModal');
   modal.style.display = 'flex';
 }
