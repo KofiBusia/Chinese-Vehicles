@@ -1698,6 +1698,11 @@ def sales_register(token=None):
             flash('Passwords do not match.', 'error')
         elif len(password) < 6:
             flash('Password must be at least 6 characters.', 'error')
+        elif email and Salesperson.query.filter(
+                db.func.lower(Salesperson.email) == email.lower()).first():
+            flash('An account with this email address already exists. Please contact admin if you need help.', 'error')
+        elif phone and Salesperson.query.filter_by(phone=phone).first():
+            flash('An account with this phone number already exists. Please contact admin if you need help.', 'error')
         else:
             # Auto-generate unique code from initials + random digits
             base = ''.join(w[0] for w in full_name.split() if w).upper()[:3]
