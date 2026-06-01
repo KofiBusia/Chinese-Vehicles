@@ -70,6 +70,36 @@
 {% endwith %}
 
 <div class="main">
+
+  <!-- ── Motivational Video Player ── -->
+  <div id="motOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:9999;align-items:center;justify-content:center;flex-direction:column;">
+    <div style="position:relative;width:min(900px,96vw);">
+      <canvas id="motCanvas" style="width:100%;border-radius:12px;display:block;box-shadow:0 8px 60px rgba(0,0,0,.8);"></canvas>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:.75rem;padding:0 .25rem;">
+        <div style="display:flex;align-items:center;gap:.75rem;">
+          <button id="motPlayBtn" onclick="motTogglePlay()"
+                  style="background:#f59e0b;color:#0f172a;border:none;border-radius:8px;padding:.5rem 1.1rem;font-weight:800;cursor:pointer;font-size:.85rem;">
+            ▶ Play
+          </button>
+          <div id="motProgress" style="width:200px;height:4px;background:rgba(255,255,255,.2);border-radius:2px;overflow:hidden;cursor:pointer;" onclick="motSeek(event)">
+            <div id="motBar" style="height:100%;background:#f59e0b;width:0%;transition:width .25s linear;"></div>
+          </div>
+          <span id="motTime" style="color:rgba(255,255,255,.6);font-size:.78rem;">0:00 / 0:30</span>
+        </div>
+        <button onclick="motClose()"
+                style="background:rgba(255,255,255,.1);color:white;border:none;border-radius:8px;padding:.5rem 1rem;font-weight:700;cursor:pointer;font-size:.82rem;">
+          ✕ Close
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Replay button (shown after first play) -->
+  <div id="motReplayBar" style="display:none;background:linear-gradient(135deg,#0f172a,#1e3a5f);border-radius:12px;padding:1rem 1.5rem;margin-bottom:1.5rem;display:none;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.75rem;">
+    <div style="color:white;font-size:.88rem;font-weight:600;">🎬 Your daily motivation briefing is ready</div>
+    <button onclick="motOpen()" style="background:#f59e0b;color:#0f172a;border:none;border-radius:8px;padding:.55rem 1.25rem;font-weight:800;cursor:pointer;font-size:.85rem;">▶ Watch Again</button>
+  </div>
+
   <div class="greeting">Hello, {{ sp.full_name }}! 👋</div>
   <div class="sub">Welcome to your sales dashboard.</div>
   <div style="display:flex;align-items:center;gap:.75rem;flex-wrap:wrap;margin-bottom:1.5rem;">
@@ -371,6 +401,388 @@
 </div>
 
 <script>
+// ── Motivational Video Engine ──────────────────────────────────────────────
+const MOT_DURATION = 30;
+const SP_NAME      = {{ sp.full_name | tojson }};
+const SP_CODE      = {{ sp.code | tojson }};
+
+let motAudioCtx = null, motAnimId = null, motStartTime = null;
+let motPaused = false, motPauseOffset = 0, motPlaying = false;
+
+const SLIDES = [
+  { from: 0,  to: 5  },
+  { from: 5,  to: 10 },
+  { from: 10, to: 17 },
+  { from: 17, to: 24 },
+  { from: 24, to: 30 },
+];
+
+/* ── Audio ── */
+function buildAudio(ctx) {
+  const t = ctx.currentTime;
+  const master = ctx.createGain();
+  master.gain.setValueAtTime(0, t);
+  master.gain.linearRampToValueAtTime(0.55, t + 1.5);
+  master.gain.setValueAtTime(0.55, t + 27);
+  master.gain.linearRampToValueAtTime(0, t + 30);
+  master.connect(ctx.destination);
+
+  // Low cinematic drone
+  const drone = ctx.createOscillator();
+  const droneGain = ctx.createGain();
+  const droneFilter = ctx.createBiquadFilter();
+  drone.type = 'sawtooth';
+  drone.frequency.setValueAtTime(55, t);
+  drone.frequency.linearRampToValueAtTime(73, t + 17);
+  drone.frequency.linearRampToValueAtTime(82, t + 24);
+  drone.frequency.linearRampToValueAtTime(55, t + 30);
+  droneFilter.type = 'lowpass';
+  droneFilter.frequency.setValueAtTime(120, t);
+  droneFilter.frequency.linearRampToValueAtTime(600, t + 24);
+  droneGain.gain.value = 0.35;
+  drone.connect(droneFilter); droneFilter.connect(droneGain); droneGain.connect(master);
+  drone.start(t); drone.stop(t + 30);
+
+  // Pad chords (cinematic swells every 5 secs)
+  const chords = [
+    [110, 138, 165, 220],
+    [123, 155, 185, 246],
+    [130, 164, 196, 261],
+    [138, 174, 207, 277],
+    [146, 184, 220, 293],
+  ];
+  chords.forEach((freqs, si) => {
+    const onset = t + si * 5;
+    freqs.forEach(freq => {
+      const osc = ctx.createOscillator();
+      const g   = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+      g.gain.setValueAtTime(0, onset);
+      g.gain.linearRampToValueAtTime(0.12, onset + 0.8);
+      g.gain.setValueAtTime(0.12, onset + 3.5);
+      g.gain.linearRampToValueAtTime(0, onset + 5);
+      osc.connect(g); g.connect(master);
+      osc.start(onset); osc.stop(onset + 5.1);
+    });
+  });
+
+  // Percussion hits (noise bursts at slide transitions)
+  [0, 5, 10, 17, 24].forEach(sec => {
+    const buf  = ctx.createBuffer(1, Math.floor(ctx.sampleRate * 0.18), ctx.sampleRate);
+    const data = buf.getChannelData(0);
+    for (let i = 0; i < data.length; i++)
+      data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / data.length, 3);
+    const src = ctx.createBufferSource();
+    const hg  = ctx.createGain();
+    const hf  = ctx.createBiquadFilter();
+    src.buffer = buf;
+    hf.type = 'bandpass'; hf.frequency.value = 180; hf.Q.value = 0.8;
+    hg.gain.setValueAtTime(1.2, t + sec);
+    src.connect(hf); hf.connect(hg); hg.connect(master);
+    src.start(t + sec);
+  });
+
+  // Rising triumph melody (last 6 seconds)
+  const melody = [261, 293, 329, 349, 392, 440, 493, 523];
+  melody.forEach((freq, i) => {
+    const osc = ctx.createOscillator();
+    const mg  = ctx.createGain();
+    osc.type = 'triangle';
+    osc.frequency.value = freq;
+    const mt = t + 24 + i * 0.78;
+    mg.gain.setValueAtTime(0, mt);
+    mg.gain.linearRampToValueAtTime(0.22, mt + 0.08);
+    mg.gain.linearRampToValueAtTime(0, mt + 0.7);
+    osc.connect(mg); mg.connect(master);
+    osc.start(mt); osc.stop(mt + 0.8);
+  });
+}
+
+/* ── Canvas Renderer ── */
+function motRender(elapsed) {
+  const canvas = document.getElementById('motCanvas');
+  const W = canvas.width, H = canvas.height;
+  const ctx = canvas.getContext('2d');
+  const t = Math.min(elapsed, MOT_DURATION);
+
+  // Which slide?
+  const si = SLIDES.findIndex(s => t >= s.from && t < s.to);
+  const slide = SLIDES[si] || SLIDES[SLIDES.length - 1];
+  const localT = t - slide.from;
+  const dur    = slide.to - slide.from;
+  const frac   = Math.min(localT / dur, 1);
+
+  // Slide-in / slide-out alpha
+  const alpha = localT < 0.6 ? localT / 0.6
+               : localT > dur - 0.5 ? (dur - localT) / 0.5
+               : 1;
+
+  // Clear
+  ctx.clearRect(0, 0, W, H);
+
+  // Helper fns
+  function fillBg(c1, c2) {
+    const g = ctx.createLinearGradient(0, 0, 0, H);
+    g.addColorStop(0, c1); g.addColorStop(1, c2);
+    ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+  }
+  function txt(text, x, y, size, color, align='center', weight='bold', font='Poppins, Inter, sans-serif') {
+    ctx.globalAlpha = alpha;
+    ctx.font = `${weight} ${size}px ${font}`;
+    ctx.fillStyle = color;
+    ctx.textAlign = align;
+    ctx.fillText(text, x, y);
+    ctx.globalAlpha = 1;
+  }
+  function wrapTxt(text, x, y, maxW, lineH, size, color, align='left', weight='normal') {
+    ctx.globalAlpha = alpha;
+    ctx.font = `${weight} ${size}px Inter, sans-serif`;
+    ctx.fillStyle = color;
+    ctx.textAlign = align;
+    const words = text.split(' ');
+    let line = '', lines = [];
+    for (const w of words) {
+      const test = line + w + ' ';
+      if (ctx.measureText(test).width > maxW && line) { lines.push(line.trim()); line = w + ' '; }
+      else line = test;
+    }
+    lines.push(line.trim());
+    lines.forEach((l, i) => ctx.fillText(l, x, y + i * lineH));
+    ctx.globalAlpha = 1;
+    return lines.length;
+  }
+  function pill(text, cx, cy, color, textColor='#0f172a') {
+    ctx.globalAlpha = alpha;
+    ctx.font = `bold ${H * 0.028}px Inter, sans-serif`;
+    const tw = ctx.measureText(text).width + H * 0.04;
+    const th = H * 0.055;
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.roundRect(cx - tw/2, cy - th/2, tw, th, th/2);
+    ctx.fill();
+    ctx.fillStyle = textColor;
+    ctx.textAlign = 'center';
+    ctx.fillText(text, cx, cy + H * 0.009);
+    ctx.globalAlpha = 1;
+  }
+  function goldLine(y, opacity=0.6) {
+    ctx.globalAlpha = opacity * alpha;
+    ctx.strokeStyle = '#f59e0b';
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(W * 0.08, y); ctx.lineTo(W * 0.92, y); ctx.stroke();
+    ctx.globalAlpha = 1;
+  }
+
+  // ── SLIDE 0: INTRO ──────────────────────────────────────────────────────
+  if (si === 0) {
+    fillBg('#0a0f1a', '#0f172a');
+    // Animated gold border
+    const prog = Math.min(localT / 2, 1);
+    ctx.globalAlpha = alpha * 0.7;
+    ctx.strokeStyle = '#f59e0b'; ctx.lineWidth = 3;
+    ctx.strokeRect(W*0.04, H*0.05, W*0.92 * prog, 2);
+    ctx.strokeRect(W*0.04, H*0.95, W*0.92 * prog, 2);
+    ctx.globalAlpha = 1;
+
+    // Pulsing glow
+    const pulse = 0.5 + 0.5 * Math.sin(localT * 3);
+    ctx.globalAlpha = alpha * 0.15 * pulse;
+    const glow = ctx.createRadialGradient(W/2, H/2, 0, W/2, H/2, W*0.45);
+    glow.addColorStop(0, '#f59e0b'); glow.addColorStop(1, 'transparent');
+    ctx.fillStyle = glow; ctx.fillRect(0, 0, W, H);
+    ctx.globalAlpha = 1;
+
+    txt('⚡', W/2, H*0.32, H*0.13, '#f59e0b');
+    txt('CHINA CARS IN GHANA', W/2, H*0.52, H*0.062, 'white', 'center', '800');
+    goldLine(H * 0.58);
+    txt('VEHICLES  ·  SOLAR  ·  FINANCE', W/2, H*0.67, H*0.032, '#94a3b8', 'center', '600');
+    txt('YOUR SALES BRIEFING', W/2, H*0.82, H*0.026, '#f59e0b', 'center', '700');
+  }
+
+  // ── SLIDE 1: GREETING ───────────────────────────────────────────────────
+  else if (si === 1) {
+    fillBg('#0f172a', '#1e3a5f');
+    // Slide-in name from left
+    const nameX = W/2 + (1 - Math.min(localT / 0.8, 1)) * W * 0.5;
+    txt('GOOD DAY,', W/2, H*0.28, H*0.048, '#94a3b8', 'center', '600');
+    ctx.globalAlpha = alpha;
+    ctx.font = `800 ${H*0.1}px Poppins, Inter, sans-serif`;
+    ctx.fillStyle = '#f59e0b';
+    ctx.textAlign = 'center';
+    ctx.fillText(SP_NAME.split(' ')[0].toUpperCase() + '!', nameX, H*0.43);
+    ctx.globalAlpha = 1;
+
+    goldLine(H*0.5);
+    txt('Your commission is waiting.', W/2, H*0.6, H*0.038, 'white', 'center', '700');
+    txt('Today is a new opportunity to change your income.', W/2, H*0.7, H*0.028, '#94a3b8', 'center', '500');
+    txt(`Code: ${SP_CODE}`, W/2, H*0.83, H*0.03, '#f59e0b', 'center', '800');
+  }
+
+  // ── SLIDE 2: FORMAL SECTOR ──────────────────────────────────────────────
+  else if (si === 2) {
+    fillBg('#0f2044', '#0f172a');
+    txt('🏦 FORMAL SECTOR', W/2, H*0.14, H*0.05, '#60a5fa', 'center', '800');
+    goldLine(H*0.2);
+
+    const items = [
+      ['BANKS & FINANCIALS', 'Walk into GCB, Ecobank, Fidelity, Republic Bank — ask for HR or Procurement. Present the proposal PPT. Staff vehicle loans are common.'],
+      ['GOVERNMENT AGENCIES', 'GRA, SSNIT, Police, Armed Forces, DVLA — they have fleets and individual staff buyers. One contact inside opens many doors.'],
+      ['CORPORATES & NGOs', 'MTN, Unilever, Newmont, Kosmos — pitch fleet packages. One corporate deal equals 10 individual sales.'],
+    ];
+    items.forEach(([title, body], i) => {
+      const y = H * (0.285 + i * 0.225);
+      const itemAlpha = Math.max(0, Math.min(1, (localT - i * 1.5) / 0.7));
+      ctx.globalAlpha = alpha * itemAlpha;
+      // Dot
+      ctx.fillStyle = '#f59e0b';
+      ctx.beginPath(); ctx.arc(W*0.1, y + H*0.01, H*0.013, 0, Math.PI*2); ctx.fill();
+      ctx.font = `700 ${H*0.033}px Inter, sans-serif`;
+      ctx.fillStyle = 'white'; ctx.textAlign = 'left';
+      ctx.fillText(title, W*0.13, y + H*0.014);
+      ctx.globalAlpha = alpha * itemAlpha * 0.75;
+      wrapTxt(body, W*0.13, y + H*0.058, W*0.78, H*0.038, H*0.026, '#94a3b8', 'left', 'normal');
+      ctx.globalAlpha = 1;
+    });
+  }
+
+  // ── SLIDE 3: INFORMAL SECTOR ────────────────────────────────────────────
+  else if (si === 3) {
+    fillBg('#1a0a00', '#1c1000');
+    // Warm amber tint
+    ctx.globalAlpha = 0.12;
+    ctx.fillStyle = '#f59e0b'; ctx.fillRect(0, 0, W, H);
+    ctx.globalAlpha = 1;
+
+    txt('💬 INFORMAL SECTOR', W/2, H*0.14, H*0.05, '#f59e0b', 'center', '800');
+    goldLine(H*0.2);
+
+    const items2 = [
+      ['WHATSAPP & SOCIAL MEDIA', 'Post inventory daily on your Status. Share the referral link in family & community groups. Short video walkthroughs convert best.'],
+      ['CHURCHES & COMMUNITIES', "Large churches are big buyers — buses, pastor's vehicles, solar for the complex. Approach administrators and deacons directly."],
+      ['TAXI, BOLT & UBER DRIVERS', 'Show them: owning on finance costs less than renting long-term. A saloon car that earns income from Day 1 is an easy sell.'],
+    ];
+    items2.forEach(([title, body], i) => {
+      const y = H * (0.285 + i * 0.225);
+      const itemAlpha = Math.max(0, Math.min(1, (localT - i * 1.5) / 0.7));
+      ctx.globalAlpha = alpha * itemAlpha;
+      ctx.fillStyle = '#f59e0b';
+      ctx.beginPath(); ctx.arc(W*0.1, y + H*0.01, H*0.013, 0, Math.PI*2); ctx.fill();
+      ctx.font = `700 ${H*0.033}px Inter, sans-serif`;
+      ctx.fillStyle = 'white'; ctx.textAlign = 'left';
+      ctx.fillText(title, W*0.13, y + H*0.014);
+      ctx.globalAlpha = alpha * itemAlpha * 0.75;
+      wrapTxt(body, W*0.13, y + H*0.058, W*0.78, H*0.038, H*0.026, '#d97706', 'left', 'normal');
+      ctx.globalAlpha = 1;
+    });
+  }
+
+  // ── SLIDE 4: CLOSE ──────────────────────────────────────────────────────
+  else {
+    fillBg('#0a0f1a', '#0f172a');
+    // Star-burst finale pulse
+    const pulse2 = 0.5 + 0.5 * Math.sin(localT * 5);
+    ctx.globalAlpha = 0.08 + 0.06 * pulse2;
+    const glow2 = ctx.createRadialGradient(W/2, H/2, 0, W/2, H/2, W*0.5);
+    glow2.addColorStop(0, '#22c55e'); glow2.addColorStop(1, 'transparent');
+    ctx.fillStyle = glow2; ctx.fillRect(0, 0, W, H);
+    ctx.globalAlpha = 1;
+
+    txt('GO OUT AND', W/2, H*0.25, H*0.058, '#94a3b8', 'center', '700');
+    txt('CLOSE DEALS!', W/2, H*0.42, H*0.11, '#22c55e', 'center', '900');
+    goldLine(H*0.5);
+
+    txt('Lead with the discount. Quote the monthly payment.', W/2, H*0.6, H*0.03, 'white', 'center', '600');
+    txt('Follow up. Never give up. The commission is yours.', W/2, H*0.69, H*0.03, '#94a3b8', 'center', '500');
+
+    pill(`Your Code: ${SP_CODE}`, W/2, H*0.81, '#f59e0b', '#0f172a');
+    txt('chinacarsinghana.com', W/2, H*0.91, H*0.025, '#3b82f6', 'center', '600');
+  }
+
+  // Progress bar
+  document.getElementById('motBar').style.width = (t / MOT_DURATION * 100) + '%';
+  const secs = Math.floor(t);
+  document.getElementById('motTime').textContent =
+    `${Math.floor(secs/60)}:${String(secs%60).padStart(2,'0')} / 0:30`;
+}
+
+/* ── Playback control ── */
+function motOpen() {
+  const overlay = document.getElementById('motOverlay');
+  overlay.style.display = 'flex';
+  const canvas = document.getElementById('motCanvas');
+  canvas.width  = 900;
+  canvas.height = Math.round(900 * 9/16);
+  motRender(0);
+  setTimeout(motPlay, 120);
+}
+
+function motPlay() {
+  if (motPlaying) return;
+  motPlaying = true;
+  if (!motAudioCtx) {
+    motAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    buildAudio(motAudioCtx);
+  } else if (motAudioCtx.state === 'suspended') {
+    motAudioCtx.resume();
+  }
+  motStartTime = performance.now() - motPauseOffset * 1000;
+  document.getElementById('motPlayBtn').textContent = '⏸ Pause';
+
+  function frame() {
+    if (!motPlaying) return;
+    const elapsed = (performance.now() - motStartTime) / 1000;
+    if (elapsed >= MOT_DURATION) { motFinish(); return; }
+    motRender(elapsed);
+    motAnimId = requestAnimationFrame(frame);
+  }
+  motAnimId = requestAnimationFrame(frame);
+}
+
+function motPause() {
+  if (!motPlaying) return;
+  motPlaying = false;
+  motPauseOffset = (performance.now() - motStartTime) / 1000;
+  if (motAudioCtx) motAudioCtx.suspend();
+  cancelAnimationFrame(motAnimId);
+  document.getElementById('motPlayBtn').textContent = '▶ Play';
+}
+
+function motTogglePlay() {
+  motPlaying ? motPause() : motPlay();
+}
+
+function motFinish() {
+  motPlaying = false; motPauseOffset = 0; motStartTime = null;
+  cancelAnimationFrame(motAnimId);
+  if (motAudioCtx) { motAudioCtx.close(); motAudioCtx = null; }
+  motRender(MOT_DURATION - 0.01);
+  document.getElementById('motPlayBtn').textContent = '↩ Replay';
+  document.getElementById('motPlayBtn').onclick = () => { motPauseOffset = 0; motAudioCtx = null; motPlay(); };
+}
+
+function motClose() {
+  motPause();
+  document.getElementById('motOverlay').style.display = 'none';
+  const bar = document.getElementById('motReplayBar');
+  bar.style.display = 'flex';
+  if (motAudioCtx) { motAudioCtx.close(); motAudioCtx = null; }
+}
+
+function motSeek(e) {
+  const bar = e.currentTarget;
+  const ratio = e.offsetX / bar.offsetWidth;
+  motPauseOffset = ratio * MOT_DURATION;
+  if (motPlaying) { motPause(); motPlay(); }
+  else { motRender(motPauseOffset); }
+}
+
+// Auto-open on first visit per session
+if (!sessionStorage.getItem('motSeen')) {
+  sessionStorage.setItem('motSeen', '1');
+  window.addEventListener('load', () => setTimeout(motOpen, 800));
+}
+
 function copyRef() {
   const inp = document.getElementById('refLink');
   inp.select(); inp.setSelectionRange(0, 99999);
