@@ -1125,7 +1125,11 @@ def order_vehicle(vid):
         db.session.commit()
         send_order_notification(order, vehicle)
         order_type_label = 'test drive' if order.order_type == 'test_drive' else 'order'
-        flash(f'Your {order_type_label} request for the {vehicle.name} has been submitted! We will contact you shortly.', 'success')
+        flash(
+            f'Your {order_type_label} request for the {vehicle.name} has been submitted! '
+            f'We will contact you within 24 hours. If you do not hear from us, please email us directly at kofi@chinacarsinghana.com.',
+            'success'
+        )
         return redirect(url_for('vehicle_detail', vid=vid))
     order_type = request.args.get('type', 'order')  # 'order' or 'test_drive'
     return render_template('order.html', vehicle=vehicle, order_type=order_type)
