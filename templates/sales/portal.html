@@ -417,85 +417,145 @@ const SLIDES = [
   { from: 24, to: 30 },
 ];
 
-/* ── Audio ── */
+/* ── Audio: upbeat motivational soundtrack ── */
 function buildAudio(ctx) {
-  const t = ctx.currentTime;
+  const t   = ctx.currentTime;
+  const BPM = 116;
+  const B   = 60 / BPM;   // one beat ≈ 0.517 s
+  const H   = B / 2;       // 8th note
+
+  /* Master + compressor for punch */
   const master = ctx.createGain();
   master.gain.setValueAtTime(0, t);
-  master.gain.linearRampToValueAtTime(0.55, t + 1.5);
-  master.gain.setValueAtTime(0.55, t + 27);
+  master.gain.linearRampToValueAtTime(0.7, t + 1.2);
+  master.gain.setValueAtTime(0.7, t + 27.5);
   master.gain.linearRampToValueAtTime(0, t + 30);
   master.connect(ctx.destination);
 
-  // Low cinematic drone
-  const drone = ctx.createOscillator();
-  const droneGain = ctx.createGain();
-  const droneFilter = ctx.createBiquadFilter();
-  drone.type = 'sawtooth';
-  drone.frequency.setValueAtTime(55, t);
-  drone.frequency.linearRampToValueAtTime(73, t + 17);
-  drone.frequency.linearRampToValueAtTime(82, t + 24);
-  drone.frequency.linearRampToValueAtTime(55, t + 30);
-  droneFilter.type = 'lowpass';
-  droneFilter.frequency.setValueAtTime(120, t);
-  droneFilter.frequency.linearRampToValueAtTime(600, t + 24);
-  droneGain.gain.value = 0.35;
-  drone.connect(droneFilter); droneFilter.connect(droneGain); droneGain.connect(master);
-  drone.start(t); drone.stop(t + 30);
+  const comp = ctx.createDynamicsCompressor();
+  comp.threshold.value = -16; comp.knee.value = 6;
+  comp.ratio.value = 4; comp.attack.value = 0.003; comp.release.value = 0.12;
+  comp.connect(master);
 
-  // Pad chords (cinematic swells every 5 secs)
+  /* Kick drum */
+  function kick(time) {
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = 'sine';
+    o.frequency.setValueAtTime(180, time);
+    o.frequency.exponentialRampToValueAtTime(48, time + 0.12);
+    g.gain.setValueAtTime(1.8, time);
+    g.gain.exponentialRampToValueAtTime(0.001, time + 0.28);
+    o.connect(g); g.connect(comp);
+    o.start(time); o.stop(time + 0.32);
+  }
+
+  /* Snare / clap */
+  function snare(time) {
+    const buf = ctx.createBuffer(1, Math.floor(ctx.sampleRate * 0.14), ctx.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < d.length; i++)
+      d[i] = (Math.random()*2-1) * Math.pow(1 - i/d.length, 1.8);
+    const src = ctx.createBufferSource(), g = ctx.createGain(), f = ctx.createBiquadFilter();
+    src.buffer = buf; f.type = 'highpass'; f.frequency.value = 1400;
+    g.gain.setValueAtTime(1.1, time); g.gain.exponentialRampToValueAtTime(0.001, time + 0.18);
+    src.connect(f); f.connect(g); g.connect(comp); src.start(time);
+  }
+
+  /* Open hi-hat */
+  function hat(time, vol) {
+    const buf = ctx.createBuffer(1, Math.floor(ctx.sampleRate * 0.05), ctx.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < d.length; i++)
+      d[i] = (Math.random()*2-1) * Math.pow(1 - i/d.length, 4);
+    const src = ctx.createBufferSource(), g = ctx.createGain(), f = ctx.createBiquadFilter();
+    src.buffer = buf; f.type = 'highpass'; f.frequency.value = 9000;
+    g.gain.setValueAtTime(vol, time);
+    src.connect(f); f.connect(g); g.connect(comp); src.start(time);
+  }
+
+  /* Schedule 30 s of drums */
+  const nBeats = Math.ceil(30 / B);
+  for (let b = 0; b < nBeats; b++) {
+    const bt = t + b * B;
+    if (bt > t + 30) break;
+    if (b % 4 === 0 || b % 4 === 2) kick(bt);          // 1 & 3
+    if (b % 4 === 1 || b % 4 === 3) snare(bt);         // 2 & 4
+    hat(bt, 0.22);                                       // on beat
+    if (bt + H < t + 30) hat(bt + H, 0.12);            // 8th off-beat
+  }
+
+  /* Uplifting chord progression: C – G – Am – F (2 beats each) */
   const chords = [
-    [110, 138, 165, 220],
-    [123, 155, 185, 246],
-    [130, 164, 196, 261],
-    [138, 174, 207, 277],
-    [146, 184, 220, 293],
+    [261, 329, 392],   // C maj
+    [196, 246, 293],   // G maj
+    [220, 261, 329],   // A min
+    [174, 220, 261],   // F maj
   ];
-  chords.forEach((freqs, si) => {
-    const onset = t + si * 5;
-    freqs.forEach(freq => {
-      const osc = ctx.createOscillator();
-      const g   = ctx.createGain();
-      osc.type = 'sine';
-      osc.frequency.value = freq;
+  const chordBeats = 2;
+  const nChords = Math.ceil(30 / (chordBeats * B));
+  for (let ci = 0; ci < nChords; ci++) {
+    const onset = t + ci * chordBeats * B;
+    if (onset >= t + 30) break;
+    chords[ci % 4].forEach(freq => {
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.type = 'triangle'; o.frequency.value = freq;
       g.gain.setValueAtTime(0, onset);
-      g.gain.linearRampToValueAtTime(0.12, onset + 0.8);
-      g.gain.setValueAtTime(0.12, onset + 3.5);
-      g.gain.linearRampToValueAtTime(0, onset + 5);
-      osc.connect(g); g.connect(master);
-      osc.start(onset); osc.stop(onset + 5.1);
+      g.gain.linearRampToValueAtTime(0.07, onset + 0.06);
+      g.gain.setValueAtTime(0.07, onset + chordBeats*B - 0.1);
+      g.gain.linearRampToValueAtTime(0, onset + chordBeats*B);
+      o.connect(g); g.connect(comp);
+      o.start(onset); o.stop(onset + chordBeats*B + 0.05);
     });
+  }
+
+  /* Bass line (root notes, octave below chords) */
+  const bassRoots = [130, 98, 110, 87]; // C2 G2 A2 F2
+  for (let ci = 0; ci < nChords; ci++) {
+    const onset = t + ci * chordBeats * B;
+    if (onset >= t + 30) break;
+    const o = ctx.createOscillator(), g = ctx.createGain(), f = ctx.createBiquadFilter();
+    o.type = 'sawtooth'; o.frequency.value = bassRoots[ci % 4];
+    f.type = 'lowpass'; f.frequency.value = 320;
+    g.gain.setValueAtTime(0, onset);
+    g.gain.linearRampToValueAtTime(0.38, onset + 0.03);
+    g.gain.setValueAtTime(0.38, onset + chordBeats*B - 0.12);
+    g.gain.linearRampToValueAtTime(0, onset + chordBeats*B);
+    o.connect(f); f.connect(g); g.connect(comp);
+    o.start(onset); o.stop(onset + chordBeats*B + 0.05);
+  }
+
+  /* Bright lead melody — enters at 5 s, C major scale */
+  const melodyNotes = [
+    523,659,784,659, 784,880,784,659,
+    523,587,659,784, 880,784,659,523,
+    659,784,880,988, 880,784,659,784,
+    523,659,784,880, 1047,988,880,784,
+  ];
+  const melStart = t + 5;
+  melodyNotes.forEach((freq, i) => {
+    const onset = melStart + i * H;
+    if (onset >= t + 30) return;
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = 'sine'; o.frequency.value = freq;
+    g.gain.setValueAtTime(0, onset);
+    g.gain.linearRampToValueAtTime(0.14, onset + 0.02);
+    g.gain.setValueAtTime(0.14, onset + H*0.68);
+    g.gain.linearRampToValueAtTime(0, onset + H*0.92);
+    o.connect(g); g.connect(comp);
+    o.start(onset); o.stop(onset + H + 0.05);
   });
 
-  // Percussion hits (noise bursts at slide transitions)
-  [0, 5, 10, 17, 24].forEach(sec => {
-    const buf  = ctx.createBuffer(1, Math.floor(ctx.sampleRate * 0.18), ctx.sampleRate);
-    const data = buf.getChannelData(0);
-    for (let i = 0; i < data.length; i++)
-      data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / data.length, 3);
-    const src = ctx.createBufferSource();
-    const hg  = ctx.createGain();
-    const hf  = ctx.createBiquadFilter();
-    src.buffer = buf;
-    hf.type = 'bandpass'; hf.frequency.value = 180; hf.Q.value = 0.8;
-    hg.gain.setValueAtTime(1.2, t + sec);
-    src.connect(hf); hf.connect(hg); hg.connect(master);
-    src.start(t + sec);
-  });
-
-  // Rising triumph melody (last 6 seconds)
-  const melody = [261, 293, 329, 349, 392, 440, 493, 523];
-  melody.forEach((freq, i) => {
-    const osc = ctx.createOscillator();
-    const mg  = ctx.createGain();
-    osc.type = 'triangle';
-    osc.frequency.value = freq;
-    const mt = t + 24 + i * 0.78;
-    mg.gain.setValueAtTime(0, mt);
-    mg.gain.linearRampToValueAtTime(0.22, mt + 0.08);
-    mg.gain.linearRampToValueAtTime(0, mt + 0.7);
-    osc.connect(mg); mg.connect(master);
-    osc.start(mt); osc.stop(mt + 0.8);
+  /* Fanfare stabs — final 3 seconds */
+  [523, 659, 784, 1047].forEach((freq, i) => {
+    const onset = t + 27 + i * 0.55;
+    if (onset >= t + 30) return;
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = 'triangle'; o.frequency.value = freq;
+    g.gain.setValueAtTime(0, onset);
+    g.gain.linearRampToValueAtTime(0.28, onset + 0.04);
+    g.gain.linearRampToValueAtTime(0, onset + 0.45);
+    o.connect(g); g.connect(comp);
+    o.start(onset); o.stop(onset + 0.55);
   });
 }
 
@@ -777,11 +837,8 @@ function motSeek(e) {
   else { motRender(motPauseOffset); }
 }
 
-// Auto-open on first visit per session
-if (!sessionStorage.getItem('motSeen')) {
-  sessionStorage.setItem('motSeen', '1');
-  window.addEventListener('load', () => setTimeout(motOpen, 800));
-}
+// Auto-open every time the salesperson logs in
+window.addEventListener('load', () => setTimeout(motOpen, 700));
 
 function copyRef() {
   const inp = document.getElementById('refLink');
