@@ -37,7 +37,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ── Flash auto-dismiss ───────────────────────────────────────
   document.querySelectorAll('.flash').forEach(el => {
-    setTimeout(() => el.remove(), 6000);
+    const delay = el.classList.contains('flash-info') || el.classList.contains('flash-success')
+      ? 30000   // finance / referral messages: 30 s
+      : 6000;   // errors / warnings: 6 s
+    setTimeout(() => el.remove(), delay);
   });
 
   // ── Scroll reveal animations ─────────────────────────────────
