@@ -351,10 +351,12 @@ class Salesperson(db.Model):
         return check_password_hash(self.password_hash, pw)
 
     def total_sales(self):
-        return SalespersonSale.query.filter_by(salesperson_id=self.id).count()
+        return SalespersonSale.query.filter_by(salesperson_id=self.id).filter(
+            SalespersonSale.status != 'cancelled').count()
 
     def total_revenue(self):
-        sales = SalespersonSale.query.filter_by(salesperson_id=self.id).all()
+        sales = SalespersonSale.query.filter_by(salesperson_id=self.id).filter(
+            SalespersonSale.status != 'cancelled').all()
         return sum(s.sale_amount or 0 for s in sales)
 
     def commission_earned(self):
@@ -1221,11 +1223,12 @@ def admin_dashboard():
     from sqlalchemy import func as sqlfunc
     total_sp_revenue = db.session.query(
         sqlfunc.sum(SalespersonSale.sale_amount)
-    ).scalar() or 0
+    ).filter(SalespersonSale.status != 'cancelled').scalar() or 0
 
     total_sp_commission = db.session.query(
         sqlfunc.sum(SalespersonSale.sale_amount * Salesperson.commission_pct / 100.0)
-    ).join(Salesperson, SalespersonSale.salesperson_id == Salesperson.id).scalar() or 0
+    ).join(Salesperson, SalespersonSale.salesperson_id == Salesperson.id
+    ).filter(SalespersonSale.status != 'cancelled').scalar() or 0
 
     rate = get_ghs_rate()
 
@@ -1602,6 +1605,16 @@ def admin_update_app_status(aid):
 def admin_view_application(aid):
     a = LoanApplication.query.get_or_404(aid)
     return render_template('admin/application_detail.html', app=a)
+
+
+@app.route('/admin/applications/<int:aid>/delete', methods=['POST'])
+@admin_required
+def admin_delete_application(aid):
+    a = LoanApplication.query.get_or_404(aid)
+    db.session.delete(a)
+    db.session.commit()
+    flash('Loan application deleted.', 'success')
+    return redirect(url_for('admin_applications'))
 
 
 @app.route('/admin/contacts')

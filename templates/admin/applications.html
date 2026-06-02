@@ -71,6 +71,10 @@
                   <option value="rejected"   {% if a.status == 'rejected' %}selected{% endif %}>❌ Rejected</option>
                 </select>
               </form>
+              <form method="post" action="{{ url_for('admin_delete_application', aid=a.id) }}"
+                    onsubmit="return confirm('Delete this application from {{ a.first_name }} {{ a.last_name }}? This cannot be undone.');">
+                <button type="submit" style="width:100%;padding:.35rem .6rem;background:none;color:#ef4444;border:1.5px solid #fca5a5;border-radius:6px;font-size:.78rem;font-weight:600;cursor:pointer;">🗑 Delete</button>
+              </form>
             </div>
           </td>
         </tr>
