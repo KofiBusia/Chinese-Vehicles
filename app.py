@@ -1611,6 +1611,10 @@ def admin_view_application(aid):
 @admin_required
 def admin_delete_application(aid):
     a = LoanApplication.query.get_or_404(aid)
+    # Unlink any salesperson sale records that reference this application
+    SalespersonSale.query.filter_by(loan_application_id=aid).update(
+        {'loan_application_id': None}, synchronize_session=False
+    )
     db.session.delete(a)
     db.session.commit()
     flash('Loan application deleted.', 'success')
