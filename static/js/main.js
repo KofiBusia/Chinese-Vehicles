@@ -188,18 +188,22 @@ document.addEventListener('DOMContentLoaded', () => {
     const loan   = parseFloat(loanAmountEl?.value || 0);
     const term   = parseInt(document.getElementById('loan_term')?.value || 12);
     const rate   = (window.LOAN_ANNUAL_RATE || 7.0) / 100 / 12;
+    const ghs    = window.USD_TO_GHS || 15.5;
     let monthly  = 0;
     if (loan > 0 && term > 0) {
       monthly = (loan * rate * Math.pow(1+rate, term)) / (Math.pow(1+rate, term) - 1);
     }
+    const fmt = (usd) => usd.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    const dual = (usd) => `$${fmt(usd)}<br><span style="font-size:.8em;opacity:.65;">GH₵ ${fmt(usd * ghs)}</span>`;
+
     const previewMonthly = document.getElementById('previewMonthly');
     const previewTotal   = document.getElementById('previewTotal');
     const previewLoan    = document.getElementById('previewLoan');
     const previewTerm    = document.getElementById('previewTerm');
-    if (previewMonthly) previewMonthly.textContent = monthly > 0 ? `$${monthly.toFixed(2)}` : '—';
-    if (previewTotal)   previewTotal.textContent   = monthly > 0 ? `$${(monthly * term).toFixed(2)}` : '—';
-    if (previewLoan)    previewLoan.textContent     = loan > 0 ? `$${loan.toLocaleString('en-US', {minimumFractionDigits: 2})}` : '—';
-    if (previewTerm)    previewTerm.textContent     = term ? `${term} months` : '—';
+    if (previewMonthly) previewMonthly.innerHTML = monthly > 0 ? dual(monthly)       : '—';
+    if (previewTotal)   previewTotal.innerHTML   = monthly > 0 ? dual(monthly * term) : '—';
+    if (previewLoan)    previewLoan.innerHTML    = loan > 0    ? dual(loan)            : '—';
+    if (previewTerm)    previewTerm.textContent  = term ? `${term} months` : '—';
   }
 
   document.getElementById('loan_term')?.addEventListener('change', updateLoanPreview);
