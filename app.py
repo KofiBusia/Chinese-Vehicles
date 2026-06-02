@@ -291,6 +291,8 @@ class Contact(db.Model):
     sp_code    = db.Column(db.String(20))
     sp_name    = db.Column(db.String(100))
     sp_phone   = db.Column(db.String(20))
+    reply_text = db.Column(db.Text)
+    replied_at = db.Column(db.DateTime)
 
 
 class CarOrder(db.Model):
@@ -533,6 +535,22 @@ def inject_globals():
         unread         = 0
         pending        = 0
         pending_orders = 0
+
+    # Resolve referral SP for OG tags.
+    # Check the live URL ?ref= first so social-media scrapers (which have no
+    # session) still get the personalised preview card.
+    ref_code = session.get('ref_sp_code', '')
+    ref_name = session.get('ref_sp_name', '')
+    url_ref  = request.args.get('ref', '').strip().upper()
+    if url_ref and not ref_code:
+        try:
+            sp = Salesperson.query.filter_by(code=url_ref, active=True).first()
+            if sp:
+                ref_code = sp.code
+                ref_name = sp.full_name
+        except Exception:
+            pass
+
     return {
         'business':        BUSINESS,
         'current_year':    datetime.utcnow().year,
@@ -540,8 +558,8 @@ def inject_globals():
         'pending_loans':   pending,
         'pending_orders':  pending_orders,
         'USD_TO_GHS':      get_ghs_rate(),
-        'ref_sp_code':     session.get('ref_sp_code', ''),
-        'ref_sp_name':     session.get('ref_sp_name', ''),
+        'ref_sp_code':     ref_code,
+        'ref_sp_name':     ref_name,
     }
 
 
@@ -558,6 +576,13 @@ def capture_referral():
             session['ref_sp_code']  = sp.code
             session['ref_sp_name']  = sp.full_name
             session['ref_sp_phone'] = sp.phone or ''
+            flash(
+                f'🎉 Welcome! {sp.full_name} has shared an exclusive deal with you. '
+                f'Don\'t worry about financing — Republic Bank loan packages are available. '
+                f'Mention code {sp.code} when you order to unlock your discount!',
+                'success'
+            )
+            session['finance_flash_shown'] = True  # suppress the generic flash on home page
 
 def _sp_session():
     """Return (sp_code, sp_name, sp_phone) from the current session."""
@@ -926,6 +951,15 @@ def og_default_image():
 
 @app.route('/')
 def index():
+    if not session.get('finance_flash_shown'):
+        flash(
+            '💳 Don\'t let financing hold you back — we offer flexible loan packages '
+            'through Republic Bank. Drive away today, pay comfortably over time. '
+            'Apply in minutes!',
+            'info'
+        )
+        session['finance_flash_shown'] = True
+
     featured_vehicles = Vehicle.query.filter_by(featured=True, available=True).limit(4).all()
     featured_solar    = SolarSystem.query.filter_by(featured=True, available=True).limit(2).all()
     latest_vehicles   = Vehicle.query.filter_by(available=True).order_by(Vehicle.created_at.desc()).limit(6).all()
@@ -1183,22 +1217,41 @@ def admin_logout():
 @app.route('/admin/dashboard')
 @admin_required
 def admin_dashboard():
+    # Aggregate commission/revenue in two SQL queries (avoids N+1 per salesperson)
+    from sqlalchemy import func as sqlfunc
+    total_sp_revenue = db.session.query(
+        sqlfunc.sum(SalespersonSale.sale_amount)
+    ).scalar() or 0
+
+    total_sp_commission = db.session.query(
+        sqlfunc.sum(SalespersonSale.sale_amount * Salesperson.commission_pct / 100.0)
+    ).join(Salesperson, SalespersonSale.salesperson_id == Salesperson.id).scalar() or 0
+
+    rate = get_ghs_rate()
+
     stats = {
-        'vehicles':     Vehicle.query.count(),
-        'solar':        SolarSystem.query.count(),
-        'applications': LoanApplication.query.count(),
-        'pending':      LoanApplication.query.filter_by(status='pending').count(),
-        'contacts':     Contact.query.filter_by(status='unread').count(),
-        'approved':     LoanApplication.query.filter_by(status='approved').count(),
-        'salespersons': Salesperson.query.filter_by(active=True).count(),
-        'sp_loans':     LoanApplication.query.filter(LoanApplication.sp_code != None, LoanApplication.sp_code != '').count(),
-        'sp_orders':    CarOrder.query.filter(CarOrder.sp_code != None, CarOrder.sp_code != '').count(),
+        'vehicles':          Vehicle.query.count(),
+        'solar':             SolarSystem.query.count(),
+        'applications':      LoanApplication.query.count(),
+        'pending':           LoanApplication.query.filter_by(status='pending').count(),
+        'contacts':          Contact.query.filter_by(status='unread').count(),
+        'approved':          LoanApplication.query.filter_by(status='approved').count(),
+        'salespersons':      Salesperson.query.filter_by(active=True).count(),
+        'sp_loans':          LoanApplication.query.filter(LoanApplication.sp_code != None, LoanApplication.sp_code != '').count(),
+        'sp_orders':         CarOrder.query.filter(CarOrder.sp_code != None, CarOrder.sp_code != '').count(),
+        'total_sp_revenue':  total_sp_revenue,
+        'total_commission':  total_sp_commission,
+        'total_commission_ghs': total_sp_commission * rate,
+        'total_revenue_ghs': total_sp_revenue * rate,
     }
     recent_apps      = LoanApplication.query.order_by(LoanApplication.created_at.desc()).limit(6).all()
     recent_contacts  = Contact.query.order_by(Contact.created_at.desc()).limit(5).all()
 
-    # Salesperson leaderboard
-    salespersons = Salesperson.query.filter_by(active=True).order_by(Salesperson.created_at.desc()).all()
+    # Salesperson leaderboard — highest revenue first, then A-Z
+    salespersons = sorted(
+        Salesperson.query.filter_by(active=True).all(),
+        key=lambda sp: (-sp.total_revenue(), sp.full_name.lower())
+    )
 
     # Recent salesperson-attributed activity (loans + orders merged, last 10)
     sp_loan_activity = (LoanApplication.query
@@ -1337,6 +1390,11 @@ def admin_edit_vehicle(vid):
                 existing_vids.append(save_upload(f, 'vehicles'))
         v.videos = json.dumps(existing_vids)
 
+        # Keep salesperson sale records in sync with the updated price
+        SalespersonSale.query.filter_by(product_type='vehicle', product_id=v.id).update(
+            {'sale_amount': v.price}, synchronize_session=False
+        )
+
         db.session.commit()
         listing_url = f'https://chinacarsinghana.com/vehicles/{v.id}'
         threading.Thread(
@@ -1473,6 +1531,11 @@ def admin_edit_solar(sid):
                 existing_vids.append(save_upload(f, 'solar'))
         s.videos = json.dumps(existing_vids)
 
+        # Keep salesperson sale records in sync with the updated price
+        SalespersonSale.query.filter_by(product_type='solar', product_id=s.id).update(
+            {'sale_amount': s.price}, synchronize_session=False
+        )
+
         db.session.commit()
         listing_url = f'https://chinacarsinghana.com/solar/{s.id}'
         threading.Thread(
@@ -1557,6 +1620,56 @@ def admin_delete_contact(cid):
     db.session.delete(c)
     db.session.commit()
     flash('Message deleted.', 'success')
+    return redirect(url_for('admin_contacts'))
+
+
+@app.route('/admin/contacts/<int:cid>/reply', methods=['POST'])
+@admin_required
+def admin_reply_contact(cid):
+    c = Contact.query.get_or_404(cid)
+    reply = request.form.get('reply', '').strip()
+    if not reply:
+        flash('Reply cannot be empty.', 'error')
+        return redirect(url_for('admin_contacts'))
+
+    c.reply_text = reply
+    c.replied_at = datetime.utcnow()
+    c.status     = 'replied'
+    db.session.commit()
+
+    if SMTP_USER and SMTP_PASSWORD and c.email:
+        try:
+            subj = f"Re: {c.subject or 'Your Message'} — {BUSINESS['name']}"
+            body = (
+                f"Hello {c.name},\n\n"
+                f"Thank you for contacting {BUSINESS['name']}. "
+                f"Here is our reply to your message:\n\n"
+                f"{'─' * 50}\n"
+                f"Your original message:\n{c.message}\n"
+                f"{'─' * 50}\n\n"
+                f"{reply}\n\n"
+                f"Best regards,\n"
+                f"{BUSINESS['name']} Team\n"
+                f"📞 {BUSINESS['phone']}\n"
+                f"✉️  {BUSINESS['email']}\n"
+            )
+            msg = MIMEMultipart('alternative')
+            msg['Subject'] = subj
+            msg['From']    = SMTP_USER
+            msg['To']      = c.email
+            msg.attach(MIMEText(body, 'plain'))
+            with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
+                server.ehlo()
+                server.starttls()
+                server.login(SMTP_USER, SMTP_PASSWORD)
+                server.sendmail(SMTP_USER, [c.email], msg.as_string())
+            flash(f'Reply sent to {c.name} ({c.email}).', 'success')
+        except Exception as e:
+            print(f'[EMAIL] Reply send failed: {e}')
+            flash('Reply saved but email could not be delivered — check SMTP settings.', 'warning')
+    else:
+        flash('Reply saved (SMTP not configured — no email sent).', 'success')
+
     return redirect(url_for('admin_contacts'))
 
 
@@ -1706,6 +1819,9 @@ def sales_register(token=None):
             flash('Passwords do not match.', 'error')
         elif len(password) < 6:
             flash('Password must be at least 6 characters.', 'error')
+        elif Salesperson.query.filter(
+                db.func.lower(Salesperson.full_name) == full_name.lower()).first():
+            flash('An account with this name already exists. If this is you, please log in or contact the admin.', 'error')
         elif email and Salesperson.query.filter(
                 db.func.lower(Salesperson.email) == email.lower()).first():
             flash('An account with this email address already exists. Please contact admin if you need help.', 'error')
@@ -2498,9 +2614,11 @@ def init_db():
                 "ALTER TABLE car_order        ADD COLUMN IF NOT EXISTS sp_code  VARCHAR(20)",
                 "ALTER TABLE car_order        ADD COLUMN IF NOT EXISTS sp_name  VARCHAR(100)",
                 "ALTER TABLE car_order        ADD COLUMN IF NOT EXISTS sp_phone VARCHAR(20)",
-                "ALTER TABLE contact          ADD COLUMN IF NOT EXISTS sp_code  VARCHAR(20)",
-                "ALTER TABLE contact          ADD COLUMN IF NOT EXISTS sp_name  VARCHAR(100)",
-                "ALTER TABLE contact          ADD COLUMN IF NOT EXISTS sp_phone VARCHAR(20)",
+                "ALTER TABLE contact          ADD COLUMN IF NOT EXISTS sp_code     VARCHAR(20)",
+                "ALTER TABLE contact          ADD COLUMN IF NOT EXISTS sp_name     VARCHAR(100)",
+                "ALTER TABLE contact          ADD COLUMN IF NOT EXISTS sp_phone    VARCHAR(20)",
+                "ALTER TABLE contact          ADD COLUMN IF NOT EXISTS reply_text  TEXT",
+                "ALTER TABLE contact          ADD COLUMN IF NOT EXISTS replied_at  TIMESTAMP",
             ]
             for sql in migrations:
                 try:

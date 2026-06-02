@@ -121,7 +121,7 @@
         <p style="text-align:center;font-size:.78rem;color:var(--mid);margin-top:.75rem;">
           We will confirm your {% if order_type == 'test_drive' %}test drive{% else %}order{% endif %} within 24 hours.<br>
           No response after 24 hours? Contact us directly at
-          <a href="mailto:kofi@chinacarsinghana.com" style="color:var(--blue);font-weight:600;">kofi@chinacarsinghana.com</a>
+          <a href="mailto:{{ business.email }}" style="color:var(--blue);font-weight:600;">{{ business.email }}</a>
         </p>
       </form>
     </div>

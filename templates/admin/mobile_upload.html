@@ -3,228 +3,601 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#080b14">
   <title>Upload Photos — {{ business.name }}</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
     :root {
-      --blue: #2563eb;
-      --green: #16a34a;
-      --red: #dc2626;
-      --dark: #0f172a;
+      --bg:        #080b14;
+      --surface:   #0f1623;
+      --surface2:  #161e2e;
+      --border:    rgba(255,255,255,.07);
+      --blue:      #3b82f6;
+      --blue-dim:  rgba(59,130,246,.12);
+      --blue-glow: rgba(59,130,246,.25);
+      --green:     #22c55e;
+      --green-dim: rgba(34,197,94,.12);
+      --red:       #ef4444;
+      --text:      #f1f5f9;
+      --text-sub:  rgba(241,245,249,.45);
+      --text-dim:  rgba(241,245,249,.25);
     }
+
+    html, body { height: 100%; }
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      background: var(--dark);
-      color: white;
-      min-height: 100svh;
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100%;
       display: flex;
       flex-direction: column;
+      -webkit-font-smoothing: antialiased;
     }
-    header {
-      padding: 1.25rem 1.5rem;
-      background: rgba(255,255,255,.05);
-      border-bottom: 1px solid rgba(255,255,255,.08);
+
+    /* ── Header ───────────────────────────────────────────────── */
+    .topbar {
       display: flex;
       align-items: center;
-      gap: .75rem;
+      gap: .85rem;
+      padding: 1.1rem 1.4rem;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 10;
     }
-    header .logo { font-size: 1.5rem; }
-    header .biz { font-size: .85rem; font-weight: 700; color: rgba(255,255,255,.9); }
-    header .sub { font-size: .72rem; color: rgba(255,255,255,.45); margin-top: .1rem; }
+    .topbar-icon {
+      width: 40px; height: 40px;
+      background: var(--blue-dim);
+      border: 1px solid rgba(59,130,246,.3);
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.1rem;
+      flex-shrink: 0;
+    }
+    .topbar-name  { font-size: .92rem; font-weight: 700; letter-spacing: -.01em; }
+    .topbar-label { font-size: .7rem; color: var(--text-sub); margin-top: .1rem; letter-spacing: .04em; text-transform: uppercase; }
 
-    main { flex: 1; padding: 2rem 1.5rem; display: flex; flex-direction: column; gap: 1.5rem; }
+    /* ── Main scroll area ─────────────────────────────────────── */
+    main { flex: 1; padding: 1.75rem 1.25rem 3rem; display: flex; flex-direction: column; gap: 1.25rem; }
 
-    .upload-zone {
-      border: 2.5px dashed rgba(255,255,255,.2);
-      border-radius: 16px;
-      padding: 2.5rem 1.5rem;
-      text-align: center;
-      cursor: pointer;
-      transition: border-color .2s, background .2s;
+    /* ── Section heading ─────────────────────────────────────── */
+    .section-label {
+      font-size: .68rem;
+      font-weight: 700;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      margin-bottom: -.25rem;
+    }
+
+    /* ── Pick buttons ─────────────────────────────────────────── */
+    .pick-grid { display: grid; grid-template-columns: 1fr 1fr; gap: .75rem; }
+
+    .pick-btn {
       position: relative;
-    }
-    .upload-zone:active, .upload-zone.drag { border-color: var(--blue); background: rgba(37,99,235,.08); }
-    .upload-zone input[type=file] {
-      position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
-    }
-    .upload-zone .icon { font-size: 3.5rem; margin-bottom: 1rem; display: block; }
-    .upload-zone h2 { font-size: 1.1rem; font-weight: 700; margin-bottom: .35rem; }
-    .upload-zone p { font-size: .82rem; color: rgba(255,255,255,.5); line-height: 1.6; }
-
-    .btn-upload {
-      display: block; width: 100%; padding: 1rem;
-      background: var(--blue); color: white; border: none; border-radius: 12px;
-      font-size: 1rem; font-weight: 700; cursor: pointer; text-align: center;
-      transition: opacity .2s;
-    }
-    .btn-upload:disabled { opacity: .5; cursor: not-allowed; }
-
-    #progressWrap {
-      display: none;
-      background: rgba(255,255,255,.06);
-      border-radius: 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: .55rem;
+      padding: 1.6rem .85rem 1.4rem;
+      border-radius: 18px;
+      border: 1.5px solid var(--border);
+      background: var(--surface);
+      color: var(--text);
+      cursor: pointer;
       overflow: hidden;
-      height: 8px;
+      transition: border-color .2s, background .2s, transform .12s;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
     }
-    #progressBar {
-      height: 100%; background: var(--blue); width: 0%;
-      transition: width .3s ease;
-      border-radius: 10px;
+    .pick-btn:active { transform: scale(.96); }
+
+    .pick-btn.library { border-color: rgba(59,130,246,.3); }
+    .pick-btn.library:active { background: var(--blue-dim); }
+    .pick-btn.camera  { border-color: rgba(34,197,94,.25); }
+    .pick-btn.camera:active  { background: var(--green-dim); }
+
+    .pick-btn .pb-icon {
+      width: 52px; height: 52px;
+      border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.5rem;
+      margin-bottom: .1rem;
+      pointer-events: none;
+    }
+    .pick-btn.library .pb-icon { background: var(--blue-dim); }
+    .pick-btn.camera  .pb-icon { background: var(--green-dim); }
+
+    .pick-btn .pb-title { font-size: .9rem; font-weight: 700; pointer-events: none; }
+    .pick-btn .pb-sub   { font-size: .68rem; color: var(--text-sub); pointer-events: none; }
+
+    /* Invisible file input covering the whole button */
+    .pick-btn input[type=file] {
+      position: absolute; inset: 0;
+      width: 100%; height: 100%;
+      opacity: 0; cursor: pointer; font-size: 0;
     }
 
-    #statusMsg {
-      text-align: center;
-      font-size: .85rem;
-      color: rgba(255,255,255,.6);
-      min-height: 1.4em;
+    /* ── Queue strip ─────────────────────────────────────────── */
+    #queueWrap {
+      display: none;
+      flex-direction: column;
+      gap: .85rem;
+      animation: fadeUp .3s ease;
     }
-    #statusMsg.ok   { color: #4ade80; }
-    #statusMsg.err  { color: #f87171; }
+    #queueWrap.show { display: flex; }
 
-    #previewGrid {
+    .queue-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: .5rem;
+    }
+    .queue-count {
+      font-size: .82rem;
+      font-weight: 700;
+      color: var(--blue);
+      background: var(--blue-dim);
+      border: 1px solid rgba(59,130,246,.2);
+      border-radius: 99px;
+      padding: .3rem .85rem;
+    }
+    .queue-clear {
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--text-sub);
+      border-radius: 8px;
+      padding: .3rem .75rem;
+      font-size: .75rem;
+      cursor: pointer;
+      transition: border-color .2s, color .2s;
+    }
+    .queue-clear:active { color: var(--red); border-color: rgba(239,68,68,.4); }
+
+    /* Photo grid */
+    .photo-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
       gap: .5rem;
     }
-    .preview-thumb {
+    .photo-cell {
       aspect-ratio: 1;
-      border-radius: 8px;
+      border-radius: 10px;
       overflow: hidden;
       position: relative;
-      background: rgba(255,255,255,.05);
+      background: var(--surface2);
+      animation: popIn .25s cubic-bezier(.34,1.56,.64,1);
     }
-    .preview-thumb img {
-      width: 100%; height: 100%; object-fit: cover;
-    }
-    .preview-thumb .tick {
-      position: absolute; bottom: 4px; right: 4px;
-      background: var(--green); color: white;
-      border-radius: 50%; width: 20px; height: 20px;
+    .photo-cell img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+    /* Remove button */
+    .photo-cell .rm {
+      position: absolute; top: 4px; right: 4px;
+      width: 22px; height: 22px;
+      background: rgba(0,0,0,.72);
+      border: 1px solid rgba(255,255,255,.15);
+      border-radius: 50%;
       display: flex; align-items: center; justify-content: center;
-      font-size: .65rem; font-weight: 700;
+      font-size: .6rem; color: white; cursor: pointer;
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
     }
-    .preview-thumb .uploading-overlay {
+    /* Upload overlay per photo */
+    .photo-cell .overlay {
       position: absolute; inset: 0;
       background: rgba(0,0,0,.5);
       display: flex; align-items: center; justify-content: center;
+    }
+    .photo-cell .overlay.done  { background: rgba(34,197,94,.25); }
+    .photo-cell .overlay .spinner {
+      width: 22px; height: 22px;
+      border: 2.5px solid rgba(255,255,255,.2);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+    }
+    .photo-cell .overlay .check {
+      font-size: 1.4rem;
+      animation: popIn .3s cubic-bezier(.34,1.56,.64,1);
+    }
+
+    /* ── Upload CTA ───────────────────────────────────────────── */
+    #uploadSection { display: flex; flex-direction: column; gap: .75rem; }
+
+    #uploadBtn {
+      width: 100%;
+      padding: 1.05rem;
+      background: var(--blue);
+      color: white;
+      border: none;
+      border-radius: 14px;
+      font-size: 1rem;
+      font-weight: 700;
+      letter-spacing: -.01em;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      transition: opacity .2s, transform .12s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    #uploadBtn:not(:disabled):active { transform: scale(.97); }
+    #uploadBtn:disabled { opacity: .3; cursor: not-allowed; }
+    #uploadBtn.pulsing { animation: pulse 1.8s ease infinite; }
+
+    /* shimmer on upload btn when active */
+    #uploadBtn::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(105deg, transparent 40%, rgba(255,255,255,.12) 50%, transparent 60%);
+      transform: translateX(-100%);
+    }
+    #uploadBtn.pulsing::after { animation: shimmer 2s ease infinite; }
+
+    /* ── Progress ─────────────────────────────────────────────── */
+    #progressBox {
+      display: none;
+      flex-direction: column;
+      gap: .4rem;
+    }
+    #progressBox.show { display: flex; }
+    .prog-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .prog-label { font-size: .75rem; color: var(--text-sub); }
+    .prog-pct   { font-size: .75rem; font-weight: 700; color: var(--blue); font-variant-numeric: tabular-nums; }
+    .prog-track {
+      height: 5px;
+      background: rgba(255,255,255,.07);
+      border-radius: 99px;
+      overflow: hidden;
+    }
+    .prog-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #3b82f6, #60a5fa);
+      border-radius: 99px;
+      width: 0%;
+      transition: width .4s cubic-bezier(.4,0,.2,1);
+    }
+
+    /* ── Status message ───────────────────────────────────────── */
+    #statusMsg {
+      text-align: center;
+      font-size: .82rem;
+      color: var(--text-sub);
+      min-height: 1.3em;
+      transition: color .2s;
+    }
+    #statusMsg.ok  { color: var(--green); }
+    #statusMsg.err { color: var(--red); }
+
+    /* ── Success banner ───────────────────────────────────────── */
+    #successBanner {
+      display: none;
+      align-items: center;
+      gap: 1rem;
+      padding: 1rem 1.1rem;
+      background: var(--green-dim);
+      border: 1px solid rgba(34,197,94,.2);
+      border-radius: 14px;
+      animation: fadeUp .35s ease;
+    }
+    #successBanner.show { display: flex; }
+    .success-icon {
+      width: 40px; height: 40px; flex-shrink: 0;
+      background: rgba(34,197,94,.2);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
       font-size: 1.2rem;
+    }
+    .success-text .s-title { font-size: .9rem; font-weight: 700; color: #4ade80; }
+    .success-text .s-sub   { font-size: .75rem; color: rgba(74,222,128,.6); margin-top: .15rem; }
+
+    /* ── Animations ───────────────────────────────────────────── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes popIn {
+      from { opacity: 0; transform: scale(.7); }
+      to   { opacity: 1; transform: scale(1); }
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    @keyframes pulse {
+      0%, 100% { box-shadow: 0 0 0 0 var(--blue-glow); }
+      50%       { box-shadow: 0 0 0 8px transparent; }
+    }
+    @keyframes shimmer {
+      0%   { transform: translateX(-100%); }
+      60%, 100% { transform: translateX(100%); }
     }
   </style>
 </head>
 <body>
 
-<header>
-  <div class="logo">📸</div>
+<!-- Header -->
+<div class="topbar">
+  <div class="topbar-icon">📸</div>
   <div>
-    <div class="biz">{{ business.name }}</div>
-    <div class="sub">Mobile Photo Upload</div>
+    <div class="topbar-name">{{ business.name }}</div>
+    <div class="topbar-label">Photo Upload Portal</div>
   </div>
-</header>
+</div>
 
 <main>
 
-  <div class="upload-zone" id="uploadZone">
-    <input type="file" id="fileInput" accept="image/*" multiple capture="environment">
-    <span class="icon">📷</span>
-    <h2>Tap to take or choose photos</h2>
-    <p>Select multiple photos from your gallery<br>or take new ones with your camera</p>
+  <!-- Step 1: Pick source -->
+  <div class="section-label">Select source</div>
+  <div class="pick-grid">
+
+    <label class="pick-btn library">
+      <div class="pb-icon">🖼️</div>
+      <div class="pb-title">Photo Library</div>
+      <div class="pb-sub">Choose from gallery</div>
+      <input type="file" id="fileInput" accept="image/*" multiple>
+    </label>
+
+    <label class="pick-btn camera">
+      <div class="pb-icon">📷</div>
+      <div class="pb-title">Camera</div>
+      <div class="pb-sub">Take a new photo</div>
+      <input type="file" id="cameraInput" accept="image/*" capture="environment">
+    </label>
+
   </div>
 
-  <button class="btn-upload" id="uploadBtn" disabled>Upload Selected Photos</button>
+  <!-- Step 2: Queue preview -->
+  <div id="queueWrap">
+    <div class="queue-bar">
+      <span class="queue-count" id="queueCount">0 photos</span>
+      <button class="queue-clear" id="clearBtn" type="button">✕ Clear all</button>
+    </div>
+    <div class="photo-grid" id="photoGrid"></div>
+  </div>
 
-  <div id="progressWrap"><div id="progressBar"></div></div>
-  <div id="statusMsg">No photos selected yet</div>
+  <!-- Step 3: Upload -->
+  <div id="uploadSection">
+    <button id="uploadBtn" type="button" disabled>Upload Photos</button>
 
-  <div id="previewGrid"></div>
+    <div id="progressBox">
+      <div class="prog-row">
+        <span class="prog-label">Uploading…</span>
+        <span class="prog-pct" id="progPct">0%</span>
+      </div>
+      <div class="prog-track"><div class="prog-fill" id="progFill"></div></div>
+    </div>
+
+    <div id="statusMsg">Pick photos above to get started</div>
+  </div>
+
+  <!-- Success banner (persists until next pick) -->
+  <div id="successBanner">
+    <div class="success-icon">✅</div>
+    <div class="success-text">
+      <div class="s-title" id="successTitle">Upload complete!</div>
+      <div class="s-sub">Photos are now attached to the listing. You can upload more.</div>
+    </div>
+  </div>
 
 </main>
 
 <script>
-const TOKEN    = {{ token | tojson }};
-const fileInput = document.getElementById('fileInput');
-const uploadBtn = document.getElementById('uploadBtn');
-const statusMsg = document.getElementById('statusMsg');
-const previewGrid = document.getElementById('previewGrid');
-const progressWrap = document.getElementById('progressWrap');
-const progressBar  = document.getElementById('progressBar');
+const TOKEN       = {{ token | tojson }};
+const fileInput   = document.getElementById('fileInput');
+const cameraInput = document.getElementById('cameraInput');
+const uploadBtn   = document.getElementById('uploadBtn');
+const statusMsg   = document.getElementById('statusMsg');
+const photoGrid   = document.getElementById('photoGrid');
+const queueWrap   = document.getElementById('queueWrap');
+const queueCount  = document.getElementById('queueCount');
+const clearBtn    = document.getElementById('clearBtn');
+const progressBox = document.getElementById('progressBox');
+const progFill    = document.getElementById('progFill');
+const progPct     = document.getElementById('progPct');
+const successBanner = document.getElementById('successBanner');
+const successTitle  = document.getElementById('successTitle');
 
-let pendingFiles = [];
+let queue = [];   // { file, objectUrl, id }
+let uid   = 0;
 
-fileInput.addEventListener('change', () => {
-  pendingFiles = Array.from(fileInput.files);
-  if (pendingFiles.length === 0) return;
-  uploadBtn.disabled = false;
-  statusMsg.className = '';
-  statusMsg.textContent = `${pendingFiles.length} photo${pendingFiles.length > 1 ? 's' : ''} selected — tap Upload`;
-
-  // Show local previews immediately
-  previewGrid.innerHTML = '';
-  pendingFiles.forEach((file, i) => {
-    const div = document.createElement('div');
-    div.className = 'preview-thumb';
-    div.id = 'thumb-' + i;
-    const img = document.createElement('img');
-    img.src = URL.createObjectURL(file);
-    const overlay = document.createElement('div');
-    overlay.className = 'uploading-overlay';
-    overlay.textContent = '⏳';
-    div.appendChild(img);
-    div.appendChild(overlay);
-    previewGrid.appendChild(div);
+/* ── Add files to queue ─────────────────────────────────── */
+function addFiles(fileList) {
+  if (!fileList || !fileList.length) return;
+  const key  = f => f.name + '|' + f.size + '|' + f.lastModified;
+  const seen  = new Set(queue.map(q => key(q.file)));
+  Array.from(fileList).forEach(f => {
+    if (seen.has(key(f))) return;
+    seen.add(key(f));
+    queue.push({ file: f, objectUrl: URL.createObjectURL(f), id: ++uid });
   });
-});
+  render();
+  successBanner.classList.remove('show');
+}
 
-uploadBtn.addEventListener('click', async () => {
-  if (pendingFiles.length === 0) return;
-  uploadBtn.disabled = true;
-  progressWrap.style.display = 'block';
-  progressBar.style.width = '5%';
+/* ── Remove one photo ───────────────────────────────────── */
+function removePhoto(id) {
+  const idx = queue.findIndex(q => q.id === id);
+  if (idx === -1) return;
+  URL.revokeObjectURL(queue[idx].objectUrl);
+  queue.splice(idx, 1);
+  render();
+}
+
+/* ── Render queue ───────────────────────────────────────── */
+function render() {
+  const n = queue.length;
+
+  if (n === 0) {
+    queueWrap.classList.remove('show');
+    uploadBtn.disabled = true;
+    uploadBtn.classList.remove('pulsing');
+    uploadBtn.textContent = 'Upload Photos';
+    statusMsg.className = '';
+    statusMsg.textContent = 'Pick photos above to get started';
+    photoGrid.innerHTML = '';
+    return;
+  }
+
+  queueWrap.classList.add('show');
+  queueCount.textContent = n + ' photo' + (n !== 1 ? 's' : '') + ' selected';
+  uploadBtn.disabled = false;
+  uploadBtn.classList.add('pulsing');
+  uploadBtn.textContent = '⬆  Upload ' + n + ' Photo' + (n !== 1 ? 's' : '');
   statusMsg.className = '';
-  statusMsg.textContent = 'Uploading…';
+  statusMsg.textContent = 'Tap Upload when ready';
+
+  /* rebuild grid cells */
+  const existing = new Set(
+    Array.from(photoGrid.children).map(el => el.dataset.uid)
+  );
+
+  queue.forEach(item => {
+    if (existing.has(String(item.id))) return;   /* already rendered */
+    const cell = document.createElement('div');
+    cell.className = 'photo-cell';
+    cell.dataset.uid = item.id;
+
+    const img = document.createElement('img');
+    img.src = item.objectUrl;
+    img.alt = '';
+
+    const rm = document.createElement('div');
+    rm.className = 'rm';
+    rm.textContent = '✕';
+    rm.addEventListener('click', () => removePhoto(item.id));
+
+    cell.appendChild(img);
+    cell.appendChild(rm);
+    photoGrid.appendChild(cell);
+  });
+
+  /* remove cells for deleted items */
+  Array.from(photoGrid.children).forEach(el => {
+    if (!queue.find(q => String(q.id) === el.dataset.uid)) {
+      el.remove();
+    }
+  });
+}
+
+function clearAll() {
+  queue.forEach(q => URL.revokeObjectURL(q.objectUrl));
+  queue = [];
+  fileInput.value   = '';
+  cameraInput.value = '';
+  render();
+}
+
+/* ── Set progress bar ───────────────────────────────────── */
+function setProgress(pct) {
+  progFill.style.width = pct + '%';
+  progPct.textContent  = pct + '%';
+}
+
+/* ── Event wiring ───────────────────────────────────────── */
+clearBtn.addEventListener('click', clearAll);
+fileInput.addEventListener('change',   () => addFiles(fileInput.files));
+cameraInput.addEventListener('change', () => addFiles(cameraInput.files));
+
+/* ── Upload ─────────────────────────────────────────────── */
+uploadBtn.addEventListener('click', async () => {
+  if (!queue.length) return;
+
+  const uploading = [...queue];
+  uploadBtn.disabled = true;
+  uploadBtn.classList.remove('pulsing');
+  uploadBtn.textContent = 'Uploading…';
+  progressBox.classList.add('show');
+  setProgress(5);
+  statusMsg.className = '';
+  statusMsg.textContent = '';
+
+  /* show spinner overlay on each cell */
+  uploading.forEach(item => {
+    const cell = photoGrid.querySelector('[data-uid="' + item.id + '"]');
+    if (!cell) return;
+    const rm = cell.querySelector('.rm');
+    if (rm) rm.style.display = 'none';
+    const ov = document.createElement('div');
+    ov.className = 'overlay';
+    const sp = document.createElement('div');
+    sp.className = 'spinner';
+    ov.appendChild(sp);
+    cell.appendChild(ov);
+  });
 
   const form = new FormData();
-  pendingFiles.forEach(f => form.append('files', f));
+  uploading.forEach(item => form.append('files', item.file));
 
   try {
+    /* Simulate progress while waiting */
+    let fake = 5;
+    const ticker = setInterval(() => {
+      fake = Math.min(fake + Math.random() * 8, 88);
+      setProgress(Math.round(fake));
+    }, 300);
+
     const res  = await fetch('/mobile-upload/' + TOKEN, { method: 'POST', body: form });
     const data = await res.json();
 
-    progressBar.style.width = '100%';
+    clearInterval(ticker);
+    setProgress(100);
 
     if (data.ok) {
-      statusMsg.className = 'ok';
-      statusMsg.textContent = `✓ ${data.count} photo${data.count !== 1 ? 's' : ''} uploaded successfully! You can upload more.`;
-
-      // Mark thumbs as done
-      pendingFiles.forEach((_, i) => {
-        const div = document.getElementById('thumb-' + i);
-        if (div) {
-          const overlay = div.querySelector('.uploading-overlay');
-          if (overlay) overlay.remove();
-          const tick = document.createElement('div');
-          tick.className = 'tick';
-          tick.textContent = '✓';
-          div.appendChild(tick);
-        }
+      /* show check on each uploaded cell */
+      uploading.forEach(item => {
+        const cell = photoGrid.querySelector('[data-uid="' + item.id + '"]');
+        if (!cell) return;
+        const ov = cell.querySelector('.overlay');
+        if (ov) { ov.classList.add('done'); ov.innerHTML = '<span class="check">✓</span>'; }
       });
 
-      // Reset for next batch
-      pendingFiles = [];
-      fileInput.value = '';
-      uploadBtn.disabled = true;
+      /* update success banner */
+      successTitle.textContent = data.count + ' photo' + (data.count !== 1 ? 's' : '') + ' uploaded successfully!';
+      successBanner.classList.add('show');
+
+      /* vibrate on success (Android) */
+      if (navigator.vibrate) navigator.vibrate([40, 30, 40]);
+
+      /* reset queue after short delay */
       setTimeout(() => {
-        progressWrap.style.display = 'none';
-        progressBar.style.width = '0%';
-      }, 1500);
+        queue = [];
+        fileInput.value   = '';
+        cameraInput.value = '';
+        progressBox.classList.remove('show');
+        setProgress(0);
+        render();
+        uploadBtn.textContent = 'Upload Photos';
+      }, 1400);
+
     } else {
-      throw new Error(data.error || 'Upload failed');
+      throw new Error(data.error || 'Server rejected the upload');
     }
+
   } catch (err) {
-    progressBar.style.width = '0%';
-    progressWrap.style.display = 'none';
+    setProgress(0);
+    progressBox.classList.remove('show');
     statusMsg.className = 'err';
-    statusMsg.textContent = '✗ Error: ' + err.message + ' — please try again.';
+    statusMsg.textContent = '✕ ' + err.message + ' — please try again.';
     uploadBtn.disabled = false;
+    uploadBtn.classList.add('pulsing');
+    uploadBtn.textContent = '⬆  Retry Upload';
+
+    /* remove overlays so user can retry */
+    uploading.forEach(item => {
+      const cell = photoGrid.querySelector('[data-uid="' + item.id + '"]');
+      if (!cell) return;
+      const ov = cell.querySelector('.overlay');
+      if (ov) ov.remove();
+      const rm = cell.querySelector('.rm');
+      if (rm) rm.style.display = '';
+    });
   }
 });
 </script>

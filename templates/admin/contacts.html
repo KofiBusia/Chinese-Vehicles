@@ -3,57 +3,188 @@
 {% block page_title %}Customer Messages{% endblock %}
 
 {% block content %}
+<style>
+  .inbox { display: flex; flex-direction: column; gap: 1rem; }
 
-<div class="table-card">
-  <div class="table-header">
-    <span class="table-title">{{ contacts | length }} Message{{ 's' if contacts | length != 1 }}</span>
+  .msg-card {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,.06);
+  }
+  .msg-card.unread { border-left: 4px solid #f59e0b; }
+  .msg-card.replied { border-left: 4px solid #22c55e; }
+
+  .msg-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1rem 1.25rem;
+    flex-wrap: wrap;
+  }
+  .msg-from { font-weight: 700; font-size: .95rem; }
+  .msg-contact { font-size: .8rem; color: #6b7280; margin-top: .2rem; display: flex; gap: .75rem; flex-wrap: wrap; }
+  .msg-contact a { color: #3b82f6; }
+
+  .msg-meta { display: flex; align-items: center; gap: .5rem; flex-shrink: 0; }
+  .badge-new    { background: #fef3c7; color: #92400e; font-size: .65rem; font-weight: 700; padding: .2rem .5rem; border-radius: 99px; }
+  .badge-replied{ background: #dcfce7; color: #166534; font-size: .65rem; font-weight: 700; padding: .2rem .5rem; border-radius: 99px; }
+  .badge-date   { font-size: .75rem; color: #9ca3af; }
+
+  .msg-body {
+    padding: .75rem 1.25rem 1rem;
+    border-top: 1px solid #f3f4f6;
+  }
+  .msg-subject { font-size: .78rem; font-weight: 600; color: #374151; margin-bottom: .35rem; }
+  .msg-text    { font-size: .875rem; color: #374151; line-height: 1.65; white-space: pre-wrap; }
+
+  /* Previous reply display */
+  .msg-reply-sent {
+    margin: .75rem 1.25rem 0;
+    padding: .85rem 1rem;
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    border-radius: 8px;
+    font-size: .82rem;
+    color: #166534;
+  }
+  .msg-reply-sent strong { display: block; margin-bottom: .35rem; font-size: .75rem; color: #15803d; }
+  .msg-reply-sent .reply-body { white-space: pre-wrap; color: #374151; }
+
+  /* Reply form */
+  .reply-form {
+    padding: 1rem 1.25rem 1.25rem;
+  }
+  .reply-form label {
+    display: block;
+    font-size: .78rem;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: .4rem;
+  }
+  .reply-form textarea {
+    width: 100%;
+    padding: .65rem .85rem;
+    border: 1.5px solid #d1d5db;
+    border-radius: 8px;
+    font-size: .875rem;
+    font-family: inherit;
+    resize: vertical;
+    min-height: 90px;
+    transition: border-color .2s;
+  }
+  .reply-form textarea:focus { outline: none; border-color: #3b82f6; }
+  .reply-actions {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    margin-top: .6rem;
+    flex-wrap: wrap;
+  }
+  .btn-send {
+    padding: .55rem 1.2rem;
+    background: #2563eb;
+    color: white;
+    border: none;
+    border-radius: 7px;
+    font-size: .85rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background .2s;
+  }
+  .btn-send:hover { background: #1d4ed8; }
+  .btn-del {
+    padding: .5rem .9rem;
+    background: none;
+    color: #ef4444;
+    border: 1.5px solid #fca5a5;
+    border-radius: 7px;
+    font-size: .82rem;
+    cursor: pointer;
+    margin-left: auto;
+    transition: background .2s;
+  }
+  .btn-del:hover { background: #fef2f2; }
+
+  .empty-state {
+    text-align: center;
+    padding: 4rem 2rem;
+    color: #9ca3af;
+    font-size: .95rem;
+  }
+</style>
+
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;flex-wrap:wrap;gap:.5rem;">
+  <span style="font-size:.9rem;color:#6b7280;">
+    {{ contacts | length }} message{{ 's' if contacts | length != 1 }}
+    {% set unread = contacts | selectattr('status','equalto','unread') | list | length %}
+    {% if unread %} &nbsp;·&nbsp; <strong style="color:#f59e0b;">{{ unread }} new</strong>{% endif %}
+  </span>
+</div>
+
+<div class="inbox">
+  {% for c in contacts %}
+  <div class="msg-card {% if c.status == 'unread' %}unread{% elif c.status == 'replied' %}replied{% endif %}" id="msg-{{ c.id }}">
+
+    <!-- Header -->
+    <div class="msg-head">
+      <div>
+        <div class="msg-from">{{ c.name }}</div>
+        <div class="msg-contact">
+          <span>✉️ {{ c.email }}</span>
+          {% if c.phone %}<span>📞 {{ c.phone }}</span>{% endif %}
+          {% if c.sp_name %}<span style="color:#7c3aed;">👤 via {{ c.sp_name }} ({{ c.sp_code }})</span>{% endif %}
+        </div>
+      </div>
+      <div class="msg-meta">
+        {% if c.status == 'unread' %}
+          <span class="badge-new">NEW</span>
+        {% elif c.status == 'replied' %}
+          <span class="badge-replied">✓ Replied</span>
+        {% endif %}
+        <span class="badge-date">{{ c.created_at.strftime('%b %d, %Y · %H:%M') }}</span>
+      </div>
+    </div>
+
+    <!-- Message body -->
+    <div class="msg-body">
+      {% if c.subject %}<div class="msg-subject">Subject: {{ c.subject }}</div>{% endif %}
+      <div class="msg-text">{{ c.message }}</div>
+    </div>
+
+    <!-- Show sent reply if exists -->
+    {% if c.reply_text %}
+    <div class="msg-reply-sent">
+      <strong>✅ Your reply — sent {{ c.replied_at.strftime('%b %d, %Y at %H:%M') if c.replied_at else '' }}</strong>
+      <div class="reply-body">{{ c.reply_text }}</div>
+    </div>
+    {% endif %}
+
+    <!-- Reply form + delete (sibling forms — never nested) -->
+    <div class="reply-form">
+      <form method="post" action="{{ url_for('admin_reply_contact', cid=c.id) }}">
+        <label for="reply-{{ c.id }}">
+          {% if c.reply_text %}Send another reply to {{ c.name }}:{% else %}Reply to {{ c.name }}:{% endif %}
+        </label>
+        <textarea id="reply-{{ c.id }}" name="reply"
+                  placeholder="Type your reply here…"></textarea>
+        <div class="reply-actions">
+          <button type="submit" class="btn-send">📨 Send Reply</button>
+        </div>
+      </form>
+      <form method="post" action="{{ url_for('admin_delete_contact', cid=c.id) }}"
+            onsubmit="return confirm('Delete this message?');"
+            style="display:inline;">
+        <button type="submit" class="btn-del">🗑 Delete</button>
+      </form>
+    </div>
+
   </div>
-  <div style="overflow-x:auto;">
-    <table>
-      <thead><tr>
-        <th>From</th>
-        <th>Contact</th>
-        <th>Subject</th>
-        <th>Message</th>
-        <th>Date</th>
-        <th>Actions</th>
-      </tr></thead>
-      <tbody>
-        {% for c in contacts %}
-        <tr {% if c.status == 'unread' %}style="background:#fffbeb;"{% endif %}>
-          <td>
-            <div style="font-weight:700;">{{ c.name }}</div>
-            {% if c.status == 'unread' %}<span class="badge badge-red" style="font-size:.6rem;">NEW</span>{% endif %}
-          </td>
-          <td>
-            <div style="font-size:.82rem;"><a href="mailto:{{ c.email }}" style="color:var(--blue);">{{ c.email }}</a></div>
-            {% if c.phone %}<div style="font-size:.78rem;color:var(--mid);">{{ c.phone }}</div>{% endif %}
-          </td>
-          <td style="font-size:.85rem;max-width:150px;">{{ c.subject or 'No subject' }}</td>
-          <td style="max-width:250px;">
-            <div style="font-size:.82rem;color:var(--mid);overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">
-              {{ c.message }}
-            </div>
-          </td>
-          <td style="font-size:.78rem;color:var(--mid);white-space:nowrap;">{{ c.created_at.strftime('%b %d, %Y') }}</td>
-          <td>
-            <div style="display:flex;gap:.4rem;">
-              <a href="mailto:{{ c.email }}?subject=Re: {{ c.subject or 'Your Message' }}" class="btn btn-primary btn-sm">✉️ Reply</a>
-              {% if c.phone %}
-              <a href="https://wa.me/{{ c.phone | replace(' ','') | replace('+','') | replace('-','') }}" class="btn btn-outline btn-sm" target="_blank">💬</a>
-              {% endif %}
-              <form method="post" action="{{ url_for('admin_delete_contact', cid=c.id) }}" class="confirm-delete" style="display:inline;">
-                <button type="submit" class="btn btn-danger btn-sm">🗑</button>
-              </form>
-            </div>
-          </td>
-        </tr>
-        {% else %}
-        <tr><td colspan="6" style="text-align:center;padding:3rem;color:var(--mid);">No messages yet.</td></tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </div>
+  {% else %}
+  <div class="empty-state">📭 No messages yet.</div>
+  {% endfor %}
 </div>
 
 {% endblock %}
