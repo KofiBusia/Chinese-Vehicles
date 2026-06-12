@@ -13,11 +13,11 @@
     .topbar-nav{display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;}
     .topbar-nav a{color:rgba(255,255,255,.7);font-size:.83rem;font-weight:500;padding:.4rem .8rem;border-radius:6px;text-decoration:none;transition:background .2s;}
     .topbar-nav a:hover{background:rgba(255,255,255,.1);color:white;}
-    .topbar-nav a.active{color:#60a5fa;}
+    .topbar-nav a.active{color:#55E600;}
     .main{max-width:1100px;margin:0 auto;padding:2rem 1.5rem;}
     .greeting{font-family:'Poppins',sans-serif;font-size:1.6rem;font-weight:800;margin-bottom:.25rem;}
     .sub{color:#6b7280;font-size:.9rem;margin-bottom:2rem;}
-    .code-badge{display:inline-flex;align-items:center;gap:.5rem;background:#2563eb;color:white;padding:.45rem 1rem;border-radius:20px;font-size:.85rem;font-weight:700;letter-spacing:.08em;box-shadow:0 2px 8px rgba(37,99,235,.3);}
+    .code-badge{display:inline-flex;align-items:center;gap:.5rem;background:#33CC00;color:white;padding:.45rem 1rem;border-radius:20px;font-size:.85rem;font-weight:700;letter-spacing:.08em;box-shadow:0 2px 8px rgba(51,204,0,.3);}
     .stats{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:1rem;margin-bottom:2rem;}
     .stat-card{background:white;border-radius:12px;padding:1.25rem;border:1px solid #e5e7eb;}
     .stat-icon{font-size:1.5rem;margin-bottom:.5rem;}
@@ -55,7 +55,9 @@
 <body>
 
 <div class="topbar">
-  <div class="topbar-brand">⚡ {{ business.name }}</div>
+  <div class="topbar-brand">
+    <img src="{{ url_for('static', filename='img/galaxy-logo.png') }}" alt="{{ business.name }}" style="height:30px;width:auto;border-radius:4px;display:block;">
+  </div>
   <div class="topbar-nav">
     <a href="{{ url_for('sales_portal') }}" class="active">Dashboard</a>
     <a href="{{ url_for('sales_inventory') }}">Inventory</a>
@@ -95,7 +97,7 @@
   </div>
 
   <!-- Replay button (shown after first play) -->
-  <div id="motReplayBar" style="display:none;background:linear-gradient(135deg,#0f172a,#1e3a5f);border-radius:12px;padding:1rem 1.5rem;margin-bottom:1.5rem;display:none;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.75rem;">
+  <div id="motReplayBar" style="display:none;background:linear-gradient(135deg,#0a0f05,#0d2800);border-radius:12px;padding:1rem 1.5rem;margin-bottom:1.5rem;display:none;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.75rem;">
     <div style="color:white;font-size:.88rem;font-weight:600;">🎬 Your daily motivation briefing is ready</div>
     <button onclick="motOpen()" style="background:#f59e0b;color:#0f172a;border:none;border-radius:8px;padding:.55rem 1.25rem;font-weight:800;cursor:pointer;font-size:.85rem;">▶ Watch Again</button>
   </div>
@@ -178,7 +180,7 @@
   <!-- ── BUSINESS PROPOSAL ───────────────────────────────────────────────── -->
   <div class="section-head" style="margin-top:.5rem;">📊 Your Business Proposal</div>
 
-  <div style="background:linear-gradient(135deg,#0f172a 0%,#1e3a5f 100%);border-radius:16px;padding:1.75rem;margin-bottom:2rem;display:grid;grid-template-columns:1fr auto;gap:1.5rem;align-items:center;flex-wrap:wrap;">
+  <div style="background:linear-gradient(135deg,#0a0f05 0%,#0d2800 100%);border-radius:16px;padding:1.75rem;margin-bottom:2rem;display:grid;grid-template-columns:1fr auto;gap:1.5rem;align-items:center;flex-wrap:wrap;">
     <div>
       <div style="font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.5);margin-bottom:.4rem;">Ready-to-use PowerPoint Presentation</div>
       <div style="font-family:'Poppins',sans-serif;font-size:1.15rem;font-weight:800;color:white;margin-bottom:.4rem;">China Cars in Ghana — Company Proposal</div>
@@ -189,7 +191,7 @@
       </div>
       <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:1rem;">
         <span style="padding:.22rem .65rem;background:rgba(245,158,11,.15);border:1px solid rgba(245,158,11,.4);border-radius:20px;font-size:.7rem;font-weight:700;color:#f59e0b;">Slide 1 — Cover + Company Name</span>
-        <span style="padding:.22rem .65rem;background:rgba(37,99,235,.15);border:1px solid rgba(37,99,235,.4);border-radius:20px;font-size:.7rem;font-weight:700;color:#60a5fa;">Slide 2 — Vehicles, Solar &amp; Finance</span>
+        <span style="padding:.22rem .65rem;background:rgba(51,204,0,.15);border:1px solid rgba(51,204,0,.4);border-radius:20px;font-size:.7rem;font-weight:700;color:#55E600;">Slide 2 — Vehicles, Solar &amp; Finance</span>
         <span style="padding:.22rem .65rem;background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.4);border-radius:20px;font-size:.7rem;font-weight:700;color:#34d399;">Slide 3 — Your Contact Info</span>
       </div>
       <a href="{{ url_for('sales_download_proposal') }}"

@@ -39,29 +39,28 @@
       border-radius: 8px; color: white; font-size: .9rem; font-family: inherit;
       transition: border-color .2s;
     }
-    .form-control:focus { outline: none; border-color: #3b82f6; background: rgba(59,130,246,.08); }
+    .form-control:focus { outline: none; border-color: #33CC00; background: rgba(51,204,0,.08); }
     .form-control::placeholder { color: rgba(255,255,255,.25); }
     .btn-login {
       width: 100%; padding: .9rem;
-      background: #3b82f6; color: white;
+      background: #33CC00; color: white;
       border: none; border-radius: 8px;
       font-size: .95rem; font-weight: 700;
       cursor: pointer; transition: background .2s;
       margin-top: .5rem;
     }
-    .btn-login:hover { background: #2563eb; }
+    .btn-login:hover { background: #28A800; }
     .flash { padding: .75rem 1rem; border-radius: 8px; font-size: .85rem; margin-bottom: 1rem; }
     .flash.error { background: rgba(239,68,68,.15); color: #fca5a5; border: 1px solid rgba(239,68,68,.3); }
     .flash.success { background: rgba(34,197,94,.15); color: #86efac; border: 1px solid rgba(34,197,94,.3); }
     .back-link { text-align: center; margin-top: 1.5rem; font-size: .82rem; color: rgba(255,255,255,.35); }
-    .back-link a { color: #60a5fa; }
+    .back-link a { color: #55E600; }
   </style>
 </head>
 <body>
   <div class="login-wrap">
     <div class="login-logo">
-      <div class="icon">⚡</div>
-      <h1>{{ business.name }}</h1>
+      <img src="{{ url_for('static', filename='img/galaxy-logo.png') }}" alt="{{ business.name }}" style="height:50px;width:auto;border-radius:6px;margin:0 auto .75rem;display:block;">
       <p>Admin Portal</p>
     </div>
 

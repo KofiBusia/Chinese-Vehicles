@@ -13,25 +13,24 @@
     .logo .icon{font-size:2.5rem;}
     .logo h1{font-family:'Poppins',sans-serif;font-size:1.3rem;font-weight:800;color:white;margin-top:.5rem;}
     .logo p{font-size:.82rem;color:rgba(255,255,255,.4);margin-top:.25rem;}
-    .badge{display:inline-block;padding:.25rem .75rem;background:rgba(59,130,246,.15);color:#60a5fa;border:1px solid rgba(59,130,246,.3);border-radius:20px;font-size:.78rem;font-weight:600;margin-bottom:1.5rem;}
+    .badge{display:inline-block;padding:.25rem .75rem;background:rgba(51,204,0,.15);color:#55E600;border:1px solid rgba(51,204,0,.3);border-radius:20px;font-size:.78rem;font-weight:600;margin-bottom:1.5rem;}
     .form-group{margin-bottom:1.25rem;}
     label{font-size:.8rem;font-weight:600;color:rgba(255,255,255,.7);display:block;margin-bottom:.4rem;}
     input{width:100%;padding:.8rem 1rem;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:8px;color:white;font-size:.9rem;font-family:inherit;transition:border-color .2s;}
-    input:focus{outline:none;border-color:#3b82f6;background:rgba(59,130,246,.08);}
+    input:focus{outline:none;border-color:#33CC00;background:rgba(51,204,0,.08);}
     input::placeholder{color:rgba(255,255,255,.25);}
-    .btn{width:100%;padding:.9rem;background:#3b82f6;color:white;border:none;border-radius:8px;font-size:.95rem;font-weight:700;cursor:pointer;transition:background .2s;margin-top:.5rem;}
-    .btn:hover{background:#2563eb;}
+    .btn{width:100%;padding:.9rem;background:#33CC00;color:white;border:none;border-radius:8px;font-size:.95rem;font-weight:700;cursor:pointer;transition:background .2s;margin-top:.5rem;}
+    .btn:hover{background:#28A800;}
     .flash{padding:.75rem 1rem;border-radius:8px;font-size:.85rem;margin-bottom:1rem;}
     .flash.error{background:rgba(239,68,68,.15);color:#fca5a5;border:1px solid rgba(239,68,68,.3);}
     .links{text-align:center;margin-top:1.5rem;font-size:.82rem;color:rgba(255,255,255,.35);}
-    .links a{color:#60a5fa;}
+    .links a{color:#55E600;}
   </style>
 </head>
 <body>
   <div class="wrap">
     <div class="logo">
-      <div class="icon">⚡</div>
-      <h1>{{ business.name }}</h1>
+      <img src="{{ url_for('static', filename='img/galaxy-logo.png') }}" alt="{{ business.name }}" style="height:48px;width:auto;border-radius:6px;margin:0 auto .75rem;">
       <p>Salesperson Portal</p>
     </div>
     <div style="text-align:center;"><span class="badge">🔑 Use your assigned Sales Code</span></div>

@@ -12,12 +12,12 @@
   --mid:          #5c5e62;
   --light:        #f4f4f4;
   --white:        #ffffff;
-  --blue:         #1a56db;
-  --blue-light:   #3b82f6;
+  --blue:         #33CC00;
+  --blue-light:   #55E600;
   --gold:         #c9a227;
   --solar:        #e55a00;
   --solar-light:  #f97316;
-  --green:        #16a34a;
+  --green:        #33CC00;
   --red:          #dc2626;
   --yellow:       #d97706;
 
@@ -297,10 +297,10 @@ input, textarea, select { font-family: inherit; }
 
 /* Main homepage hero (no image) */
 .hero-main {
-  background: linear-gradient(135deg, #0d0d14 0%, #111827 40%, #0f2744 100%);
+  background: linear-gradient(135deg, #0a0f05 0%, #0f1a08 40%, #0c2200 100%);
 }
 .hero-main .hero-gradient {
-  background: radial-gradient(ellipse at 60% 50%, rgba(26,86,219,.15) 0%, transparent 70%);
+  background: radial-gradient(ellipse at 60% 50%, rgba(51,204,0,.18) 0%, transparent 70%);
 }
 
 /* Solar themed hero */
@@ -716,7 +716,7 @@ input, textarea, select { font-family: inherit; }
    LOAN PAGE
    ════════════════════════════════════════════════════════════ */
 .loan-hero {
-  background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 100%);
+  background: linear-gradient(135deg, #0a0f05 0%, #0d2800 100%);
   padding: calc(var(--nav-h) + 4rem) 2rem 4rem;
   text-align: center; color: var(--white);
 }
@@ -775,7 +775,7 @@ input, textarea, select { font-family: inherit; }
   transition: border-color .2s;
   background: var(--white);
 }
-.form-control:focus { border-color: var(--blue); outline: none; box-shadow: 0 0 0 3px rgba(26,86,219,.1); }
+.form-control:focus { border-color: var(--blue); outline: none; box-shadow: 0 0 0 3px rgba(51,204,0,.12); }
 .form-control::placeholder { color: #9ca3af; }
 .form-control.error { border-color: var(--red); }
 textarea.form-control { resize: vertical; min-height: 100px; }
@@ -783,7 +783,7 @@ select.form-control { cursor: pointer; }
 
 /* Loan calculator preview */
 .loan-preview {
-  background: linear-gradient(135deg, #0f172a, #1e3a5f);
+  background: linear-gradient(135deg, #0a0f05, #0d2800);
   border-radius: var(--radius-lg); padding: 1.5rem;
   color: var(--white); margin-top: 1rem;
 }
@@ -801,7 +801,7 @@ select.form-control { cursor: pointer; }
   transition: var(--transition); cursor: pointer;
   margin-top: .5rem;
 }
-.btn-submit:hover { background: var(--blue-light); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(26,86,219,.3); }
+.btn-submit:hover { background: var(--blue-light); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(51,204,0,.35); }
 
 /* ════════════════════════════════════════════════════════════
    CONTACT PAGE
@@ -845,7 +845,7 @@ select.form-control { cursor: pointer; }
    ════════════════════════════════════════════════════════════ */
 .about-hero {
   height: 70vh; min-height: 500px;
-  background: linear-gradient(135deg, #0d0d14 0%, #0f2744 100%);
+  background: linear-gradient(135deg, #0a0f05 0%, #0c2200 100%);
   display: flex; align-items: flex-end;
   padding: 0 2rem 8%;
   position: relative; overflow: hidden;
@@ -853,7 +853,7 @@ select.form-control { cursor: pointer; }
 .about-hero::before {
   content: '';
   position: absolute; inset: 0;
-  background: radial-gradient(ellipse at 70% 50%, rgba(26,86,219,.2) 0%, transparent 60%);
+  background: radial-gradient(ellipse at 70% 50%, rgba(51,204,0,.2) 0%, transparent 60%);
 }
 .about-hero-content { position: relative; z-index: 1; max-width: 720px; }
 .about-hero h1 {
@@ -990,7 +990,7 @@ select.form-control { cursor: pointer; }
 
 /* Finance CTA section */
 .finance-cta {
-  background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 100%);
+  background: linear-gradient(135deg, #0a0f05 0%, #0d2800 100%);
   padding: 6rem 2rem; text-align: center;
 }
 .finance-cta h2 {

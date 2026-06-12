@@ -46,11 +46,11 @@
   <meta name="twitter:image"       content="{% block tw_image %}{{ request.host_url }}static/img/og-default.jpg{% endblock %}">
 
   <!-- Theme colour (browser UI on Android Chrome) -->
-  <meta name="theme-color" content="#0f172a">
+  <meta name="theme-color" content="#0c2200">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=4">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=5">
   {% block extra_css %}{% endblock %}
 </head>
 <body>
@@ -59,8 +59,7 @@
 <nav class="main-nav {% block nav_class %}{% endblock %}" id="mainNav">
   <div class="nav-container">
     <a href="{{ url_for('index') }}" class="nav-logo">
-      <span class="logo-icon">⚡</span>
-      <span>{{ business.name }}</span>
+      <img src="{{ url_for('static', filename='img/galaxy-logo.png') }}" alt="{{ business.name }}" style="height:38px;width:auto;border-radius:5px;display:block;">
     </a>
     <div class="nav-links">
       <a href="{{ url_for('vehicles') }}" class="nav-link {% if request.endpoint == 'vehicles' or request.endpoint == 'vehicle_detail' %}active{% endif %}">Vehicles</a>
@@ -122,7 +121,9 @@
   <div class="footer-inner">
     <div class="footer-grid">
       <div class="footer-brand">
-        <h3>⚡ {{ business.name }}</h3>
+        <a href="{{ url_for('index') }}" style="display:inline-block;margin-bottom:.75rem;">
+          <img src="{{ url_for('static', filename='img/galaxy-logo.png') }}" alt="{{ business.name }}" style="height:44px;width:auto;border-radius:6px;">
+        </a>
         <p>{{ business.tagline }}<br>Your trusted partner for premium vehicles and solar energy solutions.</p>
         <div class="footer-social">
           <a href="{{ business.facebook }}" class="social-btn" title="Facebook">f</a>
@@ -208,7 +209,7 @@
 .whatsapp-fab:hover { transform: scale(1.1); }
 </style>
 
-<script src="{{ url_for('static', filename='js/main.js') }}?v=4"></script>
+<script src="{{ url_for('static', filename='js/main.js') }}?v=5"></script>
 {% block extra_js %}{% endblock %}
 </body>
 </html>
