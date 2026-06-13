@@ -1160,12 +1160,39 @@ function pcGenerate(){
 }
 
 function pcShare(){
-  if(!pcShareUrl){ alert('Generate a quote first.'); return; }
-  navigator.clipboard.writeText(pcShareUrl).then(()=>{
-    const t = document.getElementById('pc-share-toast');
-    t.style.display='block';
-    setTimeout(()=>{ t.style.display='none'; }, 5000);
-  }).catch(()=>{ prompt('Copy this link:', pcShareUrl); });
+  if(!pcAppliances.length){ alert('Generate a quote first.'); return; }
+  const btn = document.getElementById('pc-share-btn');
+  btn.textContent = '⏳ Generating…';
+  btn.disabled = true;
+  fetch('/api/solar-quote', {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({a:pcAppliances, b:pcBattType, sp:PC_SP})
+  })
+  .then(r=>r.json())
+  .then(data=>{
+    btn.textContent = '🔗 Copy Quote Link';
+    btn.disabled = false;
+    pcShareUrl = data.url;
+    // update WhatsApp button with short URL
+    const firstName = PC_SP.name.split(' ')[0];
+    const waText = encodeURIComponent(
+      'Hi! I\'ve put together a solar system quote for your home using Galaxy Solar equipment.\n\nClick the link to see the full breakdown — panels, batteries, inverter and prices:\n' + pcShareUrl +
+      '\n\nFeel free to reach out if you have questions.\n\n' + PC_SP.name + '\nCode: ' + PC_SP.code + (PC_SP.phone ? '\n📞 ' + PC_SP.phone : '')
+    );
+    const waPhone = PC_SP.phone ? PC_SP.phone.replace(/\D/g,'') : '';
+    document.getElementById('pc-wa-btn').href = waPhone ? 'https://wa.me/'+waPhone+'?text='+waText : 'https://wa.me/?text='+waText;
+    navigator.clipboard.writeText(pcShareUrl).then(()=>{
+      const t = document.getElementById('pc-share-toast');
+      t.style.display='block';
+      setTimeout(()=>{ t.style.display='none'; }, 6000);
+    }).catch(()=>{ prompt('Copy this link:', pcShareUrl); });
+  })
+  .catch(()=>{
+    btn.textContent = '🔗 Copy Quote Link';
+    btn.disabled = false;
+    alert('Could not generate link. Please try again.');
+  });
 }
 
 function copyRef() {

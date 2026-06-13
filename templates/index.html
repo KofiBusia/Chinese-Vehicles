@@ -706,10 +706,6 @@ function calcGenerate(){
     `Battery bank: <strong style="color:white">${battLabel}</strong><br>` +
     `Est. daily generation (5 PSH): <strong style="color:#33CC00">${(panelCount*0.63*5*0.82).toFixed(1)} kWh</strong>`;
 
-  // update URL hash so Share button reflects current state (preserve sp if present)
-  const _hashSp = window._calcSp || null;
-  history.replaceState(null,'', '#solar=' + btoa(JSON.stringify({a:appliances,b:battType,sp:_hashSp})));
-
   // show advisor card if sp data available
   if(_hashSp){
     document.getElementById('inv-advisor').style.display = 'block';
@@ -723,55 +719,76 @@ function calcGenerate(){
 
 function fmt(n){ return Math.round(n).toLocaleString('en-GH'); }
 
-// ── SHARE: encode state → URL hash, copy to clipboard ──
+// ── SHARE: save to server → short URL ──
 function calcShare(){
-  const payload = btoa(JSON.stringify({a: appliances, b: battType}));
-  const url = location.origin + location.pathname + '#solar=' + payload;
-  navigator.clipboard.writeText(url).then(()=>{
-    const toast = document.getElementById('share-toast');
-    toast.style.display='block';
-    setTimeout(()=>{ toast.style.display='none'; }, 5000);
-  }).catch(()=>{
-    prompt('Copy this link:', url);
+  const btn = document.getElementById('share-btn');
+  btn.textContent = '⏳ Generating…';
+  btn.disabled = true;
+  const _sp = window._calcSp || null;
+  fetch('/api/solar-quote', {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({a:appliances, b:battType, sp:_sp})
+  })
+  .then(r=>r.json())
+  .then(data=>{
+    btn.textContent = '🔗 Share Quote';
+    btn.disabled = false;
+    const url = data.url;
+    navigator.clipboard.writeText(url).then(()=>{
+      const toast = document.getElementById('share-toast');
+      toast.style.display='block';
+      setTimeout(()=>{ toast.style.display='none'; }, 6000);
+    }).catch(()=>{ prompt('Copy this link:', url); });
+  })
+  .catch(()=>{
+    btn.textContent = '🔗 Share Quote';
+    btn.disabled = false;
+    alert('Could not generate link. Please try again.');
   });
-  history.replaceState(null,'', '#solar=' + payload);
 }
 
-// ── LOAD: restore state from URL hash on page load ──
+// ── LOAD: restore state from server code (short link) or URL hash ──
 (function calcLoadFromHash(){
+  // Check for server-injected quote code (from /q/<code> route)
+  {% if solar_quote_code %}
+  fetch('/api/solar-quote/{{ solar_quote_code }}')
+    .then(r=>r.json())
+    .then(data=>{ if(data.a) _applyQuoteData(data); })
+    .catch(()=>{});
+  return;
+  {% endif %}
   try {
     const hash = location.hash;
     if(!hash.startsWith('#solar=')) return;
     const data = JSON.parse(atob(hash.slice(7)));
-    if(!data.a || !data.a.length) return;
-    appliances = data.a;
-    battType   = data.b || 'gel';
-    // sync radio buttons
-    document.querySelectorAll('input[name="batt-type"]').forEach(r=>{
-      r.checked = (r.value === battType);
-    });
-    document.getElementById('lbl-gel').style.borderColor    = battType==='gel'    ? '#33CC00' : 'rgba(255,255,255,.12)';
-    document.getElementById('lbl-lifepo').style.borderColor = battType==='lifepo' ? '#33CC00' : 'rgba(255,255,255,.12)';
-    calcRenderTable();
-    // populate advisor card if sp data present
-    if(data.sp && data.sp.name){
-      const sp = data.sp;
-      const initials = sp.name.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
-      document.getElementById('inv-advisor-avatar').textContent = initials;
-      document.getElementById('inv-advisor-name').textContent   = sp.name;
-      document.getElementById('inv-advisor-code').textContent   = 'Code: ' + (sp.code||'') + (sp.phone ? '  ·  📞 ' + sp.phone : '');
-      if(sp.phone){
-        const waMsg = encodeURIComponent('Hi ' + sp.name.split(' ')[0] + '! I saw the solar quote you sent me. I\'d like to learn more.');
-        document.getElementById('inv-advisor-wa').href = 'https://wa.me/' + sp.phone.replace(/\D/g,'') + '?text=' + waMsg;
-      }
-      // store sp for use when calcGenerate runs and shows the advisor card
-      window._calcSp = sp;
-    }
-    // scroll to calculator and auto-generate
-    document.getElementById('solar-calculator').scrollIntoView({behavior:'smooth'});
-    setTimeout(calcGenerate, 600);
+    if(data.a) _applyQuoteData(data);
   } catch(e){}
 })();
+
+function _applyQuoteData(data){
+  if(!data.a || !data.a.length) return;
+  appliances = data.a;
+  battType   = data.b || 'gel';
+  document.querySelectorAll('input[name="batt-type"]').forEach(r=>{ r.checked = (r.value === battType); });
+  document.getElementById('lbl-gel').style.borderColor    = battType==='gel'    ? '#33CC00' : 'rgba(255,255,255,.12)';
+  document.getElementById('lbl-lifepo').style.borderColor = battType==='lifepo' ? '#33CC00' : 'rgba(255,255,255,.12)';
+  calcRenderTable();
+  if(data.sp && data.sp.name){
+    const sp = data.sp;
+    const initials = sp.name.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+    document.getElementById('inv-advisor-avatar').textContent = initials;
+    document.getElementById('inv-advisor-name').textContent   = sp.name;
+    document.getElementById('inv-advisor-code').textContent   = 'Code: ' + (sp.code||'') + (sp.phone ? '  ·  📞 ' + sp.phone : '');
+    if(sp.phone){
+      const waMsg = encodeURIComponent('Hi ' + sp.name.split(' ')[0] + '! I saw the solar quote you sent me. I\'d like to learn more.');
+      document.getElementById('inv-advisor-wa').href = 'https://wa.me/' + sp.phone.replace(/\D/g,'') + '?text=' + waMsg;
+    }
+    window._calcSp = sp;
+  }
+  document.getElementById('solar-calculator').scrollIntoView({behavior:'smooth'});
+  setTimeout(calcGenerate, 600);
+}
 
 function calcPrint(){
   const inv = document.getElementById('invoice-content').innerHTML;

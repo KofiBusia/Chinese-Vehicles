@@ -385,6 +385,14 @@ class SiteSettings(db.Model):
     value = db.Column(db.String(200), nullable=False)
 
 
+class SolarQuote(db.Model):
+    __tablename__ = 'solar_quote'
+    id         = db.Column(db.Integer, primary_key=True)
+    code       = db.Column(db.String(8), unique=True, nullable=False, index=True)
+    data       = db.Column(db.Text, nullable=False)   # JSON
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+
 # ───────────────────────────── HELPERS ──────────────────────────────────── #
 
 USD_TO_GHS_DEFAULT = 15.5
@@ -2617,6 +2625,59 @@ def admin_settings():
     return render_template('admin/settings.html', admin=admin,
                            current_rate=current_rate,
                            current_loan_rate=current_loan_rate)
+
+
+# ─────────────────── SOLAR QUOTE SHORT LINKS ────────────────────────────── #
+
+import random, string as _string
+
+def _gen_quote_code():
+    chars = _string.ascii_uppercase + _string.digits
+    while True:
+        code = ''.join(random.choices(chars, k=6))
+        if not SolarQuote.query.filter_by(code=code).first():
+            return code
+
+@app.route('/api/solar-quote', methods=['POST'])
+def api_create_solar_quote():
+    try:
+        data = request.get_json(force=True)
+        if not data or not data.get('a'):
+            return jsonify({'error': 'no appliances'}), 400
+        code  = _gen_quote_code()
+        quote = SolarQuote(code=code, data=json.dumps(data))
+        db.session.add(quote)
+        db.session.commit()
+        short_url = request.host_url.rstrip('/') + '/q/' + code
+        return jsonify({'code': code, 'url': short_url})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/q/<code>')
+def solar_quote_redirect(code):
+    quote = SolarQuote.query.filter_by(code=code).first()
+    if not quote:
+        return redirect(url_for('index'))
+    # Pass code to index so JS can fetch the data via /api/solar-quote/<code>
+    featured_vehicles = Vehicle.query.filter_by(featured=True, available=True).limit(4).all()
+    featured_solar    = SolarSystem.query.filter_by(featured=True, available=True).limit(2).all()
+    latest_vehicles   = Vehicle.query.filter_by(available=True).order_by(Vehicle.created_at.desc()).limit(6).all()
+    latest_solar      = SolarSystem.query.filter_by(available=True).order_by(SolarSystem.created_at.desc()).limit(4).all()
+    newest_vehicle    = Vehicle.query.filter_by(available=True).order_by(Vehicle.created_at.desc()).first()
+    return render_template('index.html',
+        featured_vehicles=featured_vehicles,
+        featured_solar=featured_solar,
+        latest_vehicles=latest_vehicles,
+        latest_solar=latest_solar,
+        newest_vehicle=newest_vehicle,
+        solar_quote_code=code)
+
+@app.route('/api/solar-quote/<code>')
+def api_get_solar_quote(code):
+    quote = SolarQuote.query.filter_by(code=code).first()
+    if not quote:
+        return jsonify({'error': 'not found'}), 404
+    return jsonify(json.loads(quote.data))
 
 
 # ─────────────────────────── INIT ───────────────────────────────────────── #
