@@ -438,9 +438,16 @@
             <a href="{{ url_for('contact') }}" style="flex:1;min-width:120px;padding:.75rem;background:#33CC00;color:white;border:none;border-radius:8px;font-size:.85rem;font-weight:700;text-align:center;text-decoration:none;display:block;">
               Order This System
             </a>
+            <button onclick="calcShare()" id="share-btn" style="flex:1;min-width:120px;padding:.75rem;background:rgba(51,204,0,.12);border:1px solid rgba(51,204,0,.35);border-radius:8px;color:#55E600;font-size:.85rem;font-weight:600;cursor:pointer;font-family:inherit;">
+              🔗 Share Quote
+            </button>
             <button onclick="calcPrint()" style="flex:1;min-width:120px;padding:.75rem;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);border-radius:8px;color:white;font-size:.85rem;font-weight:600;cursor:pointer;font-family:inherit;">
               Print / Save PDF
             </button>
+          </div>
+          <!-- Share confirmation toast -->
+          <div id="share-toast" style="display:none;margin-top:.6rem;background:rgba(51,204,0,.15);border:1px solid rgba(51,204,0,.3);border-radius:8px;padding:.55rem .9rem;font-size:.78rem;color:#55E600;text-align:center;">
+            ✅ Link copied to clipboard! Share it on WhatsApp or anywhere.
           </div>
         </div>
       </div>
@@ -684,6 +691,9 @@ function calcGenerate(){
     `Battery bank: <strong style="color:white">${battLabel}</strong><br>` +
     `Est. daily generation (5 PSH): <strong style="color:#33CC00">${(panelCount*0.63*5*0.82).toFixed(1)} kWh</strong>`;
 
+  // update URL hash so Share button reflects current state
+  history.replaceState(null,'', '#solar=' + btoa(JSON.stringify({a:appliances,b:battType})));
+
   // show invoice
   document.getElementById('invoice-placeholder').style.display='none';
   document.getElementById('invoice-content').style.display='block';
@@ -691,6 +701,42 @@ function calcGenerate(){
 }
 
 function fmt(n){ return Math.round(n).toLocaleString('en-GH'); }
+
+// ── SHARE: encode state → URL hash, copy to clipboard ──
+function calcShare(){
+  const payload = btoa(JSON.stringify({a: appliances, b: battType}));
+  const url = location.origin + location.pathname + '#solar=' + payload;
+  navigator.clipboard.writeText(url).then(()=>{
+    const toast = document.getElementById('share-toast');
+    toast.style.display='block';
+    setTimeout(()=>{ toast.style.display='none'; }, 5000);
+  }).catch(()=>{
+    prompt('Copy this link:', url);
+  });
+  history.replaceState(null,'', '#solar=' + payload);
+}
+
+// ── LOAD: restore state from URL hash on page load ──
+(function calcLoadFromHash(){
+  try {
+    const hash = location.hash;
+    if(!hash.startsWith('#solar=')) return;
+    const data = JSON.parse(atob(hash.slice(7)));
+    if(!data.a || !data.a.length) return;
+    appliances = data.a;
+    battType   = data.b || 'gel';
+    // sync radio buttons
+    document.querySelectorAll('input[name="batt-type"]').forEach(r=>{
+      r.checked = (r.value === battType);
+    });
+    document.getElementById('lbl-gel').style.borderColor    = battType==='gel'    ? '#33CC00' : 'rgba(255,255,255,.12)';
+    document.getElementById('lbl-lifepo').style.borderColor = battType==='lifepo' ? '#33CC00' : 'rgba(255,255,255,.12)';
+    calcRenderTable();
+    // scroll to calculator and auto-generate
+    document.getElementById('solar-calculator').scrollIntoView({behavior:'smooth'});
+    setTimeout(calcGenerate, 600);
+  } catch(e){}
+})();
 
 function calcPrint(){
   const inv = document.getElementById('invoice-content').innerHTML;
