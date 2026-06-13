@@ -1011,19 +1011,6 @@ let pcAppliances = [];
 let pcBattType   = 'gel';
 let pcShareUrl   = '';
 
-(function(){
-  const wrap = document.getElementById('ppreset-btns');
-  PC_PRESETS.forEach(p => {
-    const b = document.createElement('button');
-    b.textContent = p.name;
-    b.onclick = () => pcAdd(p.name, p.w, p.h, 1);
-    b.style.cssText = 'padding:.3rem .65rem;background:rgba(51,204,0,.12);border:1px solid rgba(51,204,0,.3);border-radius:20px;color:rgba(255,255,255,.75);font-size:.72rem;cursor:pointer;font-family:inherit;transition:background .15s;';
-    b.onmouseover = () => { b.style.background='rgba(51,204,0,.28)'; b.style.color='white'; };
-    b.onmouseout  = () => { b.style.background='rgba(51,204,0,.12)'; b.style.color='rgba(255,255,255,.75)'; };
-    wrap.appendChild(b);
-  });
-})();
-
 function pcSetBatt(el){
   pcBattType = el.value;
   document.getElementById('plbl-gel').style.borderColor    = pcBattType==='gel'    ? '#33CC00' : 'rgba(255,255,255,.1)';
@@ -1181,6 +1168,21 @@ function pcShare(){
     alert('Could not generate link. Please try again.');
   });
 }
+
+// Populate preset appliance buttons — runs after all functions are defined
+(function(){
+  const wrap = document.getElementById('ppreset-btns');
+  if (!wrap) return;
+  PC_PRESETS.forEach(p => {
+    const b = document.createElement('button');
+    b.textContent = p.name;
+    b.onclick = () => pcAdd(p.name, p.w, p.h, 1);
+    b.style.cssText = 'padding:.3rem .65rem;background:rgba(51,204,0,.12);border:1px solid rgba(51,204,0,.3);border-radius:20px;color:rgba(255,255,255,.75);font-size:.72rem;cursor:pointer;font-family:inherit;transition:background .15s;';
+    b.onmouseover = () => { b.style.background='rgba(51,204,0,.28)'; b.style.color='white'; };
+    b.onmouseout  = () => { b.style.background='rgba(51,204,0,.12)'; b.style.color='rgba(255,255,255,.75)'; };
+    wrap.appendChild(b);
+  });
+})();
 
 function copyRef() {
   const inp = document.getElementById('refLink');
