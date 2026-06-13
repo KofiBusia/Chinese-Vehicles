@@ -68,6 +68,8 @@
       <a href="{{ url_for('about') }}" class="nav-link {% if request.endpoint == 'about' %}active{% endif %}">About</a>
       <a href="{{ url_for('contact') }}" class="nav-link {% if request.endpoint == 'contact' %}active{% endif %}">Contact</a>
       <a href="{{ url_for('admin_dashboard') }}" class="nav-link nav-cta">Admin</a>
+      <a href="{{ url_for('sales_login') }}" class="nav-link nav-cta" style="background:rgba(51,204,0,.15);color:#55E600!important;border:1.5px solid rgba(51,204,0,.45);" onmouseover="this.style.background='rgba(51,204,0,.28)'" onmouseout="this.style.background='rgba(51,204,0,.15)'">Sales Login</a>
+      <a href="{{ url_for('sales_register') }}" class="nav-link nav-cta" style="background:transparent;color:#55E600!important;border:1.5px solid #33CC00;" onmouseover="this.style.background='rgba(51,204,0,.15)'" onmouseout="this.style.background='transparent'">+ Join Sales Team</a>
       <button id="currencyToggle" title="Switch currency display"
               style="padding:.3rem .8rem;border:1.5px solid rgba(255,255,255,.35);border-radius:20px;background:rgba(255,255,255,.08);color:rgba(255,255,255,.85);font-size:.75rem;font-weight:700;cursor:pointer;letter-spacing:.04em;transition:all .2s;white-space:nowrap;">
         GH₵
@@ -89,6 +91,8 @@
   <a href="{{ url_for('about') }}"    class="nav-link">About</a>
   <a href="{{ url_for('contact') }}"  class="nav-link">Contact</a>
   <a href="{{ url_for('admin_dashboard') }}" class="nav-link" style="color:var(--blue-light)">Admin Panel →</a>
+  <a href="{{ url_for('sales_login') }}" class="nav-link" style="color:#55E600;">Sales Login →</a>
+  <a href="{{ url_for('sales_register') }}" class="nav-link" style="color:#33CC00;font-weight:700;">+ Join Sales Team</a>
 </div>
 
 <!-- Flash messages -->
@@ -149,6 +153,8 @@
           <li><a href="{{ url_for('loan') }}">Loans</a></li>
           <li><a href="{{ url_for('contact') }}">Contact Us</a></li>
           <li><a href="{{ url_for('admin_login') }}">Admin Login</a></li>
+          <li><a href="{{ url_for('sales_login') }}">Sales Login</a></li>
+          <li><a href="{{ url_for('sales_register') }}">Join Sales Team</a></li>
         </ul>
       </div>
       <div class="footer-col">
