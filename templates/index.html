@@ -697,7 +697,7 @@ function calcGenerate(){
     `Est. daily generation (5 PSH): <strong style="color:#33CC00">${(panelCount*0.63*5*0.82).toFixed(1)} kWh</strong>`;
 
   // show advisor card if sp data available
-  if(_hashSp){
+  if(window._calcSp){
     document.getElementById('inv-advisor').style.display = 'block';
   }
 
