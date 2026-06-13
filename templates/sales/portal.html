@@ -50,6 +50,7 @@
     .tip-title{font-weight:700;font-size:.88rem;color:#111827;margin-bottom:.25rem;}
     .tip-body{font-size:.8rem;color:#6b7280;line-height:1.6;}
     .company-pill{display:inline-block;padding:.25rem .7rem;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:20px;font-size:.75rem;color:#334155;margin:.2rem;}
+    @media(max-width:700px){#pcalc-grid{grid-template-columns:1fr!important;}}
   </style>
 </head>
 <body>
@@ -175,6 +176,136 @@
         <div class="action-sub">Republic Bank finance form</div>
       </div>
     </a>
+  </div>
+
+  <!-- ── SOLAR CALCULATOR ───────────────────────────────────────────────── -->
+  <div class="section-head" style="margin-top:.5rem;">☀️ Solar Quote Calculator</div>
+  <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:.75rem 1rem;margin-bottom:1.25rem;font-size:.82rem;color:#15803d;">
+    Build a solar quote for your customer → click <strong>Share Quote</strong> to get a personalised link with <em>your contact details</em> attached. When they open it, they'll see your name and a direct WhatsApp button to reach you.
+  </div>
+
+  <div style="background:linear-gradient(180deg,#060d02,#0a1405 60%,#060d02);border-radius:16px;padding:2rem 1.5rem;margin-bottom:2rem;position:relative;overflow:hidden;">
+    <div style="position:absolute;top:-60px;right:-60px;width:300px;height:300px;background:radial-gradient(circle,rgba(51,204,0,.12),transparent 65%);pointer-events:none;"></div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;align-items:start;" id="pcalc-grid">
+
+      <!-- LEFT: Input -->
+      <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:1.5rem;">
+        <p style="font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;color:#33CC00;font-weight:700;margin-bottom:.85rem;">Step 1 — Appliances</p>
+        <div style="margin-bottom:1rem;">
+          <p style="font-size:.75rem;color:rgba(255,255,255,.45);margin-bottom:.5rem;">Quick add:</p>
+          <div id="ppreset-btns" style="display:flex;flex-wrap:wrap;gap:.35rem;"></div>
+        </div>
+        <div style="background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.08);border-radius:9px;padding:.85rem;margin-bottom:.85rem;">
+          <p style="font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.35);margin-bottom:.6rem;">Custom Appliance</p>
+          <div style="display:grid;grid-template-columns:2fr 1fr 1fr auto;gap:.4rem;align-items:end;">
+            <div>
+              <label style="font-size:.67rem;color:rgba(255,255,255,.35);display:block;margin-bottom:.2rem;">Name</label>
+              <input id="pc-name" type="text" placeholder="e.g. Water Pump" style="width:100%;padding:.5rem .65rem;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);border-radius:6px;color:white;font-size:.82rem;font-family:inherit;outline:none;">
+            </div>
+            <div>
+              <label style="font-size:.67rem;color:rgba(255,255,255,.35);display:block;margin-bottom:.2rem;">Watts</label>
+              <input id="pc-watts" type="number" placeholder="750" min="1" style="width:100%;padding:.5rem .65rem;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);border-radius:6px;color:white;font-size:.82rem;font-family:inherit;outline:none;">
+            </div>
+            <div>
+              <label style="font-size:.67rem;color:rgba(255,255,255,.35);display:block;margin-bottom:.2rem;">Hrs/day</label>
+              <input id="pc-hours" type="number" placeholder="4" min="0.1" max="24" step="0.5" style="width:100%;padding:.5rem .65rem;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);border-radius:6px;color:white;font-size:.82rem;font-family:inherit;outline:none;">
+            </div>
+            <button onclick="pcAddCustom()" style="padding:.5rem .8rem;background:#33CC00;border:none;border-radius:6px;color:white;font-size:1rem;font-weight:700;cursor:pointer;line-height:1;">+</button>
+          </div>
+        </div>
+        <div id="pc-table-wrap" style="display:none;margin-bottom:.85rem;">
+          <table style="width:100%;border-collapse:collapse;font-size:.78rem;">
+            <thead><tr style="color:rgba(255,255,255,.35);text-transform:uppercase;font-size:.62rem;letter-spacing:.07em;border-bottom:1px solid rgba(255,255,255,.08);">
+              <th style="text-align:left;padding:.35rem .25rem;">Appliance</th>
+              <th style="text-align:center;padding:.35rem .25rem;">W</th>
+              <th style="text-align:center;padding:.35rem .25rem;">Qty</th>
+              <th style="text-align:center;padding:.35rem .25rem;">Hrs</th>
+              <th style="text-align:right;padding:.35rem .25rem;">kWh/d</th>
+              <th style="padding:.35rem .25rem;"></th>
+            </tr></thead>
+            <tbody id="pc-tbody"></tbody>
+          </table>
+          <div style="display:flex;justify-content:space-between;align-items:center;border-top:1px solid rgba(51,204,0,.25);margin-top:.4rem;padding-top:.5rem;">
+            <span style="font-size:.75rem;color:rgba(255,255,255,.45);">Daily Total</span>
+            <span id="pc-daily-total" style="font-size:.92rem;font-weight:700;color:#33CC00;">0.00 kWh</span>
+          </div>
+        </div>
+        <p style="font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;color:#33CC00;font-weight:700;margin-bottom:.6rem;">Step 2 — Battery Type</p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-bottom:1.25rem;">
+          <label id="plbl-gel" style="display:flex;align-items:flex-start;gap:.55rem;background:rgba(255,255,255,.04);border:2px solid #33CC00;border-radius:9px;padding:.75rem;cursor:pointer;">
+            <input type="radio" name="pbatt-type" value="gel" checked onchange="pcSetBatt(this)" style="margin-top:.12rem;accent-color:#33CC00;">
+            <div>
+              <div style="font-weight:700;color:white;font-size:.82rem;">GEL</div>
+              <div style="font-size:.68rem;color:rgba(255,255,255,.4);margin-top:.1rem;">Budget · RITAR</div>
+            </div>
+          </label>
+          <label id="plbl-lifepo" style="display:flex;align-items:flex-start;gap:.55rem;background:rgba(255,255,255,.04);border:2px solid rgba(255,255,255,.1);border-radius:9px;padding:.75rem;cursor:pointer;">
+            <input type="radio" name="pbatt-type" value="lifepo" onchange="pcSetBatt(this)" style="margin-top:.12rem;accent-color:#33CC00;">
+            <div>
+              <div style="font-weight:700;color:white;font-size:.82rem;">LiFePO₄</div>
+              <div style="font-size:.68rem;color:rgba(255,255,255,.4);margin-top:.1rem;">Premium · Galaxy Energy</div>
+            </div>
+          </label>
+        </div>
+        <button onclick="pcGenerate()" style="width:100%;padding:.9rem;background:linear-gradient(135deg,#33CC00,#28A800);color:white;border:none;border-radius:9px;font-size:.95rem;font-weight:800;cursor:pointer;font-family:inherit;box-shadow:0 4px 16px rgba(51,204,0,.3);">
+          ⚡ Generate Quote
+        </button>
+        <p id="pc-error" style="color:#f87171;font-size:.75rem;text-align:center;margin-top:.4rem;display:none;">Add at least one appliance first.</p>
+      </div>
+
+      <!-- RIGHT: Invoice -->
+      <div id="pc-invoice-panel" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:1.5rem;">
+        <div id="pc-placeholder" style="text-align:center;padding:2.5rem 1rem;">
+          <div style="font-size:3rem;margin-bottom:.75rem;opacity:.3;">☀️</div>
+          <p style="color:rgba(255,255,255,.3);font-size:.85rem;">Add appliances and click<br><strong style="color:rgba(255,255,255,.45);">Generate Quote</strong></p>
+        </div>
+        <div id="pc-invoice" style="display:none;">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1rem;padding-bottom:.85rem;border-bottom:1px solid rgba(255,255,255,.1);">
+            <div>
+              <img src="{{ url_for('static', filename='img/galaxy-logo.png') }}" style="height:28px;width:auto;border-radius:3px;margin-bottom:.35rem;display:block;">
+              <p style="font-size:.68rem;color:rgba(255,255,255,.35);">Galaxy Energy Company Ltd</p>
+            </div>
+            <div style="text-align:right;">
+              <div style="font-size:.65rem;color:#33CC00;font-weight:700;letter-spacing:.08em;text-transform:uppercase;">SYSTEM QUOTE</div>
+              <div id="pc-inv-date" style="font-size:.68rem;color:rgba(255,255,255,.35);margin-top:.15rem;"></div>
+            </div>
+          </div>
+          <div id="pc-inv-chips" style="display:flex;flex-wrap:wrap;gap:.35rem;margin-bottom:1rem;"></div>
+          <table style="width:100%;border-collapse:collapse;font-size:.76rem;margin-bottom:.65rem;">
+            <thead><tr style="color:rgba(255,255,255,.3);text-transform:uppercase;font-size:.62rem;letter-spacing:.06em;border-bottom:1px solid rgba(255,255,255,.07);">
+              <th style="text-align:left;padding:.35rem .2rem;">Component</th>
+              <th style="text-align:center;padding:.35rem .2rem;">Qty</th>
+              <th style="text-align:right;padding:.35rem .2rem;">Total (GH₵)</th>
+            </tr></thead>
+            <tbody id="pc-inv-tbody"></tbody>
+          </table>
+          <div style="border-top:1px solid rgba(255,255,255,.07);padding-top:.6rem;">
+            <div style="display:flex;justify-content:space-between;font-size:.76rem;color:rgba(255,255,255,.45);margin-bottom:.25rem;">
+              <span>Equipment</span><span id="pc-subtotal"></span>
+            </div>
+            <div style="display:flex;justify-content:space-between;font-size:.76rem;color:rgba(255,255,255,.45);margin-bottom:.45rem;">
+              <span>Installation &amp; Accessories</span><span id="pc-install"></span>
+            </div>
+            <div style="display:flex;justify-content:space-between;font-size:1rem;font-weight:800;color:white;border-top:1px solid rgba(51,204,0,.35);padding-top:.5rem;">
+              <span>TOTAL</span><span id="pc-total" style="color:#33CC00;"></span>
+            </div>
+          </div>
+          <!-- Share actions -->
+          <div style="display:flex;gap:.5rem;margin-top:1rem;flex-wrap:wrap;">
+            <button onclick="pcShare()" id="pc-share-btn" style="flex:1;min-width:110px;padding:.7rem;background:rgba(51,204,0,.15);border:1px solid rgba(51,204,0,.35);border-radius:7px;color:#55E600;font-size:.82rem;font-weight:700;cursor:pointer;font-family:inherit;">
+              🔗 Copy Quote Link
+            </button>
+            <a id="pc-wa-btn" href="#" target="_blank" style="flex:1;min-width:110px;padding:.7rem;background:#22c55e;color:white;border-radius:7px;font-size:.82rem;font-weight:700;text-align:center;text-decoration:none;display:block;">
+              💬 Send on WhatsApp
+            </a>
+          </div>
+          <div id="pc-share-toast" style="display:none;margin-top:.5rem;background:rgba(51,204,0,.12);border:1px solid rgba(51,204,0,.25);border-radius:7px;padding:.45rem .75rem;font-size:.75rem;color:#55E600;text-align:center;">
+            ✅ Link copied! Share it with your customer.
+          </div>
+        </div>
+      </div>
+    </div><!-- /pcalc-grid -->
   </div>
 
   <!-- ── BUSINESS PROPOSAL ───────────────────────────────────────────────── -->
@@ -841,6 +972,201 @@ function motSeek(e) {
 
 // Auto-open every time the salesperson logs in
 window.addEventListener('load', () => setTimeout(motOpen, 700));
+
+// ── PORTAL SOLAR CALCULATOR ────────────────────────────────────────────────
+const PC_SP = {
+  name:  {{ sp.full_name | tojson }},
+  phone: {{ (sp.phone or '') | tojson }},
+  code:  {{ sp.code | tojson }},
+};
+
+const PC_PRESETS = [
+  {name:'Refrigerator',w:150,h:24},{name:'Deep Freezer',w:100,h:24},
+  {name:'LED Bulb',w:10,h:6},{name:'Ceiling Fan',w:75,h:8},
+  {name:'Standing Fan',w:65,h:8},{name:'LED TV 32"',w:50,h:6},
+  {name:'LED TV 55"',w:100,h:6},{name:'DSTV/Decoder',w:25,h:6},
+  {name:'Laptop',w:65,h:6},{name:'Phone Charger',w:10,h:3},
+  {name:'Air Con 1HP',w:900,h:8},{name:'Air Con 1.5HP',w:1400,h:8},
+  {name:'Air Con 2HP',w:1800,h:8},{name:'Water Pump',w:750,h:3},
+  {name:'Washing Machine',w:500,h:1},{name:'Microwave',w:1200,h:0.5},
+  {name:'Electric Iron',w:1000,h:0.5},{name:'Security Lights',w:20,h:12},
+];
+
+const PC_PRODUCTS = {
+  panel:{name:'JINKO Solar Panel',spec:'630W Mono PERC',unit:1800},
+  gel200:{name:'RITAR GEL Battery',spec:'12V 200AH GEL',unit:4600},
+  lifepo280:{name:'Galaxy Energy LiFePO₄',spec:'12.8V 280AH',unit:7800},
+  lifepo51v:{name:'Galaxy Energy LiFePO₄',spec:'51.2V 100AH',unit:15000},
+  inv_1k2:{name:'Galaxy Solar Inverter',spec:'1.2KW',unit:2775},
+  inv_3k6:{name:'Galaxy Solar Inverter',spec:'3.6KW',unit:4200},
+  inv_5k5:{name:'Galaxy Solar Inverter',spec:'5.5KW Hybrid',unit:4200},
+  inv_6k_4g:{name:'Galaxy Solar Inverter',spec:'6KW 4th Gen WiFi',unit:16500},
+  inv_8k5:{name:'Galaxy Solar Inverter',spec:'8.5KW Hybrid',unit:10215},
+  mppt40:{name:'MPPT Controller',spec:'40A',unit:3225},
+  mppt60:{name:'MPPT Controller',spec:'60A',unit:4470},
+  mppt85:{name:'MPPT Controller',spec:'85A',unit:7200},
+};
+
+let pcAppliances = [];
+let pcBattType   = 'gel';
+let pcShareUrl   = '';
+
+(function(){
+  const wrap = document.getElementById('ppreset-btns');
+  PC_PRESETS.forEach(p => {
+    const b = document.createElement('button');
+    b.textContent = p.name;
+    b.onclick = () => pcAdd(p.name, p.w, p.h, 1);
+    b.style.cssText = 'padding:.3rem .65rem;background:rgba(51,204,0,.12);border:1px solid rgba(51,204,0,.3);border-radius:20px;color:rgba(255,255,255,.75);font-size:.72rem;cursor:pointer;font-family:inherit;transition:background .15s;';
+    b.onmouseover = () => { b.style.background='rgba(51,204,0,.28)'; b.style.color='white'; };
+    b.onmouseout  = () => { b.style.background='rgba(51,204,0,.12)'; b.style.color='rgba(255,255,255,.75)'; };
+    wrap.appendChild(b);
+  });
+})();
+
+function pcSetBatt(el){
+  pcBattType = el.value;
+  document.getElementById('plbl-gel').style.borderColor    = pcBattType==='gel'    ? '#33CC00' : 'rgba(255,255,255,.1)';
+  document.getElementById('plbl-lifepo').style.borderColor = pcBattType==='lifepo' ? '#33CC00' : 'rgba(255,255,255,.1)';
+}
+
+function pcAddCustom(){
+  const n = document.getElementById('pc-name').value.trim();
+  const w = parseFloat(document.getElementById('pc-watts').value);
+  const h = parseFloat(document.getElementById('pc-hours').value);
+  if(!n||!w||!h){ alert('Fill in name, watts and hours.'); return; }
+  pcAdd(n,w,h,1);
+  document.getElementById('pc-name').value='';
+  document.getElementById('pc-watts').value='';
+  document.getElementById('pc-hours').value='';
+}
+
+function pcAdd(name,watts,hours,qty){
+  const ex = pcAppliances.find(a=>a.name===name);
+  if(ex){ ex.qty++; } else { pcAppliances.push({name,watts,hours,qty}); }
+  pcRenderTable();
+}
+
+function pcRemove(i){ pcAppliances.splice(i,1); pcRenderTable(); }
+function pcQty(i,d){ pcAppliances[i].qty=Math.max(1,pcAppliances[i].qty+d); pcRenderTable(); }
+
+function pcRenderTable(){
+  const tbody = document.getElementById('pc-tbody');
+  const wrap  = document.getElementById('pc-table-wrap');
+  if(!pcAppliances.length){ wrap.style.display='none'; return; }
+  wrap.style.display='block';
+  let daily=0;
+  tbody.innerHTML = pcAppliances.map((a,i)=>{
+    const kwh=(a.watts*a.hours*a.qty)/1000; daily+=kwh;
+    return `<tr style="border-bottom:1px solid rgba(255,255,255,.05);">
+      <td style="padding:.38rem .22rem;color:rgba(255,255,255,.8);">${a.name}</td>
+      <td style="text-align:center;padding:.38rem .22rem;color:rgba(255,255,255,.6);">${a.watts}</td>
+      <td style="text-align:center;padding:.38rem .22rem;">
+        <span onclick="pcQty(${i},-1)" style="cursor:pointer;color:#33CC00;padding:0 .25rem;">−</span>
+        <span style="color:white;">${a.qty}</span>
+        <span onclick="pcQty(${i},1)"  style="cursor:pointer;color:#33CC00;padding:0 .25rem;">+</span>
+      </td>
+      <td style="text-align:center;padding:.38rem .22rem;color:rgba(255,255,255,.6);">${a.hours}</td>
+      <td style="text-align:right;padding:.38rem .22rem;color:rgba(255,255,255,.75);">${kwh.toFixed(2)}</td>
+      <td style="padding:.38rem .22rem;"><span onclick="pcRemove(${i})" style="cursor:pointer;color:rgba(255,100,100,.6);font-size:.85rem;">✕</span></td>
+    </tr>`;
+  }).join('');
+  document.getElementById('pc-daily-total').textContent = daily.toFixed(2)+' kWh';
+}
+
+function pcFmt(n){ return Math.round(n).toLocaleString('en-GH'); }
+
+function pcGenerate(){
+  document.getElementById('pc-error').style.display='none';
+  if(!pcAppliances.length){ document.getElementById('pc-error').style.display='block'; return; }
+
+  const dailyKwh  = pcAppliances.reduce((s,a)=>(s+a.watts*a.hours*a.qty/1000),0);
+  const peakWatts = pcAppliances.reduce((s,a)=>(s+a.watts*a.qty),0);
+  const peakLoad  = peakWatts*1.25;
+  const panelCount = Math.max(2,Math.ceil(dailyKwh*1.2/(0.630*5)));
+  const needWh    = dailyKwh*1000;
+
+  let battKey,battCount,battLabel;
+  if(pcBattType==='gel'){
+    battCount=Math.max(2,Math.ceil(needWh/1200));
+    if(battCount%2!==0)battCount++;
+    battKey='gel200'; battLabel=`${battCount}× 12V 200AH GEL`;
+  } else {
+    if(needWh>6000){ battCount=Math.max(1,Math.ceil(needWh/4096)); battKey='lifepo51v'; battLabel=`${battCount}× 51.2V 100AH LiFePO₄`; }
+    else           { battCount=Math.max(1,Math.ceil(needWh/2867)); battKey='lifepo280'; battLabel=`${battCount}× 12.8V 280AH LiFePO₄`; }
+  }
+
+  let invKey;
+  if(peakLoad<=1200)invKey='inv_1k2';
+  else if(peakLoad<=3600)invKey='inv_3k6';
+  else if(peakLoad<=5500)invKey='inv_5k5';
+  else if(peakLoad<=6000)invKey='inv_6k_4g';
+  else invKey='inv_8k5';
+
+  let mpptKey;
+  if(panelCount<=4)mpptKey='mppt40';
+  else if(panelCount<=8)mpptKey='mppt60';
+  else mpptKey='mppt85';
+
+  const mountCost=panelCount*500, cablesCost=3810, breakerCost=2500, miscCost=3000;
+  const installCost=Math.max(2000,panelCount*500);
+  const accessTotal=mountCost+cablesCost+breakerCost+miscCost+installCost;
+  const panelTotal=panelCount*PC_PRODUCTS.panel.unit;
+  const battTotal=battCount*PC_PRODUCTS[battKey].unit;
+  const invTotal=PC_PRODUCTS[invKey].unit;
+  const mpptTotal=PC_PRODUCTS[mpptKey].unit;
+  const equipTotal=panelTotal+battTotal+invTotal+mpptTotal;
+  const grandTotal=equipTotal+accessTotal;
+
+  document.getElementById('pc-inv-date').textContent =
+    new Date().toLocaleDateString('en-GH',{day:'2-digit',month:'short',year:'numeric'});
+
+  const chips=[`${panelCount}× 630W Panels`,`${(panelCount*0.63).toFixed(1)}kWp`,battLabel,PC_PRODUCTS[invKey].spec];
+  document.getElementById('pc-inv-chips').innerHTML =
+    chips.map(c=>`<span style="display:inline-block;padding:.2rem .6rem;background:rgba(51,204,0,.15);border:1px solid rgba(51,204,0,.3);border-radius:20px;font-size:.68rem;color:#55E600;font-weight:600;margin:.1rem;">${c}</span>`).join('');
+
+  const rows=[
+    ['PV Solar Panel',`${PC_PRODUCTS.panel.spec}`,panelCount,panelTotal],
+    [PC_PRODUCTS[battKey].name,PC_PRODUCTS[battKey].spec,battCount,battTotal],
+    [PC_PRODUCTS[invKey].name,PC_PRODUCTS[invKey].spec,1,invTotal],
+    [PC_PRODUCTS[mpptKey].name,PC_PRODUCTS[mpptKey].spec,1,mpptTotal],
+  ];
+  document.getElementById('pc-inv-tbody').innerHTML = rows.map(r=>
+    `<tr style="border-bottom:1px solid rgba(255,255,255,.04);">
+    <td style="padding:.35rem .2rem;color:white;font-weight:600;font-size:.76rem;">${r[0]}<br><span style="color:rgba(255,255,255,.4);font-weight:400;font-size:.68rem;">${r[1]}</span></td>
+    <td style="text-align:center;padding:.35rem .2rem;color:rgba(255,255,255,.6);">${r[2]}</td>
+    <td style="text-align:right;padding:.35rem .2rem;font-weight:700;color:#55E600;">GH₵ ${pcFmt(r[3])}</td></tr>`
+  ).join('');
+
+  document.getElementById('pc-subtotal').textContent = 'GH₵ '+pcFmt(equipTotal);
+  document.getElementById('pc-install').textContent  = 'GH₵ '+pcFmt(accessTotal);
+  document.getElementById('pc-total').textContent    = 'GH₵ '+pcFmt(grandTotal);
+
+  // Build shareable URL with sp data
+  const payload = btoa(JSON.stringify({a:pcAppliances, b:pcBattType, sp:PC_SP}));
+  pcShareUrl = location.origin + '/#solar=' + payload;
+
+  // WhatsApp message
+  const firstName = PC_SP.name.split(' ')[0];
+  const waText = encodeURIComponent(
+    `Hi! I've put together a solar system quote for your home using Galaxy Solar equipment.\n\nClick the link to see the full breakdown — panels, batteries, inverter and prices:\n${pcShareUrl}\n\nFeel free to reach out if you have questions.\n\n${PC_SP.name}\nCode: ${PC_SP.code}${PC_SP.phone ? '\n📞 ' + PC_SP.phone : ''}`
+  );
+  const waPhone = PC_SP.phone ? PC_SP.phone.replace(/\D/g,'') : '';
+  document.getElementById('pc-wa-btn').href =
+    waPhone ? `https://wa.me/${waPhone}?text=${waText}` : `https://wa.me/?text=${waText}`;
+
+  document.getElementById('pc-placeholder').style.display='none';
+  document.getElementById('pc-invoice').style.display='block';
+}
+
+function pcShare(){
+  if(!pcShareUrl){ alert('Generate a quote first.'); return; }
+  navigator.clipboard.writeText(pcShareUrl).then(()=>{
+    const t = document.getElementById('pc-share-toast');
+    t.style.display='block';
+    setTimeout(()=>{ t.style.display='none'; }, 5000);
+  }).catch(()=>{ prompt('Copy this link:', pcShareUrl); });
+}
 
 function copyRef() {
   const inp = document.getElementById('refLink');

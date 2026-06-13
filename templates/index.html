@@ -279,7 +279,7 @@
         Solar System<br><span style="color:#33CC00;">Sizing Calculator</span>
       </h2>
       <p style="font-size:1rem;color:rgba(255,255,255,.6);max-width:580px;margin:0 auto;line-height:1.7;">
-        Enter your appliances and we'll instantly calculate the exact panels, batteries and inverter you need — with real Galaxy Solar prices.
+        Enter your appliances and we'll instantly calculate the exact panels, batteries and inverter you need — with estimated Galaxy Solar prices.
       </p>
     </div>
 
@@ -426,6 +426,21 @@
           <div id="inv-energy-box" style="background:rgba(51,204,0,.08);border:1px solid rgba(51,204,0,.2);border-radius:8px;padding:.75rem 1rem;margin-top:1rem;font-size:.78rem;">
             <div style="font-weight:700;color:#33CC00;margin-bottom:.4rem;">System Summary</div>
             <div id="inv-energy-detail" style="color:rgba(255,255,255,.6);line-height:1.7;"></div>
+          </div>
+
+          <!-- Advisor card (shown when link was shared by a salesperson) -->
+          <div id="inv-advisor" style="display:none;background:rgba(51,204,0,.08);border:1px solid rgba(51,204,0,.25);border-radius:10px;padding:.85rem 1rem;margin-top:.85rem;">
+            <p style="font-size:.65rem;letter-spacing:.1em;text-transform:uppercase;color:#33CC00;font-weight:700;margin-bottom:.5rem;">Your Solar Advisor</p>
+            <div style="display:flex;align-items:center;gap:.85rem;flex-wrap:wrap;">
+              <div id="inv-advisor-avatar" style="width:40px;height:40px;border-radius:50%;background:#33CC00;color:white;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.9rem;flex-shrink:0;"></div>
+              <div style="flex:1;min-width:120px;">
+                <div id="inv-advisor-name" style="font-weight:700;color:white;font-size:.88rem;"></div>
+                <div id="inv-advisor-code" style="font-size:.72rem;color:rgba(255,255,255,.45);margin-top:.1rem;"></div>
+              </div>
+              <a id="inv-advisor-wa" href="#" target="_blank" style="display:flex;align-items:center;gap:.4rem;padding:.5rem .9rem;background:#22c55e;color:white;border-radius:7px;font-size:.78rem;font-weight:700;text-decoration:none;white-space:nowrap;">
+                💬 WhatsApp
+              </a>
+            </div>
           </div>
 
           <!-- Disclaimer -->
@@ -691,8 +706,14 @@ function calcGenerate(){
     `Battery bank: <strong style="color:white">${battLabel}</strong><br>` +
     `Est. daily generation (5 PSH): <strong style="color:#33CC00">${(panelCount*0.63*5*0.82).toFixed(1)} kWh</strong>`;
 
-  // update URL hash so Share button reflects current state
-  history.replaceState(null,'', '#solar=' + btoa(JSON.stringify({a:appliances,b:battType})));
+  // update URL hash so Share button reflects current state (preserve sp if present)
+  const _hashSp = window._calcSp || null;
+  history.replaceState(null,'', '#solar=' + btoa(JSON.stringify({a:appliances,b:battType,sp:_hashSp})));
+
+  // show advisor card if sp data available
+  if(_hashSp){
+    document.getElementById('inv-advisor').style.display = 'block';
+  }
 
   // show invoice
   document.getElementById('invoice-placeholder').style.display='none';
@@ -732,6 +753,20 @@ function calcShare(){
     document.getElementById('lbl-gel').style.borderColor    = battType==='gel'    ? '#33CC00' : 'rgba(255,255,255,.12)';
     document.getElementById('lbl-lifepo').style.borderColor = battType==='lifepo' ? '#33CC00' : 'rgba(255,255,255,.12)';
     calcRenderTable();
+    // populate advisor card if sp data present
+    if(data.sp && data.sp.name){
+      const sp = data.sp;
+      const initials = sp.name.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+      document.getElementById('inv-advisor-avatar').textContent = initials;
+      document.getElementById('inv-advisor-name').textContent   = sp.name;
+      document.getElementById('inv-advisor-code').textContent   = 'Code: ' + (sp.code||'') + (sp.phone ? '  ·  📞 ' + sp.phone : '');
+      if(sp.phone){
+        const waMsg = encodeURIComponent('Hi ' + sp.name.split(' ')[0] + '! I saw the solar quote you sent me. I\'d like to learn more.');
+        document.getElementById('inv-advisor-wa').href = 'https://wa.me/' + sp.phone.replace(/\D/g,'') + '?text=' + waMsg;
+      }
+      // store sp for use when calcGenerate runs and shows the advisor card
+      window._calcSp = sp;
+    }
     // scroll to calculator and auto-generate
     document.getElementById('solar-calculator').scrollIntoView({behavior:'smooth'});
     setTimeout(calcGenerate, 600);
