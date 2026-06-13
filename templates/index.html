@@ -527,16 +527,6 @@ const PRODUCTS = {
 let appliances = [];
 let battType = 'gel';
 
-// Build preset buttons
-(function(){
-  const wrap = document.getElementById('preset-btns');
-  PRESETS.forEach(p=>{
-    const b = document.createElement('button');
-    b.textContent = p.name;
-    b.onclick = ()=> calcAddAppliance(p.name, p.w, p.h, 1);
-    wrap.appendChild(b);
-  });
-})();
 
 function calcSetBatt(el){
   battType = el.value;
@@ -802,6 +792,18 @@ function calcPrint(){
   win.document.close();
   win.print();
 }
+
+// Build preset buttons — runs after all functions are defined
+(function(){
+  const wrap = document.getElementById('preset-btns');
+  if (!wrap) return;
+  PRESETS.forEach(p=>{
+    const b = document.createElement('button');
+    b.textContent = p.name;
+    b.onclick = ()=> calcAddAppliance(p.name, p.w, p.h, 1);
+    wrap.appendChild(b);
+  });
+})();
 </script>
 
 <!-- ── ORDER VEHICLE CTA ── -->
