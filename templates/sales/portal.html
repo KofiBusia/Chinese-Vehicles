@@ -1142,19 +1142,6 @@ function pcGenerate(){
   document.getElementById('pc-install').textContent  = 'GH₵ '+pcFmt(accessTotal);
   document.getElementById('pc-total').textContent    = 'GH₵ '+pcFmt(grandTotal);
 
-  // Build shareable URL with sp data
-  const payload = btoa(JSON.stringify({a:pcAppliances, b:pcBattType, sp:PC_SP}));
-  pcShareUrl = location.origin + '/#solar=' + payload;
-
-  // WhatsApp message
-  const firstName = PC_SP.name.split(' ')[0];
-  const waText = encodeURIComponent(
-    `Hi! I've put together a solar system quote for your home using Galaxy Solar equipment.\n\nClick the link to see the full breakdown — panels, batteries, inverter and prices:\n${pcShareUrl}\n\nFeel free to reach out if you have questions.\n\n${PC_SP.name}\nCode: ${PC_SP.code}${PC_SP.phone ? '\n📞 ' + PC_SP.phone : ''}`
-  );
-  const waPhone = PC_SP.phone ? PC_SP.phone.replace(/\D/g,'') : '';
-  document.getElementById('pc-wa-btn').href =
-    waPhone ? `https://wa.me/${waPhone}?text=${waText}` : `https://wa.me/?text=${waText}`;
-
   document.getElementById('pc-placeholder').style.display='none';
   document.getElementById('pc-invoice').style.display='block';
 }
