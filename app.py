@@ -1810,18 +1810,18 @@ def admin_update_sale_status(sale_id):
 
 # ── Salesperson self-registration ── #
 
-@app.route('/sales/register', methods=['GET'])
+@app.route('/sales/register', methods=['GET', 'POST'])
 @app.route('/sales/register/<token>', methods=['GET', 'POST'])
 def sales_register(token=None):
-    """Public self-registration page shared by admin with a secure token."""
-    if not token:
-        return '<h2 style="font-family:sans-serif;text-align:center;padding:3rem;color:#dc2626;">No registration token provided.</h2>', 400
-    try:
-        setting = SiteSettings.query.filter_by(key='sp_reg_token').first()
-    except Exception:
-        setting = None
-    if not setting or setting.value != token:
-        return '<h2 style="font-family:sans-serif;text-align:center;padding:3rem;color:#dc2626;">This registration link is no longer valid. Please contact the admin for a new one.</h2>', 403
+    """Public self-registration page — open signup or token-gated via admin link."""
+    # If a token was supplied, validate it; if no token, allow open registration
+    if token:
+        try:
+            setting = SiteSettings.query.filter_by(key='sp_reg_token').first()
+        except Exception:
+            setting = None
+        if not setting or setting.value != token:
+            return '<h2 style="font-family:sans-serif;text-align:center;padding:3rem;color:#dc2626;">This registration link is no longer valid. Please contact the admin for a new one.</h2>', 403
 
     if request.method == 'POST':
         full_name = request.form.get('full_name', '').strip()
@@ -2483,8 +2483,11 @@ def sales_required(f):
 @app.route('/sales/portal')
 @sales_required
 def sales_portal():
-    sp     = Salesperson.query.get_or_404(session['sales_id'])
-    sales  = SalespersonSale.query.filter_by(salesperson_id=sp.id).order_by(SalespersonSale.created_at.desc()).limit(10).all()
+    sp = Salesperson.query.get(session['sales_id'])
+    if not sp:
+        session.clear()
+        return redirect(url_for('sales_login'))
+    sales = SalespersonSale.query.filter_by(salesperson_id=sp.id).order_by(SalespersonSale.created_at.desc()).limit(10).all()
     return render_template('sales/portal.html', sp=sp, recent_sales=sales)
 
 
