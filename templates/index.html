@@ -264,6 +264,448 @@
 </section>
 {% endif %}
 
+<!-- ── SOLAR SIZING CALCULATOR ── -->
+<section id="solar-calculator" style="background:linear-gradient(180deg,#060d02 0%,#0a1405 50%,#060d02 100%);padding:5rem 1.5rem;position:relative;overflow:hidden;">
+  <!-- bg glows -->
+  <div style="position:absolute;top:-80px;right:-80px;width:500px;height:500px;background:radial-gradient(circle,rgba(51,204,0,.12),transparent 65%);pointer-events:none;"></div>
+  <div style="position:absolute;bottom:-60px;left:-60px;width:400px;height:400px;background:radial-gradient(circle,rgba(51,204,0,.08),transparent 65%);pointer-events:none;"></div>
+
+  <div style="max-width:1100px;margin:0 auto;position:relative;">
+
+    <!-- Header -->
+    <div style="text-align:center;margin-bottom:3rem;" class="reveal">
+      <p style="font-size:.75rem;letter-spacing:.18em;text-transform:uppercase;color:#33CC00;font-weight:700;margin-bottom:.75rem;">FREE TOOL</p>
+      <h2 style="font-family:var(--font-head);font-size:clamp(2rem,4.5vw,3.2rem);font-weight:900;color:white;line-height:1.1;letter-spacing:-.03em;margin-bottom:1rem;">
+        Solar System<br><span style="color:#33CC00;">Sizing Calculator</span>
+      </h2>
+      <p style="font-size:1rem;color:rgba(255,255,255,.6);max-width:580px;margin:0 auto;line-height:1.7;">
+        Enter your appliances and we'll instantly calculate the exact panels, batteries and inverter you need — with real Galaxy Solar prices.
+      </p>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:2rem;align-items:start;" id="calc-grid">
+
+      <!-- ── LEFT: INPUT PANEL ── -->
+      <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:16px;padding:1.75rem;" class="reveal">
+
+        <!-- Step 1 label -->
+        <p style="font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:#33CC00;font-weight:700;margin-bottom:1rem;">Step 1 — Select Your Appliances</p>
+
+        <!-- Quick-add preset buttons -->
+        <div style="margin-bottom:1.25rem;">
+          <p style="font-size:.78rem;color:rgba(255,255,255,.5);margin-bottom:.6rem;">Quick add:</p>
+          <div id="preset-btns" style="display:flex;flex-wrap:wrap;gap:.4rem;"></div>
+        </div>
+
+        <!-- Custom appliance row -->
+        <div style="background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:1rem;margin-bottom:1rem;">
+          <p style="font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:.7rem;">Add Custom Appliance</p>
+          <div style="display:grid;grid-template-columns:2fr 1fr 1fr auto;gap:.5rem;align-items:end;">
+            <div>
+              <label style="font-size:.7rem;color:rgba(255,255,255,.4);display:block;margin-bottom:.25rem;">Appliance Name</label>
+              <input id="c-name" type="text" placeholder="e.g. Water Pump" style="width:100%;padding:.55rem .7rem;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:7px;color:white;font-size:.85rem;font-family:inherit;outline:none;">
+            </div>
+            <div>
+              <label style="font-size:.7rem;color:rgba(255,255,255,.4);display:block;margin-bottom:.25rem;">Watts</label>
+              <input id="c-watts" type="number" placeholder="750" min="1" style="width:100%;padding:.55rem .7rem;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:7px;color:white;font-size:.85rem;font-family:inherit;outline:none;">
+            </div>
+            <div>
+              <label style="font-size:.7rem;color:rgba(255,255,255,.4);display:block;margin-bottom:.25rem;">Hrs/day</label>
+              <input id="c-hours" type="number" placeholder="4" min="0.1" max="24" step="0.5" style="width:100%;padding:.55rem .7rem;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:7px;color:white;font-size:.85rem;font-family:inherit;outline:none;">
+            </div>
+            <button onclick="calcAddCustom()" style="padding:.55rem .9rem;background:#33CC00;border:none;border-radius:7px;color:white;font-size:1.1rem;font-weight:700;cursor:pointer;line-height:1;">+</button>
+          </div>
+        </div>
+
+        <!-- Appliance list table -->
+        <div id="appliance-table-wrap" style="display:none;margin-bottom:1rem;">
+          <table style="width:100%;border-collapse:collapse;font-size:.82rem;">
+            <thead>
+              <tr style="color:rgba(255,255,255,.4);text-transform:uppercase;font-size:.68rem;letter-spacing:.07em;border-bottom:1px solid rgba(255,255,255,.08);">
+                <th style="text-align:left;padding:.4rem .3rem;">Appliance</th>
+                <th style="text-align:center;padding:.4rem .3rem;">W</th>
+                <th style="text-align:center;padding:.4rem .3rem;">Qty</th>
+                <th style="text-align:center;padding:.4rem .3rem;">Hrs</th>
+                <th style="text-align:right;padding:.4rem .3rem;">kWh/d</th>
+                <th style="padding:.4rem .3rem;"></th>
+              </tr>
+            </thead>
+            <tbody id="appliance-tbody"></tbody>
+          </table>
+          <div id="daily-total-row" style="display:flex;justify-content:space-between;align-items:center;border-top:1px solid rgba(51,204,0,.3);margin-top:.5rem;padding-top:.6rem;">
+            <span style="font-size:.78rem;color:rgba(255,255,255,.5);">Total Daily Energy</span>
+            <span id="daily-total-val" style="font-size:1rem;font-weight:700;color:#33CC00;">0.00 kWh</span>
+          </div>
+        </div>
+
+        <!-- Quantity controls in table handled inline -->
+
+        <!-- Step 2: Preferences -->
+        <p style="font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:#33CC00;font-weight:700;margin-bottom:.75rem;margin-top:1.25rem;">Step 2 — Battery Preference</p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.6rem;margin-bottom:1.5rem;">
+          <label id="lbl-gel" style="display:flex;align-items:flex-start;gap:.65rem;background:rgba(255,255,255,.05);border:2px solid #33CC00;border-radius:10px;padding:.85rem;cursor:pointer;">
+            <input type="radio" name="batt-type" value="gel" checked onchange="calcSetBatt(this)" style="margin-top:.15rem;accent-color:#33CC00;">
+            <div>
+              <div style="font-weight:700;color:white;font-size:.85rem;">GEL Battery</div>
+              <div style="font-size:.72rem;color:rgba(255,255,255,.45);margin-top:.2rem;">Budget-friendly · RITAR brand · 5yr life</div>
+            </div>
+          </label>
+          <label id="lbl-lifepo" style="display:flex;align-items:flex-start;gap:.65rem;background:rgba(255,255,255,.05);border:2px solid rgba(255,255,255,.12);border-radius:10px;padding:.85rem;cursor:pointer;">
+            <input type="radio" name="batt-type" value="lifepo" onchange="calcSetBatt(this)" style="margin-top:.15rem;accent-color:#33CC00;">
+            <div>
+              <div style="font-weight:700;color:white;font-size:.85rem;">LiFePO₄</div>
+              <div style="font-size:.72rem;color:rgba(255,255,255,.45);margin-top:.2rem;">Premium · Galaxy Energy · 10yr life</div>
+            </div>
+          </label>
+        </div>
+
+        <!-- Calculate button -->
+        <button onclick="calcGenerate()" id="calc-btn" style="width:100%;padding:1rem;background:linear-gradient(135deg,#33CC00,#28A800);color:white;border:none;border-radius:10px;font-size:1rem;font-weight:800;cursor:pointer;letter-spacing:.02em;box-shadow:0 4px 20px rgba(51,204,0,.35);transition:transform .15s,box-shadow .15s;font-family:inherit;" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 28px rgba(51,204,0,.5)'" onmouseout="this.style.transform='';this.style.boxShadow='0 4px 20px rgba(51,204,0,.35)'">
+          ⚡ Generate My Solar Quote
+        </button>
+        <p id="calc-error" style="color:#ff6b6b;font-size:.78rem;text-align:center;margin-top:.5rem;display:none;">Please add at least one appliance first.</p>
+      </div>
+
+      <!-- ── RIGHT: INVOICE PANEL ── -->
+      <div id="invoice-panel" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:16px;padding:1.75rem;" class="reveal reveal-delay-1">
+
+        <!-- Placeholder state -->
+        <div id="invoice-placeholder" style="text-align:center;padding:3rem 1rem;">
+          <div style="font-size:3.5rem;margin-bottom:1rem;opacity:.35;">☀️</div>
+          <p style="color:rgba(255,255,255,.3);font-size:.9rem;line-height:1.6;">Add your appliances and click<br><strong style="color:rgba(255,255,255,.5);">Generate My Solar Quote</strong></p>
+        </div>
+
+        <!-- Invoice (hidden until generated) -->
+        <div id="invoice-content" style="display:none;">
+          <!-- Invoice header -->
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1.25rem;padding-bottom:1rem;border-bottom:1px solid rgba(255,255,255,.1);">
+            <div>
+              <img src="{{ url_for('static', filename='img/galaxy-logo.png') }}" alt="Galaxy Solar" style="height:32px;width:auto;border-radius:4px;margin-bottom:.5rem;display:block;">
+              <p style="font-size:.72rem;color:rgba(255,255,255,.4);">Galaxy Energy Company Ltd</p>
+              <p style="font-size:.72rem;color:rgba(255,255,255,.4);">www.galaxysolartech.com</p>
+            </div>
+            <div style="text-align:right;">
+              <div style="font-size:.7rem;color:#33CC00;font-weight:700;letter-spacing:.08em;text-transform:uppercase;">SYSTEM QUOTE</div>
+              <div id="inv-date" style="font-size:.72rem;color:rgba(255,255,255,.4);margin-top:.2rem;"></div>
+              <div id="inv-ref" style="font-size:.68rem;color:rgba(255,255,255,.25);margin-top:.1rem;"></div>
+            </div>
+          </div>
+
+          <!-- System summary chips -->
+          <div id="inv-chips" style="display:flex;flex-wrap:wrap;gap:.4rem;margin-bottom:1.25rem;"></div>
+
+          <!-- Line items table -->
+          <table style="width:100%;border-collapse:collapse;font-size:.8rem;margin-bottom:.75rem;">
+            <thead>
+              <tr style="color:rgba(255,255,255,.35);text-transform:uppercase;font-size:.65rem;letter-spacing:.07em;border-bottom:1px solid rgba(255,255,255,.08);">
+                <th style="text-align:left;padding:.4rem .25rem;">#</th>
+                <th style="text-align:left;padding:.4rem .25rem;">Component</th>
+                <th style="text-align:left;padding:.4rem .25rem;">Specification</th>
+                <th style="text-align:center;padding:.4rem .25rem;">Qty</th>
+                <th style="text-align:right;padding:.4rem .25rem;">Unit (GH₵)</th>
+                <th style="text-align:right;padding:.4rem .25rem;">Total (GH₵)</th>
+              </tr>
+            </thead>
+            <tbody id="inv-tbody"></tbody>
+          </table>
+
+          <!-- Subtotals -->
+          <div style="border-top:1px solid rgba(255,255,255,.08);padding-top:.75rem;">
+            <div style="display:flex;justify-content:space-between;font-size:.8rem;color:rgba(255,255,255,.5);margin-bottom:.3rem;">
+              <span>Equipment Subtotal</span><span id="inv-subtotal"></span>
+            </div>
+            <div style="display:flex;justify-content:space-between;font-size:.8rem;color:rgba(255,255,255,.5);margin-bottom:.5rem;">
+              <span>Installation &amp; Accessories</span><span id="inv-install"></span>
+            </div>
+            <div style="display:flex;justify-content:space-between;font-size:1.1rem;font-weight:800;color:white;border-top:1px solid rgba(51,204,0,.4);padding-top:.6rem;margin-top:.2rem;">
+              <span>TOTAL</span><span id="inv-total" style="color:#33CC00;"></span>
+            </div>
+          </div>
+
+          <!-- Energy summary -->
+          <div id="inv-energy-box" style="background:rgba(51,204,0,.08);border:1px solid rgba(51,204,0,.2);border-radius:8px;padding:.75rem 1rem;margin-top:1rem;font-size:.78rem;">
+            <div style="font-weight:700;color:#33CC00;margin-bottom:.4rem;">System Summary</div>
+            <div id="inv-energy-detail" style="color:rgba(255,255,255,.6);line-height:1.7;"></div>
+          </div>
+
+          <!-- Disclaimer -->
+          <p style="font-size:.68rem;color:rgba(255,255,255,.25);line-height:1.5;margin-top:.85rem;">
+            Prices in GH₵ as at June 2026. Quote valid 14 days. Installation in Greater Accra; other regions subject to transport supplement. 5-year system warranty; panels 10-year warranty.
+          </p>
+
+          <!-- Action buttons -->
+          <div style="display:flex;gap:.6rem;margin-top:1.1rem;flex-wrap:wrap;">
+            <a href="{{ url_for('contact') }}" style="flex:1;min-width:120px;padding:.75rem;background:#33CC00;color:white;border:none;border-radius:8px;font-size:.85rem;font-weight:700;text-align:center;text-decoration:none;display:block;">
+              Order This System
+            </a>
+            <button onclick="calcPrint()" style="flex:1;min-width:120px;padding:.75rem;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);border-radius:8px;color:white;font-size:.85rem;font-weight:600;cursor:pointer;font-family:inherit;">
+              Print / Save PDF
+            </button>
+          </div>
+        </div>
+      </div>
+    </div><!-- /calc-grid -->
+  </div><!-- /max-width -->
+</section>
+
+<style>
+/* calculator responsive */
+@media(max-width:768px){
+  #calc-grid{grid-template-columns:1fr!important;}
+}
+#preset-btns button{
+  padding:.35rem .75rem;
+  background:rgba(51,204,0,.12);
+  border:1px solid rgba(51,204,0,.3);
+  border-radius:20px;
+  color:rgba(255,255,255,.8);
+  font-size:.75rem;
+  cursor:pointer;
+  font-family:inherit;
+  transition:background .15s,color .15s;
+}
+#preset-btns button:hover{background:rgba(51,204,0,.28);color:white;}
+#appliance-tbody tr td{padding:.45rem .3rem;border-bottom:1px solid rgba(255,255,255,.06);color:rgba(255,255,255,.8);}
+#inv-tbody tr td{padding:.4rem .25rem;border-bottom:1px solid rgba(255,255,255,.05);color:rgba(255,255,255,.8);}
+#inv-tbody tr:last-child td{border-bottom:none;}
+.inv-chip{padding:.25rem .7rem;background:rgba(51,204,0,.15);border:1px solid rgba(51,204,0,.3);border-radius:20px;font-size:.72rem;color:#55E600;font-weight:600;}
+</style>
+
+<script>
+// ── SOLAR CALCULATOR DATA ──
+const PRESETS = [
+  {name:'Refrigerator',w:150,h:24},{name:'Deep Freezer',w:100,h:24},
+  {name:'LED Bulb',w:10,h:6},{name:'Ceiling Fan',w:75,h:8},
+  {name:'Standing Fan',w:65,h:8},{name:'LED TV 32"',w:50,h:6},
+  {name:'LED TV 55"',w:100,h:6},{name:'DSTV/Decoder',w:25,h:6},
+  {name:'Laptop',w:65,h:6},{name:'Phone Charger',w:10,h:3},
+  {name:'Air Con 1HP',w:900,h:8},{name:'Air Con 1.5HP',w:1400,h:8},
+  {name:'Air Con 2HP',w:1800,h:8},{name:'Water Pump',w:750,h:3},
+  {name:'Washing Machine',w:500,h:1},{name:'Microwave',w:1200,h:0.5},
+  {name:'Electric Iron',w:1000,h:0.5},{name:'Security Lights',w:20,h:12},
+];
+
+const PRODUCTS = {
+  panel:       {name:'JINKO Solar Panel',spec:'630W Mono PERC',unit:1800},
+  gel200:      {name:'RITAR GEL Battery',spec:'12V 200AH GEL Deep Cycle',unit:4600},
+  lifepo280:   {name:'Galaxy Energy LiFePO₄',spec:'12.8V 280AH (3.58kWh)',unit:7800},
+  lifepo51v:   {name:'Galaxy Energy LiFePO₄',spec:'51.2V 100AH (5.12kWh)',unit:15000},
+  inv_1k2:     {name:'Galaxy Solar Inverter',spec:'1.2KW Pure Sine Wave',unit:2775},
+  inv_3k6:     {name:'Galaxy Solar Inverter',spec:'3.6KW Pure Sine Wave',unit:4200},
+  inv_5k5:     {name:'Galaxy Solar Inverter',spec:'5.5KW Hybrid',unit:4200},
+  inv_5k_4g:   {name:'Galaxy Solar Inverter',spec:'5KW 4th Gen WiFi+GPS',unit:14500},
+  inv_6k_4g:   {name:'Galaxy Solar Inverter',spec:'6KW 4th Gen WiFi+GPS',unit:16500},
+  inv_8k5:     {name:'Galaxy Solar Inverter',spec:'8.5KW Hybrid',unit:10215},
+  mppt40:      {name:'MPPT Solar Controller',spec:'40A 12/24/48V',unit:3225},
+  mppt60:      {name:'MPPT Solar Controller',spec:'60A 12/24/48V',unit:4470},
+  mppt85:      {name:'MPPT Solar Controller',spec:'85A 12/24/48V',unit:7200},
+};
+
+// state
+let appliances = [];
+let battType = 'gel';
+
+// Build preset buttons
+(function(){
+  const wrap = document.getElementById('preset-btns');
+  PRESETS.forEach(p=>{
+    const b = document.createElement('button');
+    b.textContent = p.name;
+    b.onclick = ()=> calcAddAppliance(p.name, p.w, p.h, 1);
+    wrap.appendChild(b);
+  });
+})();
+
+function calcSetBatt(el){
+  battType = el.value;
+  document.getElementById('lbl-gel').style.borderColor   = battType==='gel'   ? '#33CC00' : 'rgba(255,255,255,.12)';
+  document.getElementById('lbl-lifepo').style.borderColor= battType==='lifepo'? '#33CC00' : 'rgba(255,255,255,.12)';
+}
+
+function calcAddCustom(){
+  const n = document.getElementById('c-name').value.trim();
+  const w = parseFloat(document.getElementById('c-watts').value);
+  const h = parseFloat(document.getElementById('c-hours').value);
+  if(!n || !w || !h){ alert('Please fill in name, watts and hours.'); return; }
+  calcAddAppliance(n, w, h, 1);
+  document.getElementById('c-name').value='';
+  document.getElementById('c-watts').value='';
+  document.getElementById('c-hours').value='';
+}
+
+function calcAddAppliance(name,watts,hours,qty){
+  // check if already exists → increment qty
+  const existing = appliances.find(a=>a.name===name);
+  if(existing){ existing.qty++; }
+  else { appliances.push({name,watts,hours,qty}); }
+  calcRenderTable();
+}
+
+function calcRemove(idx){
+  appliances.splice(idx,1);
+  calcRenderTable();
+}
+
+function calcChangeQty(idx,delta){
+  appliances[idx].qty = Math.max(1, appliances[idx].qty + delta);
+  calcRenderTable();
+}
+
+function calcRenderTable(){
+  const tbody = document.getElementById('appliance-tbody');
+  const wrap  = document.getElementById('appliance-table-wrap');
+  if(!appliances.length){ wrap.style.display='none'; return; }
+  wrap.style.display='block';
+  let daily=0;
+  tbody.innerHTML = appliances.map((a,i)=>{
+    const kwh = (a.watts*a.hours*a.qty)/1000;
+    daily+=kwh;
+    return `<tr>
+      <td>${a.name}</td>
+      <td style="text-align:center">${a.watts}</td>
+      <td style="text-align:center">
+        <span onclick="calcChangeQty(${i},-1)" style="cursor:pointer;padding:0 .3rem;color:#33CC00;">−</span>
+        ${a.qty}
+        <span onclick="calcChangeQty(${i},1)"  style="cursor:pointer;padding:0 .3rem;color:#33CC00;">+</span>
+      </td>
+      <td style="text-align:center">${a.hours}</td>
+      <td style="text-align:right">${kwh.toFixed(2)}</td>
+      <td style="text-align:right"><span onclick="calcRemove(${i})" style="cursor:pointer;color:rgba(255,100,100,.7);font-size:.9rem;">✕</span></td>
+    </tr>`;
+  }).join('');
+  document.getElementById('daily-total-val').textContent = daily.toFixed(2)+' kWh';
+}
+
+function calcGenerate(){
+  document.getElementById('calc-error').style.display='none';
+  if(!appliances.length){ document.getElementById('calc-error').style.display='block'; return; }
+
+  const dailyKwh  = appliances.reduce((s,a)=>(s + a.watts*a.hours*a.qty/1000),0);
+  const peakWatts = appliances.reduce((s,a)=>(s + a.watts*a.qty),0);
+  const peakLoad  = peakWatts * 1.25; // 25% safety
+
+  // ── Panels (630W, 5 PSH Ghana, 1.2 design factor) ──
+  const panelCount = Math.max(2, Math.ceil(dailyKwh * 1.2 / (0.630 * 5)));
+
+  // ── Battery bank ──
+  const needWh = dailyKwh * 1000;
+  let battKey, battCount, battLabel;
+  if(battType==='gel'){
+    // 12V 200AH, 50% DoD → 1200Wh usable each
+    battCount = Math.max(2, Math.ceil(needWh / 1200));
+    if(battCount % 2 !== 0) battCount++; // even for series pairing
+    battKey   = 'gel200';
+    battLabel = `${battCount}× 12V 200AH GEL`;
+  } else {
+    // prefer 51.2V 100AH (4096Wh usable) for large, 12.8V 280AH (2867Wh) for small
+    if(needWh > 6000){
+      battCount = Math.max(1, Math.ceil(needWh / 4096));
+      battKey   = 'lifepo51v';
+      battLabel = `${battCount}× 51.2V 100AH LiFePO₄`;
+    } else {
+      battCount = Math.max(1, Math.ceil(needWh / 2867));
+      battKey   = 'lifepo280';
+      battLabel = `${battCount}× 12.8V 280AH LiFePO₄`;
+    }
+  }
+
+  // ── Inverter ──
+  let invKey;
+  if     (peakLoad <= 1200)  invKey = 'inv_1k2';
+  else if(peakLoad <= 3600)  invKey = 'inv_3k6';
+  else if(peakLoad <= 5500)  invKey = 'inv_5k5';
+  else if(peakLoad <= 6000)  invKey = 'inv_6k_4g';
+  else                       invKey = 'inv_8k5';
+
+  // ── MPPT ──
+  let mpptKey;
+  if     (panelCount <= 4)  mpptKey = 'mppt40';
+  else if(panelCount <= 8)  mpptKey = 'mppt60';
+  else                      mpptKey = 'mppt85';
+
+  // ── Accessories ──
+  const mountCost   = panelCount * 500;
+  const cablesCost  = 3810;
+  const breakerCost = 2500;
+  const miscCost    = 3000;
+  const installCost = Math.max(2000, panelCount * 500);
+  const accessTotal = mountCost + cablesCost + breakerCost + miscCost + installCost;
+
+  // ── Equipment subtotal ──
+  const panelTotal = panelCount * PRODUCTS.panel.unit;
+  const battTotal  = battCount  * PRODUCTS[battKey].unit;
+  const invTotal   = PRODUCTS[invKey].unit;
+  const mpptTotal  = PRODUCTS[mpptKey].unit;
+  const equipTotal = panelTotal + battTotal + invTotal + mpptTotal;
+  const grandTotal = equipTotal + accessTotal;
+
+  // ── Render invoice ──
+  const now = new Date();
+  document.getElementById('inv-date').textContent =
+    now.toLocaleDateString('en-GH',{day:'2-digit',month:'short',year:'numeric'});
+  document.getElementById('inv-ref').textContent =
+    'Ref: GAL-' + Math.floor(10000+Math.random()*90000);
+
+  // chips
+  const chips = [
+    `${panelCount}× 630W Panels`,
+    `${(panelCount*0.63).toFixed(1)}kWp System`,
+    `${battLabel}`,
+    PRODUCTS[invKey].spec,
+  ];
+  document.getElementById('inv-chips').innerHTML =
+    chips.map(c=>`<span class="inv-chip">${c}</span>`).join('');
+
+  // line items
+  const rows = [
+    [1,'PV Solar Panel',`${PRODUCTS.panel.spec}`,panelCount,PRODUCTS.panel.unit,panelTotal],
+    [2,PRODUCTS[battKey].name,PRODUCTS[battKey].spec,battCount,PRODUCTS[battKey].unit,battTotal],
+    [3,PRODUCTS[invKey].name, PRODUCTS[invKey].spec,1,PRODUCTS[invKey].unit,invTotal],
+    [4,PRODUCTS[mpptKey].name,PRODUCTS[mpptKey].spec,1,PRODUCTS[mpptKey].unit,mpptTotal],
+  ];
+  document.getElementById('inv-tbody').innerHTML = rows.map(r=>
+    `<tr><td style="color:rgba(255,255,255,.35)">${r[0]}</td>
+    <td><strong style="color:white">${r[1]}</strong></td>
+    <td style="color:rgba(255,255,255,.5);font-size:.75rem">${r[2]}</td>
+    <td style="text-align:center">${r[3]}</td>
+    <td style="text-align:right">${fmt(r[4])}</td>
+    <td style="text-align:right;font-weight:700;color:#55E600">${fmt(r[5])}</td></tr>`
+  ).join('');
+
+  document.getElementById('inv-subtotal').textContent = 'GH₵ '+fmt(equipTotal);
+  document.getElementById('inv-install').textContent  = 'GH₵ '+fmt(accessTotal);
+  document.getElementById('inv-total').textContent    = 'GH₵ '+fmt(grandTotal);
+
+  // energy detail
+  document.getElementById('inv-energy-detail').innerHTML =
+    `Daily load: <strong style="color:white">${dailyKwh.toFixed(2)} kWh</strong> &nbsp;|&nbsp; ` +
+    `Peak demand: <strong style="color:white">${(peakWatts/1000).toFixed(1)} kW</strong><br>` +
+    `Solar array: <strong style="color:white">${(panelCount*0.63).toFixed(2)} kWp</strong> &nbsp;|&nbsp; ` +
+    `Battery bank: <strong style="color:white">${battLabel}</strong><br>` +
+    `Est. daily generation (5 PSH): <strong style="color:#33CC00">${(panelCount*0.63*5*0.82).toFixed(1)} kWh</strong>`;
+
+  // show invoice
+  document.getElementById('invoice-placeholder').style.display='none';
+  document.getElementById('invoice-content').style.display='block';
+  document.getElementById('invoice-panel').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function fmt(n){ return Math.round(n).toLocaleString('en-GH'); }
+
+function calcPrint(){
+  const inv = document.getElementById('invoice-content').innerHTML;
+  const win = window.open('','_blank','width=800,height=700');
+  win.document.write(`<!DOCTYPE html><html><head><title>Galaxy Solar Quote</title>
+  <style>body{font-family:Arial,sans-serif;padding:2rem;background:#fff;color:#111;}
+  table{width:100%;border-collapse:collapse}th,td{padding:.4rem .5rem;text-align:left;border-bottom:1px solid #eee}
+  .inv-chip{display:inline-block;margin:.15rem;padding:.2rem .5rem;background:#f0fff0;border:1px solid #c3f7c3;border-radius:12px;font-size:.75rem;color:#1a7a00;font-weight:600}
+  img{height:36px}</style></head>
+  <body>${inv}</body></html>`);
+  win.document.close();
+  win.print();
+}
+</script>
+
 <!-- ── ORDER VEHICLE CTA ── -->
 <section class="hero-screen" style="background:linear-gradient(135deg,#0a0f05 0%,#0c2200 50%,#0f1a08 100%);position:relative;overflow:hidden;">
   <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 30% 60%,rgba(51,204,0,.18),transparent 60%);"></div>
