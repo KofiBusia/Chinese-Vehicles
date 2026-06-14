@@ -1305,8 +1305,20 @@ def admin_dashboard():
 @app.route('/admin/vehicles')
 @admin_required
 def admin_vehicles():
-    vlist = Vehicle.query.order_by(Vehicle.created_at.desc()).all()
-    return render_template('admin/vehicles.html', vehicles=vlist)
+    q = request.args.get('q', '').strip()
+    query = Vehicle.query
+    if q:
+        like = f'%{q}%'
+        query = query.filter(
+            db.or_(
+                Vehicle.name.ilike(like),
+                Vehicle.category.ilike(like),
+                Vehicle.fuel_type.ilike(like),
+                Vehicle.tagline.ilike(like),
+            )
+        )
+    vlist = query.order_by(Vehicle.created_at.desc()).all()
+    return render_template('admin/vehicles.html', vehicles=vlist, search_q=q)
 
 
 @app.route('/admin/vehicles/add', methods=['GET', 'POST'])

@@ -4,11 +4,24 @@
 
 {% block content %}
 
-<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;">
+<div style="display:flex;justify-content:space-between;align-items:center;gap:1rem;margin-bottom:1.5rem;flex-wrap:wrap;">
   <div>
-    <p style="font-size:.85rem;color:var(--mid);">{{ vehicles | length }} vehicle{{ 's' if vehicles | length != 1 }} in inventory</p>
+    <p style="font-size:.85rem;color:var(--mid);">
+      {{ vehicles | length }} vehicle{{ 's' if vehicles | length != 1 }}
+      {% if search_q %} matching <strong>"{{ search_q }}"</strong>{% else %} in inventory{% endif %}
+    </p>
   </div>
-  <a href="{{ url_for('admin_add_vehicle') }}" class="btn btn-primary">+ Add New Vehicle</a>
+  <div style="display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;">
+    <form method="get" action="{{ url_for('admin_vehicles') }}" style="display:flex;gap:.4rem;">
+      <input type="text" name="q" value="{{ search_q }}" placeholder="Search vehicles…"
+             style="padding:.45rem .75rem;border:1px solid #d1d5db;border-radius:7px;font-size:.85rem;width:220px;outline:none;">
+      <button type="submit" class="btn btn-primary btn-sm">🔍 Search</button>
+      {% if search_q %}
+      <a href="{{ url_for('admin_vehicles') }}" class="btn btn-outline btn-sm">✕ Clear</a>
+      {% endif %}
+    </form>
+    <a href="{{ url_for('admin_add_vehicle') }}" class="btn btn-primary">+ Add New Vehicle</a>
+  </div>
 </div>
 
 <div class="table-card">
@@ -63,7 +76,11 @@
         </tr>
         {% else %}
         <tr><td colspan="8" style="text-align:center;padding:3rem;color:var(--mid);">
-          No vehicles yet. <a href="{{ url_for('admin_add_vehicle') }}" style="color:var(--blue);">Add your first vehicle →</a>
+          {% if search_q %}
+            No vehicles found for <strong>"{{ search_q }}"</strong>. <a href="{{ url_for('admin_vehicles') }}" style="color:var(--blue);">Clear search →</a>
+          {% else %}
+            No vehicles yet. <a href="{{ url_for('admin_add_vehicle') }}" style="color:var(--blue);">Add your first vehicle →</a>
+          {% endif %}
         </td></tr>
         {% endfor %}
       </tbody>
