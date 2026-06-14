@@ -801,6 +801,79 @@ chinacarsinghana.com · Accra, Ghana
         print(f'[EMAIL] send_new_listing_alert failed: {e}')
 
 
+def send_price_change_alert(product_type, product_id, product_name, old_price_usd, new_price_usd):
+    """Email all loan applicants for a product when its price changes."""
+    if not SMTP_USER or not SMTP_PASSWORD:
+        return
+    # Only fire when price actually changed by more than a rounding artefact
+    if abs(new_price_usd - old_price_usd) < 0.01:
+        return
+    try:
+        with app.app_context():
+            rate = get_ghs_rate()
+            old_ghs = old_price_usd * rate
+            new_ghs = new_price_usd * rate
+            direction = 'decreased' if new_ghs < old_ghs else 'increased'
+
+            apps = LoanApplication.query.filter_by(
+                product_type=product_type,
+                product_id=product_id,
+            ).all()
+            recipients = [a for a in apps if a.email]
+            if not recipients:
+                return
+
+            loan_url = 'https://chinacarsinghana.com/loan'
+
+            for a in recipients:
+                body = f"""\
+PRICE UPDATE — {product_name}
+{'=' * 54}
+
+Dear {a.first_name},
+
+We are writing to let you know that the price of the
+product you applied to finance has {direction}:
+
+  PRODUCT   : {product_name}
+  OLD PRICE : GH₵ {old_ghs:,.2f}
+  NEW PRICE : GH₵ {new_ghs:,.2f}
+
+Because the price has changed, your previous loan
+application (Ref #{a.id}) may no longer reflect the
+correct figures. We kindly ask you to submit a new
+application with the updated price so that Republic Bank
+can process it accurately.
+
+Apply here:
+  {loan_url}
+
+If you have any questions, please contact us:
+  kofi@chinacarsinghana.com
+
+We appreciate your patience and look forward to helping
+you complete your purchase.
+
+— China Cars in Ghana Team
+{'=' * 54}
+chinacarsinghana.com · Accra, Ghana
+"""
+                msg = MIMEMultipart('alternative')
+                msg['Subject'] = f'Price Update: {product_name} — Please Reapply for Financing'
+                msg['From']    = SMTP_USER
+                msg['To']      = a.email
+                msg.attach(MIMEText(body, 'plain'))
+                try:
+                    with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
+                        server.ehlo(); server.starttls()
+                        server.login(SMTP_USER, SMTP_PASSWORD)
+                        server.sendmail(SMTP_USER, [a.email], msg.as_string())
+                except Exception as e:
+                    print(f'[EMAIL] Price alert to {a.email} failed: {e}')
+    except Exception as e:
+        print(f'[EMAIL] send_price_change_alert failed: {e}')
+
+
 # ────────────────────────── PUBLIC ROUTES ───────────────────────────────── #
 
 @app.route('/static/img/og-sales.jpg')
@@ -1383,6 +1456,7 @@ def admin_edit_vehicle(vid):
     if request.method == 'POST':
         feats = [f.strip() for f in request.form.get('features', '').splitlines() if f.strip()]
         _price_ghs = request.form.get('price_ghs', type=float) or 0
+        _old_price = v.price
         v.name         = request.form.get('name')
         v.tagline      = request.form.get('tagline')
         v.description  = request.form.get('description')
@@ -1425,6 +1499,11 @@ def admin_edit_vehicle(vid):
         threading.Thread(
             target=send_new_listing_alert,
             args=('vehicle', v.name, v.price, listing_url, 'updated'),
+            daemon=True
+        ).start()
+        threading.Thread(
+            target=send_price_change_alert,
+            args=('vehicle', v.id, v.name, _old_price, v.price),
             daemon=True
         ).start()
         flash(f'Vehicle "{v.name}" updated successfully!', 'success')
@@ -1528,6 +1607,7 @@ def admin_edit_solar(sid):
     if request.method == 'POST':
         feats = [f.strip() for f in request.form.get('features', '').splitlines() if f.strip()]
         _price_ghs = request.form.get('price_ghs', type=float) or 0
+        _old_price = s.price
         s.name             = request.form.get('name')
         s.tagline          = request.form.get('tagline')
         s.description      = request.form.get('description')
@@ -1568,6 +1648,11 @@ def admin_edit_solar(sid):
         threading.Thread(
             target=send_new_listing_alert,
             args=('solar', s.name, s.price, listing_url, 'updated'),
+            daemon=True
+        ).start()
+        threading.Thread(
+            target=send_price_change_alert,
+            args=('solar', s.id, s.name, _old_price, s.price),
             daemon=True
         ).start()
         flash(f'Solar system "{s.name}" updated successfully!', 'success')
