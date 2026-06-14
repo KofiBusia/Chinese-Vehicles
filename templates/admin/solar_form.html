@@ -40,10 +40,21 @@
               </select>
             </div>
             <div class="form-group">
-              <label class="form-label">Price (USD) *</label>
-              <input type="number" name="price" class="form-control" required step="0.01" min="0" placeholder="0.00"
-                     value="{{ solar.price if solar else '' }}">
+              <label class="form-label">Price (GHS) *</label>
+              <input type="number" name="price_ghs" class="form-control" required step="0.01" min="0" placeholder="e.g. 85000"
+                     id="priceGhs"
+                     value="{{ (solar.price * USD_TO_GHS)|round(2) if solar else '' }}"
+                     oninput="updateUsdHint()">
+              <small id="usd-hint" style="color:#6b7280;font-size:.78rem;margin-top:.3rem;display:block;"></small>
             </div>
+            <script>
+            function updateUsdHint(){
+              var ghs = parseFloat(document.getElementById('priceGhs').value)||0;
+              var usd = ghs/{{ USD_TO_GHS }};
+              document.getElementById('usd-hint').textContent = ghs ? '≈ $'+usd.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})+' USD' : '';
+            }
+            updateUsdHint();
+            </script>
             <div class="form-group">
               <label class="form-label">Power Output</label>
               <input type="text" name="power_output" class="form-control" placeholder="e.g. 10 kW"

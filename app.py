@@ -1314,11 +1314,12 @@ def admin_vehicles():
 def admin_add_vehicle():
     if request.method == 'POST':
         feats = [f.strip() for f in request.form.get('features', '').splitlines() if f.strip()]
+        _price_ghs = request.form.get('price_ghs', type=float) or 0
         v = Vehicle(
             name         = request.form.get('name'),
             tagline      = request.form.get('tagline'),
             description  = request.form.get('description'),
-            price        = request.form.get('price', type=float) or 0,
+            price        = _price_ghs / get_ghs_rate() if _price_ghs else 0,
             category     = request.form.get('category'),
             year         = request.form.get('year', type=int),
             mileage      = request.form.get('mileage', type=int),
@@ -1369,10 +1370,11 @@ def admin_edit_vehicle(vid):
     v = Vehicle.query.get_or_404(vid)
     if request.method == 'POST':
         feats = [f.strip() for f in request.form.get('features', '').splitlines() if f.strip()]
+        _price_ghs = request.form.get('price_ghs', type=float) or 0
         v.name         = request.form.get('name')
         v.tagline      = request.form.get('tagline')
         v.description  = request.form.get('description')
-        v.price        = request.form.get('price', type=float) or 0
+        v.price        = _price_ghs / get_ghs_rate() if _price_ghs else 0
         v.category     = request.form.get('category')
         v.year         = request.form.get('year', type=int)
         v.mileage      = request.form.get('mileage', type=int)
@@ -1459,11 +1461,12 @@ def admin_solar():
 def admin_add_solar():
     if request.method == 'POST':
         feats = [f.strip() for f in request.form.get('features', '').splitlines() if f.strip()]
+        _price_ghs = request.form.get('price_ghs', type=float) or 0
         s = SolarSystem(
             name             = request.form.get('name'),
             tagline          = request.form.get('tagline'),
             description      = request.form.get('description'),
-            price            = request.form.get('price', type=float) or 0,
+            price            = _price_ghs / get_ghs_rate() if _price_ghs else 0,
             category         = request.form.get('category'),
             power_output     = request.form.get('power_output'),
             panel_count      = request.form.get('panel_count', type=int),
@@ -1512,10 +1515,11 @@ def admin_edit_solar(sid):
     s = SolarSystem.query.get_or_404(sid)
     if request.method == 'POST':
         feats = [f.strip() for f in request.form.get('features', '').splitlines() if f.strip()]
+        _price_ghs = request.form.get('price_ghs', type=float) or 0
         s.name             = request.form.get('name')
         s.tagline          = request.form.get('tagline')
         s.description      = request.form.get('description')
-        s.price            = request.form.get('price', type=float) or 0
+        s.price            = _price_ghs / get_ghs_rate() if _price_ghs else 0
         s.category         = request.form.get('category')
         s.power_output     = request.form.get('power_output')
         s.panel_count      = request.form.get('panel_count', type=int)
