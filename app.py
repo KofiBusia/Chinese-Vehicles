@@ -874,6 +874,65 @@ chinacarsinghana.com · Accra, Ghana
         print(f'[EMAIL] send_price_change_alert failed: {e}')
 
 
+def send_manual_price_alert(product_type, product_id, product_name, price_usd):
+    """Manually notify all loan applicants of the current price for a product."""
+    if not SMTP_USER or not SMTP_PASSWORD:
+        return
+    try:
+        with app.app_context():
+            rate    = get_ghs_rate()
+            ghs     = price_usd * rate
+            apps    = LoanApplication.query.filter_by(
+                product_type=product_type, product_id=product_id
+            ).all()
+            recipients = [a for a in apps if a.email]
+            if not recipients:
+                return
+            loan_url = 'https://chinacarsinghana.com/loan'
+            for a in recipients:
+                body = f"""\
+IMPORTANT: UPDATED PRICE — {product_name}
+{'=' * 54}
+
+Dear {a.first_name},
+
+We are reaching out regarding your loan application
+(Ref #{a.id}) for the following product:
+
+  PRODUCT       : {product_name}
+  CURRENT PRICE : GH₵ {ghs:,.2f}
+
+To ensure your financing is processed at the correct
+amount, please submit a fresh application using the
+link below:
+
+  {loan_url}
+
+If you have any questions, contact us at:
+  kofi@chinacarsinghana.com
+
+Thank you for choosing China Cars in Ghana.
+
+— China Cars in Ghana Team
+{'=' * 54}
+chinacarsinghana.com · Accra, Ghana
+"""
+                msg = MIMEMultipart('alternative')
+                msg['Subject'] = f'Action Required: Please Reapply — {product_name}'
+                msg['From']    = SMTP_USER
+                msg['To']      = a.email
+                msg.attach(MIMEText(body, 'plain'))
+                try:
+                    with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
+                        server.ehlo(); server.starttls()
+                        server.login(SMTP_USER, SMTP_PASSWORD)
+                        server.sendmail(SMTP_USER, [a.email], msg.as_string())
+                except Exception as e:
+                    print(f'[EMAIL] Manual price alert to {a.email} failed: {e}')
+    except Exception as e:
+        print(f'[EMAIL] send_manual_price_alert failed: {e}')
+
+
 # ────────────────────────── PUBLIC ROUTES ───────────────────────────────── #
 
 @app.route('/static/img/og-sales.jpg')
@@ -1511,6 +1570,19 @@ def admin_edit_vehicle(vid):
     return render_template('admin/vehicle_form.html', vehicle=v, action='Edit')
 
 
+@app.route('/admin/vehicles/<int:vid>/notify-applicants', methods=['POST'])
+@admin_required
+def admin_notify_vehicle_applicants(vid):
+    v = Vehicle.query.get_or_404(vid)
+    threading.Thread(
+        target=send_manual_price_alert,
+        args=('vehicle', v.id, v.name, v.price),
+        daemon=True
+    ).start()
+    flash(f'Price alert sent to all loan applicants for "{v.name}".', 'success')
+    return redirect(url_for('admin_edit_vehicle', vid=vid))
+
+
 @app.route('/admin/vehicles/delete/<int:vid>', methods=['POST'])
 @admin_required
 def admin_delete_vehicle(vid):
@@ -1658,6 +1730,19 @@ def admin_edit_solar(sid):
         flash(f'Solar system "{s.name}" updated successfully!', 'success')
         return redirect(url_for('admin_solar'))
     return render_template('admin/solar_form.html', solar=s, action='Edit')
+
+
+@app.route('/admin/solar/<int:sid>/notify-applicants', methods=['POST'])
+@admin_required
+def admin_notify_solar_applicants(sid):
+    s = SolarSystem.query.get_or_404(sid)
+    threading.Thread(
+        target=send_manual_price_alert,
+        args=('solar', s.id, s.name, s.price),
+        daemon=True
+    ).start()
+    flash(f'Price alert sent to all loan applicants for "{s.name}".', 'success')
+    return redirect(url_for('admin_edit_solar', sid=sid))
 
 
 @app.route('/admin/solar/delete/<int:sid>', methods=['POST'])

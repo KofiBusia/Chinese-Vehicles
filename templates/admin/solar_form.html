@@ -215,6 +215,22 @@
   </div>
 </form>
 
+{% if solar %}
+<div style="margin-top:2rem;padding:1.25rem;background:#fff7ed;border:1px solid #fed7aa;border-radius:10px;">
+  <div style="font-weight:700;font-size:.9rem;color:#9a3412;margin-bottom:.35rem;">📣 Notify Loan Applicants</div>
+  <p style="font-size:.82rem;color:#7c2d12;margin-bottom:.75rem;">
+    Send an email to everyone who applied for a loan on this solar system,
+    asking them to reapply with the current price of <strong>{{ solar.price | ghs }}</strong>.
+  </p>
+  <form method="post" action="{{ url_for('admin_notify_solar_applicants', sid=solar.id) }}"
+        onsubmit="return confirm('Send a price alert email to all loan applicants for this solar system?');">
+    <button type="submit" style="padding:.55rem 1.25rem;background:#ea580c;color:white;border:none;border-radius:7px;font-size:.85rem;font-weight:700;cursor:pointer;">
+      📧 Send Price Alert to Applicants
+    </button>
+  </form>
+</div>
+{% endif %}
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script>
 (function() {
