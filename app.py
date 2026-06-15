@@ -3011,6 +3011,13 @@ def _gen_quote_code():
         if not SolarQuote.query.filter_by(code=code).first():
             return code
 
+@app.route('/api/ghs-rate')
+def api_ghs_rate():
+    """Return the live USD→GHS rate as JSON so client JS always uses the current value."""
+    from flask import jsonify
+    return jsonify({'rate': get_ghs_rate()})
+
+
 @app.route('/api/solar-quote', methods=['POST'])
 def api_create_solar_quote():
     try:

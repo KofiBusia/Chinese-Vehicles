@@ -424,9 +424,12 @@ document.getElementById('vehicle_id')?.addEventListener('change', afterProductFi
 document.getElementById('solar_id')?.addEventListener('change', afterProductFill);
 document.getElementById('deposit_ghs')?.addEventListener('input', () => { syncDeposit(); afterProductFill(); });
 
-// ── Init ───────────────────────────────────────────────────────────────────
-onBankChange();
-updateCalc();
+// ── Init: fetch live GHS rate then render ─────────────────────────────────
+fetch('/api/ghs-rate')
+  .then(r => r.json())
+  .then(d => { window.USD_TO_GHS = d.rate; })
+  .catch(() => {})
+  .finally(() => { onBankChange(); updateCalc(); });
 </script>
 <script>
 // Wire up product_type radio buttons to show/hide groups

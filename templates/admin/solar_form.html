@@ -48,9 +48,11 @@
               <small id="usd-hint" style="color:#6b7280;font-size:.78rem;margin-top:.3rem;display:block;"></small>
             </div>
             <script>
+            var _ghsRate = {{ USD_TO_GHS }};
+            fetch('/api/ghs-rate').then(r=>r.json()).then(d=>{_ghsRate=d.rate;updateUsdHint();}).catch(()=>{});
             function updateUsdHint(){
               var ghs = parseFloat(document.getElementById('priceGhs').value)||0;
-              var usd = ghs/{{ USD_TO_GHS }};
+              var usd = ghs/_ghsRate;
               document.getElementById('usd-hint').textContent = ghs ? '≈ $'+usd.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})+' USD' : '';
             }
             updateUsdHint();
