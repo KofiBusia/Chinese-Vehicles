@@ -58,8 +58,8 @@ ALLOWED_ALL = ALLOWED_IMAGES | ALLOWED_VIDEOS
 
 # ── Email configuration ───────────────────────────────────────────────────── #
 LOAN_TO_EMAIL    = 'sbonsu@republicghana.com'          # primary recipient for loans
-LOAN_CC_EMAILS   = ['kofi@chinacarsinghana.com', 'pkudor@republicghana.com']
-NOTIFY_EMAILS    = ['kofi@chinacarsinghana.com', 'kyeikofi@gmail.com']  # orders, test drives, contacts
+LOAN_CC_EMAILS   = ['kofi@chinacarsinghana.com', 'pdesbordes@republicghana.com']
+NOTIFY_EMAILS    = ['kofi@chinacarsinghana.com']  # orders, test drives, contacts
 # SMTP settings
 SMTP_HOST     = 'smtp.gmail.com'
 SMTP_PORT     = 587
