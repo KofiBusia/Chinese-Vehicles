@@ -38,7 +38,9 @@
       <div class="form-section-header">💰 Loan Details</div>
       <div class="form-section-body">
         <table style="width:100%;border-collapse:collapse;">
+          {% set bank_label = 'Access Bank Ghana' if app.bank_choice == 'access' else 'Republic Bank Ghana' %}
           {% set rows = [
+            ('Bank', bank_label),
             ('Product Type', (app.product_type or '—') | title),
             ('Product', app.product_name or '—'),
             ('Product Price', app.product_price | currency if app.product_price else '—'),

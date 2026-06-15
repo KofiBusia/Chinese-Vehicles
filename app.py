@@ -57,9 +57,11 @@ ALLOWED_VIDEOS = {'mp4', 'mov', 'avi', 'mkv', 'webm'}
 ALLOWED_ALL = ALLOWED_IMAGES | ALLOWED_VIDEOS
 
 # ── Email configuration ───────────────────────────────────────────────────── #
-LOAN_TO_EMAIL    = 'sbonsu@republicghana.com'          # primary recipient for loans
-LOAN_CC_EMAILS   = ['kofi@chinacarsinghana.com', 'pdesbordes@republicghana.com']
-NOTIFY_EMAILS    = ['kofi@chinacarsinghana.com']  # orders, test drives, contacts
+LOAN_TO_EMAIL       = 'sbonsu@republicghana.com'          # Republic Bank primary
+LOAN_CC_EMAILS      = ['kofi@chinacarsinghana.com', 'pdesbordes@republicghana.com']
+ACCESS_BANK_EMAILS  = ['emmanueloffei44@gmail.com', 'Offeie@accessbankplc.com']
+ACCESS_BANK_CC      = ['kofi@chinacarsinghana.com']
+NOTIFY_EMAILS       = ['kofi@chinacarsinghana.com']  # orders, test drives, contacts
 # SMTP settings
 SMTP_HOST     = 'smtp.gmail.com'
 SMTP_PORT     = 587
@@ -90,7 +92,7 @@ except Exception as e:
 
 
 def send_loan_notification(app_obj):
-    """Email loan application details to LOAN_NOTIFY_EMAILS."""
+    """Email loan application details to the chosen bank and internal CC."""
     if not SMTP_USER or not SMTP_PASSWORD:
         return
     try:
@@ -105,6 +107,9 @@ def send_loan_notification(app_obj):
         d_ghs        = f"GH₵ {app_obj.deposit_amount * rate:,.2f}" if app_obj.deposit_amount else 'N/A'
         income_str   = f"${app_obj.annual_income:,.2f} (GH₵ {app_obj.annual_income * rate:,.2f})" if app_obj.annual_income else 'N/A'
 
+        is_access = (app_obj.bank_choice or 'republic') == 'access'
+        bank_label = 'ACCESS BANK GHANA' if is_access else 'REPUBLIC BANK GHANA'
+
         sp_section = ''
         if app_obj.sp_code:
             sp_section = f"""
@@ -117,6 +122,7 @@ def send_loan_notification(app_obj):
         body = f"""\
 NEW LOAN APPLICATION — #{app_obj.id}
 {'=' * 54}
+  BANK SELECTED : {bank_label}
 
   PRODUCT REQUESTED
   -----------------
@@ -152,12 +158,20 @@ NEW LOAN APPLICATION — #{app_obj.id}
 {'=' * 54}
 Submitted : {app_obj.created_at.strftime('%d %B %Y at %H:%M UTC')}
 """
-        all_recipients = [LOAN_TO_EMAIL] + LOAN_CC_EMAILS
+        if is_access:
+            to_addr    = ACCESS_BANK_EMAILS[0]
+            cc_addrs   = ACCESS_BANK_EMAILS[1:] + ACCESS_BANK_CC
+        else:
+            to_addr    = LOAN_TO_EMAIL
+            cc_addrs   = LOAN_CC_EMAILS
+
+        all_recipients = [to_addr] + cc_addrs
+        bank_tag = 'Access Bank' if is_access else 'Republic Bank'
         msg = MIMEMultipart('alternative')
-        msg['Subject'] = f"[Loan #{app_obj.id}] {ptype}: {pname} — {app_obj.first_name} {app_obj.last_name}"
+        msg['Subject'] = f"[{bank_tag} Loan #{app_obj.id}] {ptype}: {pname} — {app_obj.first_name} {app_obj.last_name}"
         msg['From']    = SMTP_USER
-        msg['To']      = LOAN_TO_EMAIL
-        msg['Cc']      = ', '.join(LOAN_CC_EMAILS)
+        msg['To']      = to_addr
+        msg['Cc']      = ', '.join(cc_addrs)
         msg.attach(MIMEText(body, 'plain'))
 
         with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
@@ -272,6 +286,7 @@ class LoanApplication(db.Model):
     employer          = db.Column(db.String(100))
     annual_income     = db.Column(db.Float)
     message           = db.Column(db.Text)
+    bank_choice       = db.Column(db.String(20), default='republic')  # 'republic' | 'access'
     status            = db.Column(db.String(20), default='pending')
     created_at        = db.Column(db.DateTime, default=datetime.utcnow)
     sp_code           = db.Column(db.String(20))
@@ -590,7 +605,7 @@ def capture_referral():
             session['ref_sp_phone'] = sp.phone or ''
             flash(
                 f'🎉 Welcome! {sp.full_name} has shared an exclusive deal with you. '
-                f'Don\'t worry about financing — Republic Bank loan packages are available. '
+                f'Don\'t worry about financing — loan packages available via Republic Bank or Access Bank. '
                 f'Mention code {sp.code} when you order to unlock your discount!',
                 'success'
             )
@@ -1227,6 +1242,7 @@ def loan():
             employer          = request.form.get('employer', '').strip(),
             annual_income     = request.form.get('annual_income', type=float),
             message           = request.form.get('message', '').strip(),
+            bank_choice       = request.form.get('bank_choice', 'republic'),
             sp_code           = sp_code,
             sp_name           = sp_name,
             sp_phone          = sp_phone,
@@ -3059,6 +3075,7 @@ def init_db():
                 "ALTER TABLE contact          ADD COLUMN IF NOT EXISTS replied_at  TIMESTAMP",
                 "ALTER TABLE salesperson      ADD COLUMN IF NOT EXISTS reset_token        VARCHAR(64)",
                 "ALTER TABLE salesperson      ADD COLUMN IF NOT EXISTS reset_token_expiry TIMESTAMP",
+                "ALTER TABLE loan_application ADD COLUMN IF NOT EXISTS bank_choice        VARCHAR(20) DEFAULT 'republic'",
             ]
             for sql in migrations:
                 try:

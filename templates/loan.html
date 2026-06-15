@@ -4,21 +4,67 @@
 {% block content %}
 
 <div class="loan-hero">
-  <div style="display:inline-flex;align-items:center;gap:.5rem;margin-bottom:1rem;font-size:.75rem;text-transform:uppercase;letter-spacing:.1em;color:rgba(255,255,255,.5);">
-    In partnership with
+  <div style="font-size:.75rem;text-transform:uppercase;letter-spacing:.1em;color:rgba(255,255,255,.5);margin-bottom:1rem;">
+    Official Financing Partners
   </div>
-  <div class="bank-badge" style="margin-bottom:1.5rem;">
-    <div class="bank-logo">RB</div>
-    <span>Republic Bank — Trusted Financing Partner</span>
+  <div style="display:flex;gap:.75rem;justify-content:center;flex-wrap:wrap;margin-bottom:1.5rem;">
+    <div class="bank-badge">
+      <div class="bank-logo">RB</div>
+      <span>Republic Bank Ghana</span>
+    </div>
+    <div class="bank-badge" style="background:rgba(220,38,38,.12);border-color:rgba(220,38,38,.3);">
+      <div class="bank-logo" style="background:#dc2626;color:white;">AB</div>
+      <span>Access Bank Ghana</span>
+    </div>
   </div>
   <h1>Apply for a Loan</h1>
-  <p>Drive your dream vehicle or power your home with solar energy. Complete the form below and we'll process your application within 24–48 hours.</p>
+  <p>Drive your dream vehicle or power your home with solar energy. Choose your preferred bank, complete the form below and we'll process your application within 24–48 hours.</p>
 </div>
 
 <section class="loan-form-section">
   <div class="loan-form-inner">
 
     <form method="post" action="{{ url_for('loan') }}">
+
+      <!-- Step 0: Bank Selection -->
+      <div class="form-card">
+        <div class="form-card-header">
+          <div class="form-card-icon">🏦</div>
+          <div>
+            <div class="form-card-title">Choose Your Financing Bank</div>
+            <div style="font-size:.8rem;color:var(--mid);">Select which bank you'd like to apply through</div>
+          </div>
+        </div>
+        <div class="form-card-body">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+
+            <label id="lbl-republic" for="bankRepublic" style="display:flex;flex-direction:column;gap:.5rem;cursor:pointer;padding:1.25rem;border:2px solid var(--blue);border-radius:12px;background:rgba(37,99,235,.04);transition:all .2s;">
+              <div style="display:flex;align-items:center;gap:.65rem;">
+                <input type="radio" name="bank_choice" id="bankRepublic" value="republic" checked style="accent-color:var(--blue);">
+                <div style="width:34px;height:34px;background:#28A800;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:.6rem;color:white;flex-shrink:0;">RB</div>
+                <span style="font-weight:700;font-size:.95rem;">Republic Bank Ghana</span>
+              </div>
+              <div style="font-size:.8rem;color:var(--mid);line-height:1.5;padding-left:1.75rem;">
+                Interest Rate: <strong style="color:var(--blue);">12% – 14% p.a.</strong><br>
+                Quick decisions · Established vehicle & solar financing
+              </div>
+            </label>
+
+            <label id="lbl-access" for="bankAccess" style="display:flex;flex-direction:column;gap:.5rem;cursor:pointer;padding:1.25rem;border:2px solid #e5e7eb;border-radius:12px;background:transparent;transition:all .2s;">
+              <div style="display:flex;align-items:center;gap:.65rem;">
+                <input type="radio" name="bank_choice" id="bankAccess" value="access" style="accent-color:#dc2626;">
+                <div style="width:34px;height:34px;background:#dc2626;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:.6rem;color:white;flex-shrink:0;">AB</div>
+                <span style="font-weight:700;font-size:.95rem;">Access Bank Ghana</span>
+              </div>
+              <div style="font-size:.8rem;color:var(--mid);line-height:1.5;padding-left:1.75rem;">
+                Interest Rate: <strong style="color:#dc2626;">10% – 16% p.a.</strong><br>
+                Competitive rates · Pan-African banking group
+              </div>
+            </label>
+
+          </div>
+        </div>
+      </div>
 
       <!-- Step 1: Personal Info -->
       <div class="form-card">
@@ -185,7 +231,7 @@
                 <div class="loan-preview-value" id="previewTotal">—</div>
               </div>
             </div>
-            <p style="font-size:.72rem;opacity:.5;margin-top:.75rem;">*Estimates based on ~{{ loan_interest_rate }}% p.a. Actual rates set by Republic Bank. Subject to approval.</p>
+            <p style="font-size:.72rem;opacity:.5;margin-top:.75rem;" id="rateDisclaimer">*Estimates based on midpoint rate. Republic Bank: 12–14% p.a. · Access Bank: 10–16% p.a. Actual rate set by chosen bank. Subject to approval.</p>
           </div>
         </div>
       </div>
@@ -236,7 +282,7 @@
           <div style="display:flex;gap:.75rem;align-items:flex-start;margin-bottom:1.5rem;padding:1rem;background:var(--light);border-radius:8px;">
             <input type="checkbox" name="consent" id="consent" required style="margin-top:.25rem;accent-color:var(--blue);">
             <label for="consent" style="font-size:.85rem;color:var(--mid);line-height:1.6;cursor:pointer;">
-              I confirm that the information provided is accurate and I consent to {{ business.name }} sharing my details with <strong>Republic Bank</strong> for the purpose of processing this loan application. I understand the bank will perform a credit assessment.
+              I confirm that the information provided is accurate and I consent to {{ business.name }} sharing my details with <strong id="consentBankName">Republic Bank Ghana</strong> for the purpose of processing this loan application. I understand the bank will perform a credit assessment.
             </label>
           </div>
           <button type="submit" class="btn-submit">
@@ -252,7 +298,31 @@
   </div>
 </section>
 
-<script>window.LOAN_ANNUAL_RATE = {{ loan_interest_rate }}; window.USD_TO_GHS = {{ USD_TO_GHS }};</script>
+<script>
+window.USD_TO_GHS = {{ USD_TO_GHS }};
+// Bank rate midpoints (used for calculator estimates)
+const BANK_RATES = { republic: 13, access: 13 };
+const BANK_LABELS = { republic: 'Republic Bank Ghana', access: 'Access Bank Ghana' };
+let LOAN_ANNUAL_RATE = 13;
+
+function onBankChange() {
+  const bank = document.querySelector('input[name="bank_choice"]:checked')?.value || 'republic';
+  LOAN_ANNUAL_RATE = BANK_RATES[bank];
+
+  // Card highlight
+  document.getElementById('lbl-republic').style.borderColor = bank === 'republic' ? 'var(--blue)' : '#e5e7eb';
+  document.getElementById('lbl-republic').style.background  = bank === 'republic' ? 'rgba(37,99,235,.04)' : 'transparent';
+  document.getElementById('lbl-access').style.borderColor   = bank === 'access'   ? '#dc2626' : '#e5e7eb';
+  document.getElementById('lbl-access').style.background    = bank === 'access'   ? 'rgba(220,38,38,.04)' : 'transparent';
+
+  // Consent text
+  const cn = document.getElementById('consentBankName');
+  if (cn) cn.textContent = BANK_LABELS[bank];
+
+  updatePreview();
+}
+document.querySelectorAll('input[name="bank_choice"]').forEach(r => r.addEventListener('change', onBankChange));
+</script>
 <script>
 // Wire up product_type radio buttons to show/hide groups
 document.querySelectorAll('input[name="product_type"]').forEach(radio => {

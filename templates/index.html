@@ -67,7 +67,7 @@
   </div>
   <div class="finance-strip">
     Listed: {{ newest_vehicle.created_at.strftime('%B %d, %Y') }} &nbsp;|&nbsp;
-    <a href="{{ url_for('loan') }}">Loans available through Republic Bank →</a>
+    <a href="{{ url_for('loan') }}">Financing via Republic Bank or Access Bank →</a>
   </div>
 </section>
 {% endif %}
@@ -96,7 +96,7 @@
       <a href="{{ url_for('vehicle_detail', vid=vehicle.id) }}" class="btn-hero-secondary">View Details</a>
     </div>
   </div>
-  <div class="finance-strip">Starting from <strong>{{ vehicle.price | currency }}</strong> &nbsp;|&nbsp; <a href="{{ url_for('loan') }}">Loans available through Republic Bank →</a></div>
+  <div class="finance-strip">Starting from <strong>{{ vehicle.price | currency }}</strong> &nbsp;|&nbsp; <a href="{{ url_for('loan') }}">Financing via Republic Bank or Access Bank →</a></div>
 </section>
 {% endfor %}
 
@@ -139,7 +139,7 @@
       <a href="{{ url_for('solar_detail', sid=solar.id) }}" class="btn-hero-secondary">Learn More</a>
     </div>
   </div>
-  <div class="finance-strip">From <strong>{{ solar.price | currency }}</strong> &nbsp;|&nbsp; <a href="{{ url_for('loan') }}">Republic Bank financing available →</a></div>
+  <div class="finance-strip">From <strong>{{ solar.price | currency }}</strong> &nbsp;|&nbsp; <a href="{{ url_for('loan') }}">Financing via Republic Bank or Access Bank →</a></div>
 </section>
 {% endfor %}
 
@@ -864,12 +864,24 @@ function calcPrint(){
 
   <div style="max-width:1100px;margin:0 auto;">
 
-    <!-- Bank badge -->
+    <!-- Bank badges -->
     <div class="reveal" style="text-align:center;margin-bottom:3rem;">
-      <p style="font-size:.75rem;letter-spacing:.15em;text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:1rem;">Official Financing Partner</p>
-      <div style="display:inline-flex;align-items:center;gap:.85rem;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);padding:.75rem 1.75rem;border-radius:50px;">
-        <div style="width:38px;height:38px;background:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:.65rem;color:#28A800;flex-shrink:0;">RB</div>
-        <span style="font-size:1.1rem;font-weight:700;color:white;letter-spacing:.02em;">Republic Bank Ghana</span>
+      <p style="font-size:.75rem;letter-spacing:.15em;text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:1rem;">Official Financing Partners</p>
+      <div style="display:inline-flex;gap:.75rem;flex-wrap:wrap;justify-content:center;">
+        <div style="display:inline-flex;align-items:center;gap:.75rem;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);padding:.65rem 1.5rem;border-radius:50px;">
+          <div style="width:36px;height:36px;background:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:.6rem;color:#28A800;flex-shrink:0;">RB</div>
+          <div style="text-align:left;">
+            <div style="font-size:.95rem;font-weight:700;color:white;">Republic Bank Ghana</div>
+            <div style="font-size:.72rem;color:rgba(255,255,255,.45);">12% – 14% p.a.</div>
+          </div>
+        </div>
+        <div style="display:inline-flex;align-items:center;gap:.75rem;background:rgba(220,38,38,.1);border:1px solid rgba(220,38,38,.25);padding:.65rem 1.5rem;border-radius:50px;">
+          <div style="width:36px;height:36px;background:#dc2626;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:.6rem;color:white;flex-shrink:0;">AB</div>
+          <div style="text-align:left;">
+            <div style="font-size:.95rem;font-weight:700;color:white;">Access Bank Ghana</div>
+            <div style="font-size:.72rem;color:rgba(255,255,255,.45);">10% – 16% p.a.</div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -880,15 +892,15 @@ function calcPrint(){
         <span style="color:#55E600;">Vehicle</span> &amp; <span style="color:var(--solar-light);">Solar System</span>
       </h2>
       <p style="font-size:1.1rem;color:rgba(255,255,255,.65);max-width:620px;margin:0 auto;line-height:1.7;">
-        Don't let budget hold you back. Apply for affordable financing through Republic Bank and drive home your dream vehicle or power your home with solar — today.
+        Don't let budget hold you back. Choose between <strong style="color:white;">Republic Bank</strong> or <strong style="color:white;">Access Bank</strong> — apply for affordable financing and drive home your dream vehicle or power your home with solar today.
       </p>
     </div>
 
     <!-- Feature grid -->
     <div class="reveal" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1.25rem;margin-bottom:3.5rem;">
       {% for icon, title, desc in [
-        ('🏦', 'Quick Approval', 'Get a decision within 24–48 hours of application'),
-        ('📉', 'Low Interest Rates', 'Competitive rates negotiated through Republic Bank'),
+        ('🏦', 'Two Banks, Your Choice', 'Apply through Republic Bank (12–14%) or Access Bank (10–16%) — you decide'),
+        ('⚡', 'Quick Approval', 'Get a decision within 24–48 hours of application'),
         ('📅', 'Flexible Terms', 'Repayment plans from 12 up to 84 months'),
         ('🚗', 'Vehicles & Solar', 'One loan application covers both vehicles and solar systems'),
       ] %}
@@ -911,7 +923,7 @@ function calcPrint(){
     </div>
 
     <p class="reveal" style="text-align:center;font-size:.78rem;color:rgba(255,255,255,.3);">
-      Subject to Republic Bank credit assessment and approval. Terms and conditions apply.
+      Subject to bank credit assessment and approval. Terms and conditions apply. Republic Bank: 12–14% p.a. · Access Bank: 10–16% p.a.
     </p>
   </div>
 </section>
