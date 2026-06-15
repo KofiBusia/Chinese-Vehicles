@@ -146,8 +146,9 @@
                 <option value="">— Choose a vehicle —</option>
                 {% for v in vehicles %}
                 <option value="{{ v.id }}" data-price="{{ v.price }}"
+                        data-price-ghs="{{ (v.price * USD_TO_GHS)|round(0)|int }}"
                         {% if preselect_vehicle == v.id %}selected{% endif %}>
-                  {{ v.name }} {% if v.year %}({{ v.year }}){% endif %} — {{ v.price | currency }}
+                  {{ v.name }} {% if v.year %}({{ v.year }}){% endif %} — {{ v.price | ghs }}
                 </option>
                 {% endfor %}
               </select>
@@ -160,8 +161,9 @@
                 <option value="">— Choose a solar system —</option>
                 {% for s in solar_systems %}
                 <option value="{{ s.id }}" data-price="{{ s.price }}"
+                        data-price-ghs="{{ (s.price * USD_TO_GHS)|round(0)|int }}"
                         {% if preselect_solar == s.id %}selected{% endif %}>
-                  {{ s.name }} — {{ s.price | currency }}
+                  {{ s.name }} — {{ s.price | ghs }}
                 </option>
                 {% endfor %}
               </select>
@@ -187,14 +189,18 @@
         <div class="form-card-body">
           <div class="form-grid">
             <div class="form-group">
-              <label class="form-label">Deposit / Down Payment ($)</label>
-              <input type="number" name="deposit_amount" id="deposit_amount" class="form-control"
-                     placeholder="0.00" min="0" step="0.01">
+              <label class="form-label">Deposit / Down Payment (GH₵)</label>
+              <input type="number" id="deposit_ghs" class="form-control"
+                     placeholder="e.g. 15000" min="0" step="1" oninput="syncDeposit()">
+              <small id="deposit_usd_hint" style="color:#6b7280;font-size:.78rem;margin-top:.3rem;display:block;"></small>
+              <input type="hidden" name="deposit_amount" id="deposit_amount">
             </div>
             <div class="form-group">
-              <label class="form-label">Loan Amount Required ($)</label>
-              <input type="number" name="loan_amount" id="loan_amount" class="form-control"
-                     placeholder="0.00" min="0" step="0.01">
+              <label class="form-label">Loan Amount Required (GH₵)</label>
+              <input type="number" id="loan_amount_ghs" class="form-control"
+                     placeholder="e.g. 80000" min="0" step="1" oninput="syncLoan()">
+              <small id="loan_usd_hint" style="color:#6b7280;font-size:.78rem;margin-top:.3rem;display:block;"></small>
+              <input type="hidden" name="loan_amount" id="loan_amount">
             </div>
             <div class="form-group">
               <label class="form-label">Loan Term <span class="req">*</span></label>
@@ -222,16 +228,31 @@
                 <div class="loan-preview-label">Term</div>
                 <div class="loan-preview-value" id="previewTerm">—</div>
               </div>
-              <div class="loan-preview-item">
-                <div class="loan-preview-label">Est. Monthly Payment</div>
-                <div class="loan-preview-value" id="previewMonthly">—</div>
+              <div class="loan-preview-item" style="grid-column:1/-1;">
+                <div class="loan-preview-label">Interest Rate Range <span id="previewBankName" style="font-weight:400;opacity:.7;">(Republic Bank)</span></div>
+                <div class="loan-preview-value" id="previewRate" style="font-size:1.1rem;">12% – 14% p.a.</div>
               </div>
               <div class="loan-preview-item">
-                <div class="loan-preview-label">Est. Total Repayment</div>
-                <div class="loan-preview-value" id="previewTotal">—</div>
+                <div class="loan-preview-label">Est. Monthly — Low End</div>
+                <div class="loan-preview-value" id="previewMonthlyLow">—</div>
+              </div>
+              <div class="loan-preview-item">
+                <div class="loan-preview-label">Est. Monthly — High End</div>
+                <div class="loan-preview-value" id="previewMonthlyHigh">—</div>
+              </div>
+              <div class="loan-preview-item">
+                <div class="loan-preview-label">Est. Total — Low End</div>
+                <div class="loan-preview-value" id="previewTotalLow">—</div>
+              </div>
+              <div class="loan-preview-item">
+                <div class="loan-preview-label">Est. Total — High End</div>
+                <div class="loan-preview-value" id="previewTotalHigh">—</div>
               </div>
             </div>
-            <p style="font-size:.72rem;opacity:.5;margin-top:.75rem;" id="rateDisclaimer">*Estimates based on midpoint rate. Republic Bank: 12–14% p.a. · Access Bank: 10–16% p.a. Actual rate set by chosen bank. Subject to approval.</p>
+            <!-- keep these IDs so main.js doesn't error — hidden, updated by our script -->
+            <span id="previewMonthly" style="display:none;"></span>
+            <span id="previewTotal"   style="display:none;"></span>
+            <p style="font-size:.72rem;opacity:.5;margin-top:.75rem;" id="rateDisclaimer">*Estimates use the min and max rate of your chosen bank. Actual rate determined by bank after credit assessment. Subject to approval.</p>
           </div>
         </div>
       </div>
@@ -300,28 +321,112 @@
 
 <script>
 window.USD_TO_GHS = {{ USD_TO_GHS }};
-// Bank rate midpoints (used for calculator estimates)
-const BANK_RATES = { republic: 13, access: 13 };
+
+const BANK_CONFIG = {
+  republic: { label: 'Republic Bank Ghana', min: 12, max: 14 },
+  access:   { label: 'Access Bank Ghana',   min: 10, max: 16 }
+};
+let currentBank = 'republic';
+
+// ── GHS ↔ USD sync ────────────────────────────────────────────────────────
+const GHS = window.USD_TO_GHS || 15.5;
+
+function fmtGhs(v) {
+  return 'GH₵ ' + v.toLocaleString('en-GH', {minimumFractionDigits:2, maximumFractionDigits:2});
+}
+function fmtUsd(v) {
+  return '≈ $' + v.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2}) + ' USD';
+}
+
+function syncDeposit() {
+  const ghs = parseFloat(document.getElementById('deposit_ghs').value) || 0;
+  document.getElementById('deposit_amount').value = ghs ? (ghs / GHS).toFixed(2) : '';
+  document.getElementById('deposit_usd_hint').textContent = ghs ? fmtUsd(ghs / GHS) : '';
+  updateCalc();
+}
+function syncLoan() {
+  const ghs = parseFloat(document.getElementById('loan_amount_ghs').value) || 0;
+  document.getElementById('loan_amount').value = ghs ? (ghs / GHS).toFixed(2) : '';
+  document.getElementById('loan_usd_hint').textContent = ghs ? fmtUsd(ghs / GHS) : '';
+  updateCalc();
+}
+
+// ── Calculator ─────────────────────────────────────────────────────────────
+function calcMonthly(loanGhs, annualPct, months) {
+  if (!loanGhs || !months) return 0;
+  const r = annualPct / 100 / 12;
+  if (r === 0) return loanGhs / months;
+  return (loanGhs * r * Math.pow(1+r, months)) / (Math.pow(1+r, months) - 1);
+}
+
+function updateCalc() {
+  const loanGhs = parseFloat(document.getElementById('loan_amount_ghs').value) || 0;
+  const term    = parseInt(document.getElementById('loan_term')?.value || 36);
+  const cfg     = BANK_CONFIG[currentBank];
+
+  const mLow  = calcMonthly(loanGhs, cfg.min, term);
+  const mHigh = calcMonthly(loanGhs, cfg.max, term);
+
+  const set = (id, v) => { const el = document.getElementById(id); if (el) el.innerHTML = v; };
+
+  set('previewLoan', loanGhs > 0 ? fmtGhs(loanGhs) + `<br><span style="font-size:.8em;opacity:.65;">${fmtUsd(loanGhs/GHS)}</span>` : '—');
+  set('previewTerm', term ? term + ' months' : '—');
+  set('previewMonthlyLow',  mLow  > 0 ? fmtGhs(mLow)        + `<br><span style="font-size:.8em;opacity:.65;">${fmtUsd(mLow/GHS)}</span>`        : '—');
+  set('previewMonthlyHigh', mHigh > 0 ? fmtGhs(mHigh)       + `<br><span style="font-size:.8em;opacity:.65;">${fmtUsd(mHigh/GHS)}</span>`       : '—');
+  set('previewTotalLow',    mLow  > 0 ? fmtGhs(mLow*term)   + `<br><span style="font-size:.8em;opacity:.65;">${fmtUsd(mLow*term/GHS)}</span>`   : '—');
+  set('previewTotalHigh',   mHigh > 0 ? fmtGhs(mHigh*term)  + `<br><span style="font-size:.8em;opacity:.65;">${fmtUsd(mHigh*term/GHS)}</span>`  : '—');
+}
+
+document.getElementById('loan_term')?.addEventListener('change', updateCalc);
+
+// ── Bank switch ────────────────────────────────────────────────────────────
 const BANK_LABELS = { republic: 'Republic Bank Ghana', access: 'Access Bank Ghana' };
-let LOAN_ANNUAL_RATE = 13;
 
 function onBankChange() {
-  const bank = document.querySelector('input[name="bank_choice"]:checked')?.value || 'republic';
-  LOAN_ANNUAL_RATE = BANK_RATES[bank];
+  currentBank = document.querySelector('input[name="bank_choice"]:checked')?.value || 'republic';
+  const cfg   = BANK_CONFIG[currentBank];
 
-  // Card highlight
-  document.getElementById('lbl-republic').style.borderColor = bank === 'republic' ? 'var(--blue)' : '#e5e7eb';
-  document.getElementById('lbl-republic').style.background  = bank === 'republic' ? 'rgba(37,99,235,.04)' : 'transparent';
-  document.getElementById('lbl-access').style.borderColor   = bank === 'access'   ? '#dc2626' : '#e5e7eb';
-  document.getElementById('lbl-access').style.background    = bank === 'access'   ? 'rgba(220,38,38,.04)' : 'transparent';
+  document.getElementById('lbl-republic').style.borderColor = currentBank === 'republic' ? 'var(--blue)' : '#e5e7eb';
+  document.getElementById('lbl-republic').style.background  = currentBank === 'republic' ? 'rgba(37,99,235,.04)' : 'transparent';
+  document.getElementById('lbl-access').style.borderColor   = currentBank === 'access'   ? '#dc2626' : '#e5e7eb';
+  document.getElementById('lbl-access').style.background    = currentBank === 'access'   ? 'rgba(220,38,38,.04)' : 'transparent';
 
-  // Consent text
+  const rateEl = document.getElementById('previewRate');
+  if (rateEl) rateEl.textContent = `${cfg.min}% – ${cfg.max}% p.a.`;
+  const bnEl = document.getElementById('previewBankName');
+  if (bnEl) bnEl.textContent = `(${cfg.label})`;
   const cn = document.getElementById('consentBankName');
-  if (cn) cn.textContent = BANK_LABELS[bank];
+  if (cn) cn.textContent = cfg.label;
 
-  updatePreview();
+  updateCalc();
 }
 document.querySelectorAll('input[name="bank_choice"]').forEach(r => r.addEventListener('change', onBankChange));
+
+// ── Product auto-fill (GHS) ────────────────────────────────────────────────
+function afterProductFill() {
+  const vSel = document.getElementById('vehicle_id');
+  const sSel = document.getElementById('solar_id');
+  const vGrp = document.getElementById('vehicleGroup');
+  const sel  = vGrp?.style.display !== 'none' ? vSel : sSel;
+  if (!sel) return;
+  const opt      = sel.options[sel.selectedIndex];
+  const priceGhs = parseFloat(opt?.dataset.priceGhs || 0);
+  const depGhs   = parseFloat(document.getElementById('deposit_ghs').value || 0);
+  if (priceGhs > 0) {
+    const loanGhs = Math.max(0, priceGhs - depGhs);
+    document.getElementById('loan_amount_ghs').value = loanGhs.toFixed(0);
+    document.getElementById('loan_amount').value     = (loanGhs / GHS).toFixed(2);
+    document.getElementById('loan_usd_hint').textContent = fmtUsd(loanGhs / GHS);
+  }
+  updateCalc();
+}
+document.getElementById('vehicle_id')?.addEventListener('change', afterProductFill);
+document.getElementById('solar_id')?.addEventListener('change', afterProductFill);
+document.getElementById('deposit_ghs')?.addEventListener('input', () => { syncDeposit(); afterProductFill(); });
+
+// ── Init ───────────────────────────────────────────────────────────────────
+onBankChange();
+updateCalc();
 </script>
 <script>
 // Wire up product_type radio buttons to show/hide groups
