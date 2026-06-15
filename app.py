@@ -337,11 +337,13 @@ class Salesperson(db.Model):
     email        = db.Column(db.String(100))
     phone        = db.Column(db.String(20))
     code         = db.Column(db.String(20), unique=True, nullable=False)  # unique referral/access code
-    password_hash = db.Column(db.String(200), nullable=False)
-    active       = db.Column(db.Boolean, default=True)
-    commission_pct = db.Column(db.Float, default=1.0)  # commission percentage
-    notes        = db.Column(db.Text)
-    created_at   = db.Column(db.DateTime, default=datetime.utcnow)
+    password_hash      = db.Column(db.String(200), nullable=False)
+    active             = db.Column(db.Boolean, default=True)
+    commission_pct     = db.Column(db.Float, default=1.0)  # commission percentage
+    notes              = db.Column(db.Text)
+    created_at         = db.Column(db.DateTime, default=datetime.utcnow)
+    reset_token        = db.Column(db.String(64))
+    reset_token_expiry = db.Column(db.DateTime)
     # stats (computed from linked applications/sales)
 
     def set_password(self, pw):
@@ -2656,6 +2658,80 @@ def sales_login():
     return render_template('sales/login.html')
 
 
+@app.route('/sales/forgot-password', methods=['GET', 'POST'])
+def sales_forgot_password():
+    if request.method == 'POST':
+        code  = request.form.get('code', '').strip().upper()
+        email = request.form.get('email', '').strip().lower()
+        sp = Salesperson.query.filter_by(code=code, active=True).first()
+        if sp and sp.email and sp.email.lower() == email:
+            token = uuid.uuid4().hex
+            sp.reset_token        = token
+            sp.reset_token_expiry = datetime.utcnow() + timedelta(hours=1)
+            db.session.commit()
+            reset_url = url_for('sales_reset_password', token=token, _external=True)
+            if SMTP_USER and SMTP_PASSWORD:
+                try:
+                    body = f"""\
+Hi {sp.full_name},
+
+A password reset was requested for your sales portal account.
+
+Click the link below to set a new password (valid for 1 hour):
+
+  {reset_url}
+
+If you did not request this, ignore this email — your password has not changed.
+
+──────────────────────────────────────
+China Cars in Ghana — Sales Team
+"""
+                    msg = MIMEMultipart('alternative')
+                    msg['Subject'] = 'Reset Your Sales Portal Password'
+                    msg['From']    = SMTP_USER
+                    msg['To']      = sp.email
+                    msg.attach(MIMEText(body, 'plain'))
+                    def _send():
+                        try:
+                            with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
+                                server.ehlo(); server.starttls()
+                                server.login(SMTP_USER, SMTP_PASSWORD)
+                                server.sendmail(SMTP_USER, [sp.email], msg.as_string())
+                        except Exception as e:
+                            print(f'[EMAIL] Password reset email failed: {e}')
+                    threading.Thread(target=_send, daemon=True).start()
+                except Exception as e:
+                    print(f'[EMAIL] Password reset prepare failed: {e}')
+        # Always show success to prevent email enumeration
+        flash('If that code and email match our records, a reset link has been sent. Check your inbox.', 'success')
+        return redirect(url_for('sales_forgot_password'))
+    return render_template('sales/forgot_password.html')
+
+
+@app.route('/sales/reset-password/<token>', methods=['GET', 'POST'])
+def sales_reset_password(token):
+    sp = Salesperson.query.filter_by(reset_token=token).first()
+    if not sp or not sp.reset_token_expiry or sp.reset_token_expiry < datetime.utcnow():
+        flash('This reset link is invalid or has expired. Please request a new one.', 'error')
+        return redirect(url_for('sales_forgot_password'))
+    if request.method == 'POST':
+        pw  = request.form.get('password', '')
+        pw2 = request.form.get('password2', '')
+        if len(pw) < 6:
+            flash('Password must be at least 6 characters.', 'error')
+            return render_template('sales/reset_password.html', token=token)
+        if pw != pw2:
+            flash('Passwords do not match.', 'error')
+            return render_template('sales/reset_password.html', token=token)
+        sp.set_password(pw)
+        sp.reset_token        = None
+        sp.reset_token_expiry = None
+        db.session.commit()
+        flash('Password updated! You can now log in with your new password.', 'success')
+        return redirect(url_for('sales_login'))
+    return render_template('sales/reset_password.html', token=token)
+
+
 @app.route('/sales/logout')
 def sales_logout():
     session.pop('sales_id', None)
@@ -2886,6 +2962,8 @@ def init_db():
                 "ALTER TABLE contact          ADD COLUMN IF NOT EXISTS sp_phone    VARCHAR(20)",
                 "ALTER TABLE contact          ADD COLUMN IF NOT EXISTS reply_text  TEXT",
                 "ALTER TABLE contact          ADD COLUMN IF NOT EXISTS replied_at  TIMESTAMP",
+                "ALTER TABLE salesperson      ADD COLUMN IF NOT EXISTS reset_token        VARCHAR(64)",
+                "ALTER TABLE salesperson      ADD COLUMN IF NOT EXISTS reset_token_expiry TIMESTAMP",
             ]
             for sql in migrations:
                 try:

@@ -300,6 +300,11 @@ input, textarea, select { font-family: inherit; }
 .hero-main {
   background: linear-gradient(135deg, #0a0f05 0%, #0f1a08 40%, #0c2200 100%);
 }
+@media (min-width: 769px) {
+  .hero-main {
+    justify-content: center;
+  }
+}
 .hero-main .hero-gradient {
   background: radial-gradient(ellipse at 60% 50%, rgba(51,204,0,.18) 0%, transparent 70%);
 }
