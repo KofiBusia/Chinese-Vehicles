@@ -109,6 +109,28 @@
     <span class="code-badge">🔑 Your Code: {{ sp.code }}</span>
   </div>
 
+  <!-- Showroom Location -->
+  <div style="background:white;border:1px solid #e5e7eb;border-radius:14px;padding:1.25rem 1.5rem;margin-bottom:1.5rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;">
+    <div style="display:flex;align-items:center;gap:1rem;">
+      <div style="font-size:2rem;flex-shrink:0;">📍</div>
+      <div>
+        <div style="font-weight:800;font-size:.92rem;color:#111827;">Showroom — Tema</div>
+        <div style="font-size:.8rem;color:#6b7280;margin-top:.15rem;">China Cars in Ghana · Tema, Greater Accra</div>
+        <div style="font-size:.76rem;color:#9ca3af;margin-top:.1rem;">Bring customers here to view vehicles and complete purchases</div>
+      </div>
+    </div>
+    <div style="display:flex;gap:.6rem;flex-wrap:wrap;">
+      <a href="https://maps.app.goo.gl/M2xCkDrKbhEUrqyn8?g_st=iwb" target="_blank"
+         style="display:inline-flex;align-items:center;gap:.45rem;padding:.6rem 1.1rem;background:#1d6f42;color:white;border-radius:8px;font-size:.82rem;font-weight:700;text-decoration:none;">
+        🗺 Open in Maps
+      </a>
+      <button onclick="navigator.clipboard.writeText('https://maps.app.goo.gl/M2xCkDrKbhEUrqyn8?g_st=iwb').then(()=>{this.textContent='✓ Copied!';setTimeout(()=>this.textContent='📋 Copy Link',2000)})"
+              style="display:inline-flex;align-items:center;gap:.45rem;padding:.6rem 1.1rem;background:#f3f4f6;color:#374151;border:1px solid #e5e7eb;border-radius:8px;font-size:.82rem;font-weight:700;cursor:pointer;">
+        📋 Copy Link
+      </button>
+    </div>
+  </div>
+
   <!-- Referral link card -->
   <div style="background:linear-gradient(135deg,#2563eb,#1d4ed8);border-radius:14px;padding:1.5rem;margin-bottom:2rem;color:white;box-shadow:0 4px 20px rgba(37,99,235,.3);">
     <div style="font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.7);margin-bottom:.35rem;">🔗 Your Referral Link</div>
