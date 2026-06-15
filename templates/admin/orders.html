@@ -46,9 +46,15 @@
     Test Drives only
   </a>
   <a href="{{ url_for('admin_orders') }}?status=pending"
-     class="btn btn-sm {% if request.args.get('status') == 'pending' %}btn-primary{% else %}btn-outline{% endif %}" style="margin-left:auto;">
+     class="btn btn-sm {% if request.args.get('status') == 'pending' %}btn-primary{% else %}btn-outline{% endif %}">
     Pending only
   </a>
+  <form method="post" action="{{ url_for('admin_test_drive_blast') }}" style="margin-left:auto;"
+        onsubmit="return confirm('Send showroom location email to ALL test drive customers?');">
+    <button type="submit" class="btn btn-sm" style="background:#f59e0b;color:#0f172a;font-weight:700;">
+      📍 Email All Test Drive Customers
+    </button>
+  </form>
 </div>
 
 <!-- Table -->

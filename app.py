@@ -1335,6 +1335,101 @@ def admin_update_order_status(oid):
     return redirect(url_for('admin_orders'))
 
 
+@app.route('/admin/orders/test-drive-blast', methods=['POST'])
+@admin_required
+def admin_test_drive_blast():
+    """Email every test drive customer telling them to contact their sales agent for showroom directions."""
+    if not SMTP_USER or not SMTP_PASSWORD:
+        flash('SMTP not configured — no emails sent.', 'error')
+        return redirect(url_for('admin_orders'))
+
+    orders = CarOrder.query.filter_by(order_type='test_drive').all()
+    if not orders:
+        flash('No test drive bookings found.', 'error')
+        return redirect(url_for('admin_orders'))
+
+    SHOWROOM_LINK = 'https://maps.app.goo.gl/M2xCkDrKbhEUrqyn8?g_st=iwb'
+    DEALERSHIP_PHONE = '+233 50 356 6913'
+    sent = 0
+    failed = 0
+
+    def _send_all(app_ctx, order_list):
+        nonlocal sent, failed
+        with app_ctx:
+            for o in order_list:
+                if not o.email:
+                    continue
+                vehicle_name = o.vehicle.name if o.vehicle else 'the vehicle'
+                if o.sp_name and o.sp_phone:
+                    contact_block = (
+                        f"Please reach out directly to your sales agent:\n\n"
+                        f"  Agent : {o.sp_name}\n"
+                        f"  Phone : {o.sp_phone}\n\n"
+                        f"They will guide you on the best time to visit and answer any questions."
+                    )
+                elif o.sp_name:
+                    contact_block = (
+                        f"Please reach out directly to your sales agent, {o.sp_name}, "
+                        f"or call us on {DEALERSHIP_PHONE} to arrange your visit."
+                    )
+                else:
+                    contact_block = (
+                        f"Please call us on {DEALERSHIP_PHONE} or reply to this email "
+                        f"to arrange a convenient time for your visit."
+                    )
+
+                body = f"""\
+Hi {o.name},
+
+Thank you for booking a test drive for the {vehicle_name}!
+
+We are excited to have you visit our showroom in Tema so you can experience the vehicle in person.
+
+──────────────────────────────────────
+SHOWROOM LOCATION — TEMA
+──────────────────────────────────────
+Open in Google Maps:
+{SHOWROOM_LINK}
+
+──────────────────────────────────────
+NEXT STEP
+──────────────────────────────────────
+{contact_block}
+
+We look forward to seeing you!
+
+──────────────────────────────────────
+China Cars in Ghana
+{DEALERSHIP_PHONE}
+kofi@chinacarsinghana.com
+https://chinacarsinghana.com
+"""
+                try:
+                    msg = MIMEMultipart('alternative')
+                    msg['Subject'] = f'Your Test Drive — Visit Us at Our Tema Showroom'
+                    msg['From']    = SMTP_USER
+                    msg['To']      = o.email
+                    msg.attach(MIMEText(body, 'plain'))
+                    with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
+                        server.ehlo(); server.starttls()
+                        server.login(SMTP_USER, SMTP_PASSWORD)
+                        server.sendmail(SMTP_USER, [o.email], msg.as_string())
+                    sent += 1
+                except Exception as e:
+                    print(f'[EMAIL] Test drive blast failed for {o.email}: {e}')
+                    failed += 1
+
+    threading.Thread(target=_send_all, args=(app.app_context(), orders), daemon=True).start()
+
+    total = len([o for o in orders if o.email])
+    flash(
+        f'Sending showroom location email to {total} test drive customer{"s" if total != 1 else ""}. '
+        f'Delivery may take a minute.',
+        'success'
+    )
+    return redirect(url_for('admin_orders'))
+
+
 # ────────────────────────── ADMIN ROUTES ────────────────────────────────── #
 
 @app.route('/admin/login', methods=['GET', 'POST'])
