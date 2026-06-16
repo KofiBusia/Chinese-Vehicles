@@ -4,17 +4,17 @@
 {% block og_meta %}
 <meta property="og:type"        content="product">
 <meta property="og:site_name"   content="{{ business.name }}">
-<meta property="og:url"         content="{{ request.url }}">
+<meta property="og:url"         content="{{ canonical_url }}">
 <meta property="og:title"       content="{{ solar.name }} — {{ business.name }}">
 <meta property="og:description" content="{% if solar.tagline %}{{ solar.tagline }}. {% endif %}{{ solar.price | currency }} ({{ solar.price | ghs }}). {% if solar.power_output %}{{ solar.power_output }} system. {% endif %}{% if solar.warranty %}{{ solar.warranty }} warranty.{% endif %} Available at {{ business.name }}, Accra Ghana.">
-<meta property="og:image"       content="{% if solar.cover %}{{ media_url(solar.cover) }}{% else %}{{ request.host_url }}static/img/og-default.jpg{% endif %}">
+<meta property="og:image"       content="{{ og_image_url(solar.cover) }}">
 <meta property="og:image:width"  content="1200">
 <meta property="og:image:height" content="630">
 <meta property="og:locale"      content="en_GH">
 {% endblock %}
 {% block tw_title %}{{ solar.name }} — {{ business.name }}{% endblock %}
 {% block tw_desc %}{{ solar.price | currency }} · {% if solar.power_output %}{{ solar.power_output }} · {% endif %}Solar system available in Accra, Ghana.{% endblock %}
-{% block tw_image %}{% if solar.cover %}{{ media_url(solar.cover) }}{% else %}{{ request.host_url }}static/img/og-default.jpg{% endif %}{% endblock %}
+{% block tw_image %}{{ og_image_url(solar.cover) }}{% endblock %}
 
 {% block content %}
 <div class="detail-page">

@@ -4,17 +4,17 @@
 {% block og_meta %}
 <meta property="og:type"        content="product">
 <meta property="og:site_name"   content="{{ business.name }}">
-<meta property="og:url"         content="{{ request.url }}">
+<meta property="og:url"         content="{{ canonical_url }}">
 <meta property="og:title"       content="{{ vehicle.name }}{% if vehicle.year %} ({{ vehicle.year }}){% endif %} — {{ business.name }}">
 <meta property="og:description" content="{% if vehicle.tagline %}{{ vehicle.tagline }}. {% endif %}{{ vehicle.price | currency }} ({{ vehicle.price | ghs }}). {% if vehicle.fuel_type %}{{ vehicle.fuel_type }}. {% endif %}{% if vehicle.transmission %}{{ vehicle.transmission }}.{% endif %} Available at {{ business.name }}, Accra Ghana.">
-<meta property="og:image"       content="{% if vehicle.cover %}{{ media_url(vehicle.cover) }}{% else %}{{ request.host_url }}static/img/og-default.jpg{% endif %}">
+<meta property="og:image"       content="{{ og_image_url(vehicle.cover) }}">
 <meta property="og:image:width"  content="1200">
 <meta property="og:image:height" content="630">
 <meta property="og:locale"      content="en_GH">
 {% endblock %}
 {% block tw_title %}{{ vehicle.name }}{% if vehicle.year %} ({{ vehicle.year }}){% endif %} — {{ business.name }}{% endblock %}
 {% block tw_desc %}{{ vehicle.price | currency }} · {% if vehicle.fuel_type %}{{ vehicle.fuel_type }} · {% endif %}{% if vehicle.transmission %}{{ vehicle.transmission }} · {% endif %}Available in Accra, Ghana.{% endblock %}
-{% block tw_image %}{% if vehicle.cover %}{{ media_url(vehicle.cover) }}{% else %}{{ request.host_url }}static/img/og-default.jpg{% endif %}{% endblock %}
+{% block tw_image %}{{ og_image_url(vehicle.cover) }}{% endblock %}
 
 {% block content %}
 <div class="detail-page">
@@ -151,8 +151,8 @@
           </a>
         </div>
         <div class="share-btns">
-          <button class="share-btn" onclick="navigator.clipboard.writeText(window.location.href); alert('Link copied!')">🔗 Copy Link</button>
-          <a href="https://wa.me/?text={{ vehicle.name | urlencode }}%20{{ request.url | urlencode }}" class="share-btn" target="_blank">📤 Share</a>
+          <button class="share-btn" onclick="navigator.clipboard.writeText('{{ canonical_url }}'); alert('Link copied!')">🔗 Copy Link</button>
+          <a href="https://wa.me/?text={{ vehicle.name | urlencode }}%20{{ canonical_url | urlencode }}" class="share-btn" target="_blank">📤 Share</a>
         </div>
         <div style="margin-top:1.25rem; padding-top:1.25rem; border-top:1px solid #f3f4f6; font-size:.8rem; color:var(--mid); line-height:1.6;">
           📞 Call us: <a href="tel:{{ business.phone }}" style="color:var(--blue);font-weight:600;">{{ business.phone }}</a><br>

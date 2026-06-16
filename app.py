@@ -56,6 +56,13 @@ ALLOWED_IMAGES = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
 ALLOWED_VIDEOS = {'mp4', 'mov', 'avi', 'mkv', 'webm'}
 ALLOWED_ALL = ALLOWED_IMAGES | ALLOWED_VIDEOS
 
+# ── Canonical site domain ─────────────────────────────────────────────────── #
+# Always build shareable/absolute links from this constant rather than
+# request.host_url / url_for(_external=True) — those reflect whatever host the
+# visitor used (e.g. the Render-assigned chinese-vehicles.onrender.com domain),
+# which leaks the wrong domain into shared links, emails and OG tags.
+SITE_URL = 'https://chinacarsinghana.com'
+
 # ── Email configuration ───────────────────────────────────────────────────── #
 LOAN_TO_EMAIL       = 'sbonsu@republicghana.com'          # Republic Bank primary
 LOAN_CC_EMAILS      = ['kofi@chinacarsinghana.com', 'pdesbordes@republicghana.com']
@@ -471,6 +478,18 @@ def media_url(path):
 app.jinja_env.globals['media_url'] = media_url
 
 
+def og_image_url(path=None):
+    """Absolute image URL for Open Graph / Twitter card tags — always anchored
+    to the canonical domain, never the requesting host."""
+    if path and path.startswith('cld:'):
+        return path.split('|', 1)[1]   # Cloudinary secure_url (already absolute)
+    if path:
+        return SITE_URL + url_for('static', filename=path)
+    return SITE_URL + url_for('static', filename='img/og-default.svg')
+
+app.jinja_env.globals['og_image_url'] = og_image_url
+
+
 def _delete_media_file(path):
     """Delete a media file from Cloudinary or local disk."""
     if not path:
@@ -587,6 +606,8 @@ def inject_globals():
         'USD_TO_GHS':      get_ghs_rate(),
         'ref_sp_code':     ref_code,
         'ref_sp_name':     ref_name,
+        'SITE_URL':        SITE_URL,
+        'canonical_url':   SITE_URL + request.path,
     }
 
 
@@ -2780,7 +2801,7 @@ def sales_forgot_password():
             sp.reset_token        = token
             sp.reset_token_expiry = datetime.utcnow() + timedelta(hours=1)
             db.session.commit()
-            reset_url = url_for('sales_reset_password', token=token, _external=True)
+            reset_url = SITE_URL + url_for('sales_reset_password', token=token)
             if SMTP_USER and SMTP_PASSWORD:
                 try:
                     body = f"""\
@@ -3028,7 +3049,7 @@ def api_create_solar_quote():
         quote = SolarQuote(code=code, data=json.dumps(data))
         db.session.add(quote)
         db.session.commit()
-        short_url = request.host_url.rstrip('/') + '/q/' + code
+        short_url = SITE_URL + '/q/' + code
         return jsonify({'code': code, 'url': short_url})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
