@@ -2296,13 +2296,13 @@ def _build_proposal_pptx(sp_name='[YOUR FULL NAME]', sp_code='[YOUR CODE]',
     from pptx.dml.color import RGBColor
     from pptx.enum.text import PP_ALIGN
 
-    NAVY   = RGBColor(0x0F, 0x17, 0x2A)
-    GOLD   = RGBColor(0xF5, 0x9E, 0x0B)
+    NAVY   = RGBColor(0x1A, 0x1A, 0x1A)   # Galaxy black
+    GOLD   = RGBColor(0x3C, 0xB0, 0x43)   # Galaxy Auto bright green
     WHITE  = RGBColor(0xFF, 0xFF, 0xFF)
     LGRAY  = RGBColor(0xF1, 0xF5, 0xF9)
-    BLUE   = RGBColor(0x1D, 0x4E, 0xD8)
-    GREEN  = RGBColor(0x16, 0xA3, 0x4A)
-    DKGRAY = RGBColor(0x1E, 0x29, 0x3B)
+    BLUE   = RGBColor(0x1A, 0x1A, 0x1A)   # Galaxy black (card headers)
+    GREEN  = RGBColor(0x3C, 0xB0, 0x43)   # Galaxy green (finance card)
+    DKGRAY = RGBColor(0x0F, 0x1C, 0x0F)   # Very dark greenish panel
 
     prs = Presentation()
     prs.slide_width  = Inches(13.33)
@@ -2366,7 +2366,112 @@ def _build_proposal_pptx(sp_name='[YOUR FULL NAME]', sp_code='[YOUR CODE]',
             run.font.name = 'Calibri'
         return txb
 
-    # ── SLIDE 1: COVER ────────────────────────────────────────────────────── #
+    # ── SLIDE 1: COVER LETTER ─────────────────────────────────────────────── #
+    s0 = prs.slides.add_slide(blank_layout)
+
+    # White paper background
+    add_rect(s0, 0, 0, 13.33, 7.5, fill_rgb=WHITE)
+
+    # Black header band
+    add_rect(s0, 0, 0, 13.33, 0.82, fill_rgb=NAVY)
+
+    # Galaxy green left accent strip
+    add_rect(s0, 0, 0, 0.14, 7.5, fill_rgb=GOLD)
+
+    # Company name in green on black header
+    add_text(s0, 'GALAXY AUTO', 0.35, 0.1, 5, 0.38,
+             font_size=22, bold=True, color=GOLD, align=PP_ALIGN.LEFT)
+    add_text(s0, 'CHINA CARS IN GHANA  ·  Tema, Greater Accra  ·  chinacarsinghana.com',
+             0.35, 0.52, 10, 0.25,
+             font_size=8.5, bold=False, color=WHITE, align=PP_ALIGN.LEFT)
+
+    # Galaxy Auto logo — placed in top-right of header band (white-bg logo on black header)
+    import os as _os
+    _logo_path = _os.path.join(app.static_folder, 'img', 'galaxy-logo.png')
+    if _os.path.exists(_logo_path):
+        s0.shapes.add_picture(_logo_path, px(9.9), px(0.04), px(3.2), px(0.74))
+
+    # Thin green separator
+    add_rect(s0, 0.35, 0.88, 12.84, 0.022, fill_rgb=GOLD)
+
+    # Date (right aligned)
+    add_text(s0, datetime.utcnow().strftime('%d %B %Y'),
+             9.0, 1.02, 4.1, 0.3,
+             font_size=10.5, bold=False, color=NAVY, align=PP_ALIGN.RIGHT)
+
+    # Recipient block
+    add_text(s0, 'The Procurement / HR Manager',
+             0.45, 1.02, 6.5, 0.28,
+             font_size=10.5, bold=False, color=NAVY, align=PP_ALIGN.LEFT)
+    add_text(s0, '[COMPANY NAME]',
+             0.45, 1.32, 7, 0.42,
+             font_size=16, bold=True, color=NAVY, align=PP_ALIGN.LEFT)
+    add_text(s0, '[Company Address]  ·  Ghana',
+             0.45, 1.75, 7, 0.27,
+             font_size=10, bold=False, color=RGBColor(0x4B, 0x55, 0x63), align=PP_ALIGN.LEFT)
+
+    # Salutation
+    add_text(s0, 'Dear Sir / Madam,',
+             0.45, 2.17, 12.5, 0.3,
+             font_size=11, bold=False, color=NAVY, align=PP_ALIGN.LEFT)
+
+    # RE / Subject line box (highlighted green tint)
+    add_rect(s0, 0.45, 2.55, 12.5, 0.33,
+             fill_rgb=RGBColor(0xF0, 0xFD, 0xF4), line_rgb=GOLD, line_width=0.75)
+    add_text(s0, 'RE:  BUSINESS PARTNERSHIP PROPOSAL — PREMIUM VEHICLES & SOLAR ENERGY SYSTEMS',
+             0.62, 2.62, 12.1, 0.25,
+             font_size=10, bold=True, color=NAVY, align=PP_ALIGN.LEFT)
+
+    # Paragraph 1 — Introduction
+    add_multiline(s0, [
+        'We are pleased to write on behalf of Galaxy Auto (China Cars in Ghana), a licensed vehicle and solar energy',
+        'dealership headquartered in Tema, Greater Accra. We specialise in supplying brand-new Chinese-manufactured',
+        'vehicles, solar energy systems, and flexible bank financing solutions to corporate organisations and individuals.',
+    ], 0.45, 2.99, 12.5, 0.62, font_size=10, color=NAVY, align=PP_ALIGN.LEFT)
+
+    # Paragraph 2 — Products
+    add_multiline(s0, [
+        'Our portfolio includes saloon cars, SUVs, minibuses, pick-up trucks, and electric vehicles, alongside complete solar',
+        'panel systems with battery backup and inverters — all available with financing through Republic Bank and Access',
+        'Bank Ghana, with loan terms from 12 to 84 months and fast approvals within 24 to 48 hours.',
+    ], 0.45, 3.74, 12.5, 0.62, font_size=10, color=NAVY, align=PP_ALIGN.LEFT)
+
+    # Presentation request box (highlighted — the key ask)
+    add_rect(s0, 0.45, 4.47, 12.5, 0.82,
+             fill_rgb=RGBColor(0xF0, 0xFD, 0xF4), line_rgb=GOLD, line_width=1.0)
+    add_multiline(s0, [
+        'We respectfully request the opportunity to schedule a formal presentation to your leadership team,',
+        'at a date and venue of your convenience. We are confident our solutions will deliver significant value',
+        'and we welcome the chance to demonstrate our vehicles and systems in person or at your offices.',
+    ], 0.62, 4.56, 12.1, 0.65, font_size=10, color=NAVY, align=PP_ALIGN.LEFT)
+
+    # Closing paragraph
+    add_text(s0, 'Thank you for your time and consideration. We look forward to a productive partnership.',
+             0.45, 5.42, 12.5, 0.28,
+             font_size=10, bold=False, color=NAVY, align=PP_ALIGN.LEFT)
+
+    add_text(s0, 'Yours faithfully,',
+             0.45, 5.8, 4, 0.28,
+             font_size=10.5, bold=False, color=NAVY, align=PP_ALIGN.LEFT)
+
+    # Salesperson signature block
+    add_text(s0, sp_name,
+             0.45, 6.15, 7, 0.36,
+             font_size=13, bold=True, color=NAVY, align=PP_ALIGN.LEFT)
+    add_text(s0, f'Sales Representative  ·  China Cars in Ghana | Galaxy Auto  ·  Code: {sp_code}',
+             0.45, 6.52, 11, 0.27,
+             font_size=9, bold=False, color=NAVY, align=PP_ALIGN.LEFT)
+    add_text(s0, f'Tel: {sp_phone}  ·  {sp_email}  ·  chinacarsinghana.com',
+             0.45, 6.77, 9, 0.27,
+             font_size=9, bold=False, color=RGBColor(0x4B, 0x55, 0x63), align=PP_ALIGN.LEFT)
+
+    # Bottom Galaxy green bar
+    add_rect(s0, 0, 7.12, 13.33, 0.38, fill_rgb=GOLD)
+    add_text(s0, 'COVER LETTER  ·  GALAXY AUTO  ·  CHINA CARS IN GHANA',
+             0.35, 7.19, 12.63, 0.26,
+             font_size=8.5, bold=True, color=NAVY, align=PP_ALIGN.CENTER)
+
+    # ── SLIDE 2: BUSINESS COVER ───────────────────────────────────────────── #
     s1 = prs.slides.add_slide(blank_layout)
 
     # Full navy background
@@ -2453,7 +2558,7 @@ def _build_proposal_pptx(sp_name='[YOUR FULL NAME]', sp_code='[YOUR CODE]',
     add_text(s2, 'Our Products & Services',
              0.4, 0.25, 9, 0.7,
              font_size=28, bold=True, color=WHITE, align=PP_ALIGN.LEFT)
-    add_text(s2, 'SLIDE 2 OF 3  |  chinacarsinghana.com',
+    add_text(s2, 'SLIDE 3 OF 4  |  chinacarsinghana.com',
              10.0, 0.45, 3.0, 0.4,
              font_size=8, bold=False, color=RGBColor(0x94, 0xA3, 0xB8), align=PP_ALIGN.RIGHT)
 
