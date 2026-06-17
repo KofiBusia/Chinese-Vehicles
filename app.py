@@ -2650,7 +2650,7 @@ def _build_cover_letter_docx(sp_name='[YOUR FULL NAME]', sp_code='[YOUR CODE]',
         return DocxRGB(int(h[0:2], 16), int(h[2:4], 16), int(h[4:6], 16))
 
     def para(text='', bold=False, size=11, color=BLACK_HEX,
-             align=WD_ALIGN_PARAGRAPH.LEFT, after=Pt(0)):
+             align=WD_ALIGN_PARAGRAPH.JUSTIFY, after=Pt(0)):
         p = doc.add_paragraph()
         p.alignment = align
         p.paragraph_format.space_before = Pt(0)
@@ -2712,16 +2712,22 @@ def _build_cover_letter_docx(sp_name='[YOUR FULL NAME]', sp_code='[YOUR CODE]',
     h_line(sep)
 
     # ── DATE ─────────────────────────────────────────────────────────────────
-    para(datetime.utcnow().strftime('%d %B %Y'), size=11, color=BLACK_HEX, after=Pt(10))
+    para(datetime.utcnow().strftime('%d %B %Y'), size=11, color=BLACK_HEX,
+         align=WD_ALIGN_PARAGRAPH.LEFT, after=Pt(10))
 
     # ── RECIPIENT ─────────────────────────────────────────────────────────────
-    para('The Procurement / HR Manager,', size=11, color=BLACK_HEX, after=Pt(2))
-    para('[COMPANY NAME]', bold=True, size=13, color=BLACK_HEX, after=Pt(2))
-    para('[Company Address],', size=11, color=GRAY_HEX, after=Pt(2))
-    para('Ghana.', size=11, color=GRAY_HEX, after=Pt(14))
+    para('The Procurement / HR Manager,', size=11, color=BLACK_HEX,
+         align=WD_ALIGN_PARAGRAPH.LEFT, after=Pt(2))
+    para('[COMPANY NAME]', bold=True, size=13, color=BLACK_HEX,
+         align=WD_ALIGN_PARAGRAPH.LEFT, after=Pt(2))
+    para('[Company Address],', size=11, color=GRAY_HEX,
+         align=WD_ALIGN_PARAGRAPH.LEFT, after=Pt(2))
+    para('Ghana.', size=11, color=GRAY_HEX,
+         align=WD_ALIGN_PARAGRAPH.LEFT, after=Pt(14))
 
     # ── SALUTATION ────────────────────────────────────────────────────────────
-    para('Dear Sir / Madam,', size=11, color=BLACK_HEX, after=Pt(10))
+    para('Dear Sir / Madam,', size=11, color=BLACK_HEX,
+         align=WD_ALIGN_PARAGRAPH.LEFT, after=Pt(10))
 
     # ── RE LINE (highlighted) ─────────────────────────────────────────────────
     re_p = para(
@@ -2769,14 +2775,16 @@ def _build_cover_letter_docx(sp_name='[YOUR FULL NAME]', sp_code='[YOUR CODE]',
         'Thank you for your time and consideration. We look forward to a productive partnership.',
         size=11, color=BLACK_HEX, after=Pt(16)
     )
-    para('Yours faithfully,', size=11, color=BLACK_HEX, after=Pt(22))
+    para('Yours faithfully,', size=11, color=BLACK_HEX,
+         align=WD_ALIGN_PARAGRAPH.LEFT, after=Pt(22))
 
     # ── SIGNATURE ─────────────────────────────────────────────────────────────
-    para(sp_name, bold=True, size=13, color=BLACK_HEX, after=Pt(2))
+    para(sp_name, bold=True, size=13, color=BLACK_HEX,
+         align=WD_ALIGN_PARAGRAPH.LEFT, after=Pt(2))
     para(f'Sales Representative  |  China Cars in Ghana (Galaxy Auto)  |  Code: {sp_code}',
-         size=10, color=GRAY_HEX, after=Pt(2))
+         size=10, color=GRAY_HEX, align=WD_ALIGN_PARAGRAPH.LEFT, after=Pt(2))
     para(f'Tel: {sp_phone}  |  {sp_email}  |  www.chinacarsinghana.com',
-         size=10, color=GRAY_HEX, after=Pt(14))
+         size=10, color=GRAY_HEX, align=WD_ALIGN_PARAGRAPH.LEFT, after=Pt(14))
 
     # ── FOOTER GREEN LINE ─────────────────────────────────────────────────────
     foot = para('Galaxy Auto  |  China Cars in Ghana  |  Tema, Greater Accra  |  chinacarsinghana.com',
