@@ -331,35 +331,41 @@
   </div>
 
   <!-- ── BUSINESS PROPOSAL ───────────────────────────────────────────────── -->
-  <div class="section-head" style="margin-top:.5rem;">📊 Your Business Proposal</div>
+  <div class="section-head" style="margin-top:.5rem;">📊 Your Business Proposal Kit</div>
 
-  <div style="background:linear-gradient(135deg,#0a0f05 0%,#0d2800 100%);border-radius:16px;padding:1.75rem;margin-bottom:2rem;display:grid;grid-template-columns:1fr auto;gap:1.5rem;align-items:center;flex-wrap:wrap;">
-    <div>
-      <div style="font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.5);margin-bottom:.4rem;">Ready-to-use PowerPoint Presentation · 4 Slides · Galaxy Auto Brand Colours</div>
-      <div style="font-family:'Poppins',sans-serif;font-size:1.15rem;font-weight:800;color:white;margin-bottom:.4rem;">Galaxy Auto — Company Proposal with Cover Letter</div>
-      <div style="font-size:.82rem;color:rgba(255,255,255,.65);line-height:1.85;margin-bottom:1.1rem;">
-        Your name, sales code and contact details are pre-filled on every slide.<br>
-        <strong style="color:#3CB043;">Slide 1 is a professional Cover Letter</strong> — fill in the company name &amp; address,
-        then send it with the full proposal. The letter already includes a formal request for a presentation meeting.<br>
-        On Slide 2, also fill in <strong style="color:#3CB043;">[COMPANY NAME]</strong> on the cover page.
-      </div>
-      <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:1.2rem;">
-        <span style="padding:.22rem .65rem;background:rgba(60,176,67,.18);border:1px solid rgba(60,176,67,.5);border-radius:20px;font-size:.7rem;font-weight:700;color:#3CB043;">Slide 1 — Cover Letter (with presentation request)</span>
-        <span style="padding:.22rem .65rem;background:rgba(60,176,67,.12);border:1px solid rgba(60,176,67,.35);border-radius:20px;font-size:.7rem;font-weight:700;color:#55E600;">Slide 2 — Business Cover + Company Name</span>
-        <span style="padding:.22rem .65rem;background:rgba(60,176,67,.12);border:1px solid rgba(60,176,67,.35);border-radius:20px;font-size:.7rem;font-weight:700;color:#55E600;">Slide 3 — Vehicles, Solar &amp; Finance</span>
-        <span style="padding:.22rem .65rem;background:rgba(60,176,67,.12);border:1px solid rgba(60,176,67,.35);border-radius:20px;font-size:.7rem;font-weight:700;color:#55E600;">Slide 4 — Your Contact Info</span>
-      </div>
-      <div style="background:rgba(60,176,67,.1);border:1px solid rgba(60,176,67,.3);border-radius:9px;padding:.65rem .9rem;margin-bottom:1.1rem;font-size:.79rem;color:rgba(255,255,255,.75);line-height:1.6;">
-        💡 <strong style="color:#3CB043;">How to use:</strong> Download → open in PowerPoint or Google Slides → on Slide 1 type the company name &amp; address → on Slide 2 type the company name on the cover → email the file or print and hand-deliver. The presentation request in the letter is ready to send — no editing needed.
-      </div>
-      <a href="{{ url_for('sales_download_proposal') }}"
-         style="display:inline-flex;align-items:center;gap:.6rem;padding:.8rem 1.75rem;background:#3CB043;color:white;border-radius:8px;font-weight:800;text-decoration:none;font-size:.9rem;box-shadow:0 4px 14px rgba(60,176,67,.35);">
-        ⬇ Download Proposal (.pptx)
-      </a>
+  <div style="background:linear-gradient(135deg,#0a0f05 0%,#0d2800 100%);border-radius:16px;padding:1.75rem;margin-bottom:2rem;">
+    <div style="font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.5);margin-bottom:.4rem;">Galaxy Auto Brand Colours · 3-Slide PowerPoint + Word Cover Letter</div>
+    <div style="font-family:'Poppins',sans-serif;font-size:1.15rem;font-weight:800;color:white;margin-bottom:.5rem;">Galaxy Auto — Proposal &amp; Cover Letter</div>
+    <div style="font-size:.82rem;color:rgba(255,255,255,.65);line-height:1.85;margin-bottom:1.2rem;">
+      Your name, sales code and contact details are pre-filled on every document.<br>
+      Send the <strong style="color:#3CB043;">Cover Letter (.docx)</strong> with the <strong style="color:#3CB043;">Proposal (.pptx)</strong> together — the letter already includes a formal request for a presentation meeting.
     </div>
-    <div style="text-align:center;background:rgba(255,255,255,.06);border-radius:12px;padding:1.5rem 2rem;display:none;" id="pptIcon">
-      <div style="font-size:3rem;line-height:1;">📊</div>
-      <div style="font-size:.7rem;color:rgba(255,255,255,.45);margin-top:.4rem;font-weight:700;">.PPTX</div>
+
+    <!-- Proposal slides summary -->
+    <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:1.25rem;">
+      <span style="padding:.22rem .65rem;background:rgba(60,176,67,.15);border:1px solid rgba(60,176,67,.4);border-radius:20px;font-size:.7rem;font-weight:700;color:#3CB043;">Slide 1 — Business Cover + Company Name</span>
+      <span style="padding:.22rem .65rem;background:rgba(60,176,67,.1);border:1px solid rgba(60,176,67,.3);border-radius:20px;font-size:.7rem;font-weight:700;color:#55E600;">Slide 2 — Vehicles, Solar &amp; Finance</span>
+      <span style="padding:.22rem .65rem;background:rgba(60,176,67,.1);border:1px solid rgba(60,176,67,.3);border-radius:20px;font-size:.7rem;font-weight:700;color:#55E600;">Slide 3 — Your Contact Info</span>
+    </div>
+
+    <!-- How-to tip -->
+    <div style="background:rgba(60,176,67,.08);border:1px solid rgba(60,176,67,.25);border-radius:9px;padding:.65rem .9rem;margin-bottom:1.25rem;font-size:.79rem;color:rgba(255,255,255,.7);line-height:1.65;">
+      💡 <strong style="color:#3CB043;">How to use:</strong>
+      (1) Download the Cover Letter → open in Word → fill in <strong style="color:white;">[COMPANY NAME]</strong> and <strong style="color:white;">[Company Address]</strong> → save &amp; print or email.
+      (2) Download the Proposal → open in PowerPoint → fill in <strong style="color:white;">[COMPANY NAME]</strong> on Slide 1 cover → send or present.
+      Both documents are ready to go — send them together.
+    </div>
+
+    <!-- Download buttons -->
+    <div style="display:flex;gap:.75rem;flex-wrap:wrap;">
+      <a href="{{ url_for('sales_download_cover_letter') }}"
+         style="display:inline-flex;align-items:center;gap:.6rem;padding:.85rem 1.6rem;background:#3CB043;color:white;border-radius:8px;font-weight:800;text-decoration:none;font-size:.88rem;box-shadow:0 4px 14px rgba(60,176,67,.35);">
+        📄 Download Cover Letter (.docx)
+      </a>
+      <a href="{{ url_for('sales_download_proposal') }}"
+         style="display:inline-flex;align-items:center;gap:.6rem;padding:.85rem 1.6rem;background:rgba(60,176,67,.18);border:1px solid rgba(60,176,67,.5);color:#3CB043;border-radius:8px;font-weight:800;text-decoration:none;font-size:.88rem;">
+        📊 Download Proposal (.pptx)
+      </a>
     </div>
   </div>
 
