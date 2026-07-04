@@ -1,5 +1,6 @@
 import os
 import io
+import re
 import json
 import uuid
 import smtplib
@@ -1217,12 +1218,68 @@ def solar_detail(sid):
     return render_template('solar_detail.html', solar=solar, related=related)
 
 
+EMAIL_RE = re.compile(r'^[^@\s]+@[^@\s]+\.[A-Za-z]{2,}$')
+
+def _normalize_phone(raw):
+    """Return the significant last-9-digits of a Ghana number, or '' if the
+    input can't be a valid phone. Accepts 0XX XXX XXXX, +233 XX XXX XXXX, 233…"""
+    digits = re.sub(r'\D', '', raw or '')
+    if digits.startswith('00233'):
+        digits = digits[5:]
+    elif digits.startswith('233'):
+        digits = digits[3:]
+    elif digits.startswith('0') and len(digits) == 10:
+        digits = digits[1:]
+    return digits if len(digits) == 9 else ''
+
+
 @app.route('/loan', methods=['GET', 'POST'])
 def loan():
     all_vehicles = Vehicle.query.filter_by(available=True).all()
     all_solar    = SolarSystem.query.filter_by(available=True).all()
 
     if request.method == 'POST':
+        # ── Validate email / phone and flag duplicate applications ──
+        email      = request.form.get('email', '').strip()
+        phone_raw  = request.form.get('phone', '').strip()
+        phone_norm = _normalize_phone(phone_raw)
+        errors = []
+
+        if not EMAIL_RE.match(email):
+            errors.append('The email address looks invalid — please check it (e.g. name@example.com).')
+        if not phone_norm:
+            errors.append('The phone number looks invalid — please use a Ghana number like 050 000 0000 or +233 50 000 0000.')
+
+        if not errors:
+            # Duplicate = an application that is still open (pending/reviewing)
+            # from the same email or the same phone number.
+            open_apps = LoanApplication.query.filter(
+                LoanApplication.status.in_(['pending', 'reviewing'])).all()
+            dup = next((a for a in open_apps
+                        if (a.email or '').strip().lower() == email.lower()
+                        or _normalize_phone(a.phone) == phone_norm), None)
+            if dup:
+                errors.append(
+                    f'A loan application from this {"email address" if (dup.email or "").strip().lower() == email.lower() else "phone number"} '
+                    f'is already being processed (submitted {dup.created_at.strftime("%d %b %Y") if dup.created_at else "recently"}). '
+                    f'Please wait for our call, or contact us on {BUSINESS["phone"]} to update your existing application.')
+
+        if errors:
+            for e in errors:
+                flash(e, 'error')
+            preselect_v = request.form.get('vehicle_id', type=int)
+            preselect_s = request.form.get('solar_id', type=int)
+            if request.form.get('product_type') == 'solar' and not preselect_s:
+                preselect_s = -1
+            loan_rate_row = SiteSettings.query.filter_by(key='loan_interest_rate').first()
+            return render_template('loan.html',
+                                   vehicles=all_vehicles,
+                                   solar_systems=all_solar,
+                                   preselect_vehicle=preselect_v,
+                                   preselect_solar=preselect_s,
+                                   loan_interest_rate=float(loan_rate_row.value) if loan_rate_row else 7.0,
+                                   form=request.form)
+
         product_type  = request.form.get('product_type')
         product_name  = ''
         product_price = 0.0

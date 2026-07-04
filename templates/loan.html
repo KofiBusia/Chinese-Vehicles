@@ -77,34 +77,37 @@
           </div>
         </div>
         <div class="form-card-body">
+          {% set f = form if form is defined else {} %}
           <div class="form-grid">
             <div class="form-group">
               <label class="form-label">First Name <span class="req">*</span></label>
-              <input type="text" name="first_name" class="form-control" required placeholder="John">
+              <input type="text" name="first_name" class="form-control" required placeholder="John" value="{{ f.get('first_name', '') }}">
             </div>
             <div class="form-group">
               <label class="form-label">Last Name <span class="req">*</span></label>
-              <input type="text" name="last_name" class="form-control" required placeholder="Smith">
+              <input type="text" name="last_name" class="form-control" required placeholder="Smith" value="{{ f.get('last_name', '') }}">
             </div>
             <div class="form-group">
               <label class="form-label">Email Address <span class="req">*</span></label>
-              <input type="email" name="email" class="form-control" required placeholder="john@example.com">
+              <input type="email" name="email" id="loanEmail" class="form-control" required placeholder="john@example.com" value="{{ f.get('email', '') }}">
+              <div class="field-error" id="emailError">Please enter a valid email address (e.g. name@example.com).</div>
             </div>
             <div class="form-group">
               <label class="form-label">Phone Number <span class="req">*</span></label>
-              <input type="tel" name="phone" class="form-control" required placeholder="+1 (868) 000-0000">
+              <input type="tel" name="phone" id="loanPhone" class="form-control" required placeholder="050 000 0000 or +233 50 000 0000" value="{{ f.get('phone', '') }}">
+              <div class="field-error" id="phoneError">Please enter a valid Ghana phone number, e.g. 050 000 0000 or +233 50 000 0000.</div>
             </div>
             <div class="form-group">
               <label class="form-label">Date of Birth</label>
-              <input type="date" name="date_of_birth" class="form-control">
+              <input type="date" name="date_of_birth" class="form-control" value="{{ f.get('date_of_birth', '') }}">
             </div>
             <div class="form-group">
               <label class="form-label">National ID / Passport Number</label>
-              <input type="text" name="id_number" class="form-control" placeholder="ID number">
+              <input type="text" name="id_number" class="form-control" placeholder="ID number" value="{{ f.get('id_number', '') }}">
             </div>
             <div class="form-group full">
               <label class="form-label">Home Address</label>
-              <textarea name="address" class="form-control" rows="2" placeholder="Street, City, Country"></textarea>
+              <textarea name="address" class="form-control" rows="2" placeholder="Street, City, Country">{{ f.get('address', '') }}</textarea>
             </div>
           </div>
         </div>
@@ -460,6 +463,44 @@ document.querySelectorAll('input[name="product_type"]').forEach(r => {
 });
 // Remove duplicate product_type from form
 document.querySelector('select[name="vehicle_id"]') && (document.querySelector('select[name="vehicle_id"]').name = 'vehicle_id');
+
+// ── Inline email / phone validation ──────────────────────────────────────
+const emailEl = document.getElementById('loanEmail');
+const phoneEl = document.getElementById('loanPhone');
+
+function validEmail(v) {
+  return /^[^@\s]+@[^@\s]+\.[A-Za-z]{2,}$/.test(v.trim());
+}
+function validGhPhone(v) {
+  let d = v.replace(/\D/g, '');
+  if (d.startsWith('00233')) d = d.slice(5);
+  else if (d.startsWith('233')) d = d.slice(3);
+  else if (d.startsWith('0') && d.length === 10) d = d.slice(1);
+  return d.length === 9;
+}
+function flagField(el, errId, ok) {
+  el.style.borderColor = ok ? '' : '#dc2626';
+  el.style.background  = ok ? '' : '#fef2f2';
+  document.getElementById(errId).style.display = ok ? 'none' : 'block';
+  return ok;
+}
+emailEl.addEventListener('blur', () => emailEl.value && flagField(emailEl, 'emailError', validEmail(emailEl.value)));
+emailEl.addEventListener('input', () => flagField(emailEl, 'emailError', true));
+phoneEl.addEventListener('blur', () => phoneEl.value && flagField(phoneEl, 'phoneError', validGhPhone(phoneEl.value)));
+phoneEl.addEventListener('input', () => flagField(phoneEl, 'phoneError', true));
+
+document.querySelector('form').addEventListener('submit', (e) => {
+  const okE = flagField(emailEl, 'emailError', validEmail(emailEl.value));
+  const okP = flagField(phoneEl, 'phoneError', validGhPhone(phoneEl.value));
+  if (!okE || !okP) {
+    e.preventDefault();
+    (okE ? phoneEl : emailEl).scrollIntoView({behavior:'smooth', block:'center'});
+  }
+});
 </script>
+
+<style>
+.field-error { display:none; font-size:.78rem; color:#dc2626; margin-top:.3rem; font-weight:600; }
+</style>
 
 {% endblock %}
