@@ -10,6 +10,18 @@
     <a href="{{ url_for('admin_salespersons') }}" class="btn btn-outline btn-sm">← Back to Team</a>
   </div>
 
+  <!-- Motivation templates -->
+  <div class="form-section">
+    <div class="form-section-header">💪 Motivation Templates — one click to fire up the team</div>
+    <div class="form-section-body">
+      <p style="font-size:.8rem;color:var(--mid);margin-bottom:1rem;">
+        Four ready-made encouragement emails. <strong>⚡ Send Now</strong> sends it to the whole team instantly;
+        <strong>✏️ Edit First</strong> loads it into the editor below so you can tweak it. Rotate them so the team gets a fresh message each time.
+      </p>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:.75rem;" id="tplCards"></div>
+    </div>
+  </div>
+
   <form method="post" action="{{ url_for('admin_team_email') }}">
 
     <!-- Recipients -->
@@ -88,6 +100,137 @@
 </div>
 
 <script>
+// ── Motivation templates ────────────────────────────────────────────────
+const MOTIVATION_TEMPLATES = [
+  {
+    icon: '🔥',
+    title: 'You Are Closer Than You Think',
+    subject: '🔥 {name}, your next sale is closer than you think',
+    body: `Hi {name},
+
+Quick reminder of something important: every single person you talk to today is a potential sale.
+
+The friend who complains about trotro fares — needs a car.
+The uncle whose light bill keeps climbing — needs solar.
+The colleague dreaming of their first vehicle — needs financing, and we have Republic Bank AND Access Bank ready.
+
+You don't need to convince anyone. You just need to share your link and let the products speak:
+
+  {ref_link}
+
+One share on WhatsApp today. One conversation. That's all it takes to start your next {commission} commission.
+
+Your code {code} is your money-maker. Use it today!
+
+Go get it,
+The China Cars in Ghana Team`
+  },
+  {
+    icon: '🏆',
+    title: 'Champions Keep Showing Up',
+    subject: '🏆 {name}, this is how champions are made',
+    body: `Hi {name},
+
+Do you know the difference between the top earners on our team and everyone else?
+
+It's not talent. It's not luck. It's not connections.
+
+It's consistency. They share their link every single day. They follow up. They show up even on the days nothing seems to move — because they know every "not yet" brings them closer to the next "yes".
+
+Your tools are ready:
+  • Your referral link: {ref_link}
+  • Your code: {code}
+  • Your commission: {commission} of EVERY sale — vehicles and solar
+
+A single vehicle sale can earn you more than many people make in a month. The next customer is out there right now, scrolling WhatsApp.
+
+Make sure it's YOUR link they click.
+
+We believe in you,
+The China Cars in Ghana Team`
+  },
+  {
+    icon: '🌱',
+    title: 'Small Actions, Big Harvest',
+    subject: '🌱 {name}, plant one seed today',
+    body: `Hi {name},
+
+A farmer doesn't harvest the same day they plant. But they plant anyway — because they know the harvest is coming.
+
+Sales works exactly the same way.
+
+That link you share today might not sell a car today. But in two weeks, when that person's engine finally gives up, or when another ECG bill lands — who will they remember? The person who shared the solution: YOU.
+
+Plant seeds today:
+  ✅ Share your link in one group chat: {ref_link}
+  ✅ Tell ONE person about our bank financing (Republic & Access Bank)
+  ✅ Post one car or solar system on your status
+
+Every seed you plant with code {code} grows into {commission} commission for you.
+
+Plant today. Harvest soon.
+
+Rooting for you,
+The China Cars in Ghana Team`
+  },
+  {
+    icon: '🚀',
+    title: 'Fresh Start, Full Speed',
+    subject: '🚀 {name}, today is a fresh start — let\'s go!',
+    body: `Hi {name},
+
+Whatever happened last week — good or slow — today is a brand new page.
+
+The team is growing. Cars are moving. Solar is in demand like never before with these light bills. And customers can buy with ZERO stress through our bank financing.
+
+This is the best moment yet to push:
+
+  1. Log in and check the latest inventory: {login_url}
+  2. Pick ONE product you personally like
+  3. Share it with your link: {ref_link}
+
+People buy from people who are excited. Your excitement + our products + bank financing = sales.
+
+Your code {code} earns you {commission} on every single sale. Someone on this team will close a sale this week.
+
+Why not you?
+
+Full speed ahead,
+The China Cars in Ghana Team`
+  },
+];
+
+const tplCards = document.getElementById('tplCards');
+MOTIVATION_TEMPLATES.forEach((t, i) => {
+  const card = document.createElement('div');
+  card.style.cssText = 'border:1.5px solid var(--border);border-radius:10px;padding:1rem;display:flex;flex-direction:column;gap:.5rem;background:white;';
+  card.innerHTML = `
+    <div style="font-weight:700;font-size:.88rem;">${t.icon} ${t.title}</div>
+    <div style="font-size:.75rem;color:var(--mid);line-height:1.5;flex:1;">${t.body.split('\n').slice(2,4).join(' ').slice(0,110)}…</div>
+    <div style="display:flex;gap:.5rem;">
+      <button type="button" class="btn btn-primary btn-sm" onclick="sendTemplateNow(${i})">⚡ Send Now</button>
+      <button type="button" class="btn btn-outline btn-sm" onclick="loadTemplate(${i})">✏️ Edit First</button>
+    </div>`;
+  tplCards.appendChild(card);
+});
+
+function loadTemplate(i) {
+  const t = MOTIVATION_TEMPLATES[i];
+  document.querySelector('input[name="subject"]').value = t.subject;
+  document.querySelector('textarea[name="body"]').value = t.body;
+  selectAll(true);
+  document.querySelector('input[name="subject"]').scrollIntoView({behavior:'smooth', block:'center'});
+}
+
+function sendTemplateNow(i) {
+  const t = MOTIVATION_TEMPLATES[i];
+  const total = document.querySelectorAll('.sp-check').length;
+  if (!total) { alert('No active salespersons to send to.'); return; }
+  if (!confirm(`Send "${t.title}" to all ${total} team member${total===1?'':'s'} now?`)) return;
+  loadTemplate(i);
+  document.querySelector('form').submit();
+}
+
 function selectAll(checked) {
   document.querySelectorAll('.sp-check').forEach(cb => cb.checked = checked);
   updateCount();
