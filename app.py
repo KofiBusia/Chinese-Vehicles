@@ -2518,14 +2518,17 @@ def admin_team_email():
 
         sent = 0
         failed = 0
-        for sp in targets:
-            # Replace merge tags
-            personalised_body = (body_tpl
+        def _merge(text, sp):
+            return (text
                 .replace('{name}', sp.full_name)
                 .replace('{code}', sp.code)
                 .replace('{ref_link}', f'https://chinacarsinghana.com?ref={sp.code}')
                 .replace('{login_url}', 'https://chinacarsinghana.com/sales/login')
                 .replace('{commission}', f'{sp.commission_pct}%'))
+
+        for sp in targets:
+            personalised_subject = _merge(subject, sp)
+            personalised_body    = _merge(body_tpl, sp)
 
             personalised_body += (
                 f"\n\n{'─' * 50}"
@@ -2534,7 +2537,7 @@ def admin_team_email():
             )
 
             msg = MIMEMultipart('alternative')
-            msg['Subject'] = subject
+            msg['Subject'] = personalised_subject
             msg['From']    = SMTP_USER
             msg['To']      = sp.email
             msg.attach(MIMEText(personalised_body, 'plain'))
