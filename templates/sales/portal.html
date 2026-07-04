@@ -1030,14 +1030,11 @@ const PC_PRODUCTS = {
   gel200:{name:'RITAR GEL Battery',spec:'12V 200AH GEL',unit:4600},
   lifepo280:{name:'Galaxy Energy LiFePO₄',spec:'12.8V 280AH',unit:7800},
   lifepo51v:{name:'Galaxy Energy LiFePO₄',spec:'51.2V 100AH',unit:15000},
-  inv_1k2:{name:'Galaxy Solar Inverter',spec:'1.2KW',unit:2775},
-  inv_3k6:{name:'Galaxy Solar Inverter',spec:'3.6KW',unit:4200},
-  inv_5k5:{name:'Galaxy Solar Inverter',spec:'5.5KW Hybrid',unit:4200},
-  inv_6k_4g:{name:'Galaxy Solar Inverter',spec:'6KW 4th Gen WiFi',unit:16500},
-  inv_8k5:{name:'Galaxy Solar Inverter',spec:'8.5KW Hybrid',unit:10215},
-  mppt40:{name:'MPPT Controller',spec:'40A',unit:3225},
-  mppt60:{name:'MPPT Controller',spec:'60A',unit:4470},
-  mppt85:{name:'MPPT Controller',spec:'85A',unit:7200},
+  inv_1k2:{name:'Galaxy Solar Inverter',spec:'1.2KW · Built-in MPPT',unit:2775},
+  inv_3k6:{name:'Galaxy Solar Inverter',spec:'3.6KW · Built-in MPPT',unit:4200},
+  inv_5k5:{name:'Galaxy Solar Inverter',spec:'5.5KW Hybrid · Built-in MPPT',unit:4200},
+  inv_6k_4g:{name:'Galaxy Solar Inverter',spec:'6KW 4th Gen WiFi · Built-in MPPT',unit:16500},
+  inv_8k5:{name:'Galaxy Solar Inverter',spec:'8.5KW Hybrid · Built-in MPPT',unit:10215},
 };
 
 let pcAppliances = [];
@@ -1123,19 +1120,13 @@ function pcGenerate(){
   else if(peakLoad<=6000)invKey='inv_6k_4g';
   else invKey='inv_8k5';
 
-  let mpptKey;
-  if(panelCount<=4)mpptKey='mppt40';
-  else if(panelCount<=8)mpptKey='mppt60';
-  else mpptKey='mppt85';
-
   const mountCost=panelCount*500, cablesCost=3810, breakerCost=2500, miscCost=3000;
   const installCost=Math.max(2000,panelCount*500);
   const accessTotal=mountCost+cablesCost+breakerCost+miscCost+installCost;
   const panelTotal=panelCount*PC_PRODUCTS.panel.unit;
   const battTotal=battCount*PC_PRODUCTS[battKey].unit;
   const invTotal=PC_PRODUCTS[invKey].unit;
-  const mpptTotal=PC_PRODUCTS[mpptKey].unit;
-  const equipTotal=panelTotal+battTotal+invTotal+mpptTotal;
+  const equipTotal=panelTotal+battTotal+invTotal;
   const grandTotal=equipTotal+accessTotal;
 
   document.getElementById('pc-inv-date').textContent =
@@ -1149,7 +1140,6 @@ function pcGenerate(){
     ['PV Solar Panel',`${PC_PRODUCTS.panel.spec}`,panelCount,panelTotal],
     [PC_PRODUCTS[battKey].name,PC_PRODUCTS[battKey].spec,battCount,battTotal],
     [PC_PRODUCTS[invKey].name,PC_PRODUCTS[invKey].spec,1,invTotal],
-    [PC_PRODUCTS[mpptKey].name,PC_PRODUCTS[mpptKey].spec,1,mpptTotal],
   ];
   document.getElementById('pc-inv-tbody').innerHTML = rows.map(r=>
     `<tr style="border-bottom:1px solid rgba(255,255,255,.04);">

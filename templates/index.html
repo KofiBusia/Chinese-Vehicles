@@ -524,15 +524,12 @@ const PRODUCTS = {
   gel200:      {name:'RITAR GEL Battery',spec:'12V 200AH GEL Deep Cycle',unit:4600},
   lifepo280:   {name:'Galaxy Energy LiFePO₄',spec:'12.8V 280AH (3.58kWh)',unit:7800},
   lifepo51v:   {name:'Galaxy Energy LiFePO₄',spec:'51.2V 100AH (5.12kWh)',unit:15000},
-  inv_1k2:     {name:'Galaxy Solar Inverter',spec:'1.2KW Pure Sine Wave',unit:2775},
-  inv_3k6:     {name:'Galaxy Solar Inverter',spec:'3.6KW Pure Sine Wave',unit:4200},
-  inv_5k5:     {name:'Galaxy Solar Inverter',spec:'5.5KW Hybrid',unit:4200},
-  inv_5k_4g:   {name:'Galaxy Solar Inverter',spec:'5KW 4th Gen WiFi+GPS',unit:14500},
-  inv_6k_4g:   {name:'Galaxy Solar Inverter',spec:'6KW 4th Gen WiFi+GPS',unit:16500},
-  inv_8k5:     {name:'Galaxy Solar Inverter',spec:'8.5KW Hybrid',unit:10215},
-  mppt40:      {name:'MPPT Solar Controller',spec:'40A 12/24/48V',unit:3225},
-  mppt60:      {name:'MPPT Solar Controller',spec:'60A 12/24/48V',unit:4470},
-  mppt85:      {name:'MPPT Solar Controller',spec:'85A 12/24/48V',unit:7200},
+  inv_1k2:     {name:'Galaxy Solar Inverter',spec:'1.2KW Pure Sine Wave · Built-in MPPT',unit:2775},
+  inv_3k6:     {name:'Galaxy Solar Inverter',spec:'3.6KW Pure Sine Wave · Built-in MPPT',unit:4200},
+  inv_5k5:     {name:'Galaxy Solar Inverter',spec:'5.5KW Hybrid · Built-in MPPT',unit:4200},
+  inv_5k_4g:   {name:'Galaxy Solar Inverter',spec:'5KW 4th Gen WiFi+GPS · Built-in MPPT',unit:14500},
+  inv_6k_4g:   {name:'Galaxy Solar Inverter',spec:'6KW 4th Gen WiFi+GPS · Built-in MPPT',unit:16500},
+  inv_8k5:     {name:'Galaxy Solar Inverter',spec:'8.5KW Hybrid · Built-in MPPT',unit:10215},
 };
 
 // state
@@ -641,12 +638,6 @@ function calcGenerate(){
   else if(peakLoad <= 6000)  invKey = 'inv_6k_4g';
   else                       invKey = 'inv_8k5';
 
-  // ── MPPT ──
-  let mpptKey;
-  if     (panelCount <= 4)  mpptKey = 'mppt40';
-  else if(panelCount <= 8)  mpptKey = 'mppt60';
-  else                      mpptKey = 'mppt85';
-
   // ── Accessories ──
   const mountCost   = panelCount * 500;
   const cablesCost  = 3810;
@@ -659,8 +650,7 @@ function calcGenerate(){
   const panelTotal = panelCount * PRODUCTS.panel.unit;
   const battTotal  = battCount  * PRODUCTS[battKey].unit;
   const invTotal   = PRODUCTS[invKey].unit;
-  const mpptTotal  = PRODUCTS[mpptKey].unit;
-  const equipTotal = panelTotal + battTotal + invTotal + mpptTotal;
+  const equipTotal = panelTotal + battTotal + invTotal;
   const grandTotal = equipTotal + accessTotal;
 
   // ── Render invoice ──
@@ -685,7 +675,6 @@ function calcGenerate(){
     [1,'PV Solar Panel',`${PRODUCTS.panel.spec}`,panelCount,PRODUCTS.panel.unit,panelTotal],
     [2,PRODUCTS[battKey].name,PRODUCTS[battKey].spec,battCount,PRODUCTS[battKey].unit,battTotal],
     [3,PRODUCTS[invKey].name, PRODUCTS[invKey].spec,1,PRODUCTS[invKey].unit,invTotal],
-    [4,PRODUCTS[mpptKey].name,PRODUCTS[mpptKey].spec,1,PRODUCTS[mpptKey].unit,mpptTotal],
   ];
   document.getElementById('inv-tbody').innerHTML = rows.map(r=>
     `<tr><td style="color:rgba(255,255,255,.35)">${r[0]}</td>

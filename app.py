@@ -2142,14 +2142,16 @@ def admin_update_sale_status(sale_id):
 @app.route('/sales/register/<token>', methods=['GET', 'POST'])
 def sales_register(token=None):
     """Public self-registration page — open signup or token-gated via admin link."""
-    # If a token was supplied, validate it; if no token, allow open registration
-    if token:
+    # Registration is open to everyone; old tokened links (printed fliers/QR codes)
+    # must keep working even after the admin generates a new link, so stale tokens
+    # just fall through to the open signup page instead of a 403.
+    if token and request.method == 'GET':
         try:
             setting = SiteSettings.query.filter_by(key='sp_reg_token').first()
         except Exception:
             setting = None
         if not setting or setting.value != token:
-            return '<h2 style="font-family:sans-serif;text-align:center;padding:3rem;color:#dc2626;">This registration link is no longer valid. Please contact the admin for a new one.</h2>', 403
+            return redirect(url_for('sales_register'))
 
     if request.method == 'POST':
         full_name = request.form.get('full_name', '').strip()
