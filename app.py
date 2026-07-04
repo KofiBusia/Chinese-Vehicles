@@ -618,8 +618,11 @@ def force_https():
     """301 plain-HTTP requests to HTTPS (SEO: avoids Google indexing a
     duplicate http:// version). Uses the proxy header set by Render/Cloudflare;
     local dev sends no header and is unaffected."""
-    proto = request.headers.get('X-Forwarded-Proto', '')
-    if proto == 'http':
+    # Cloudflare reports the visitor's real scheme in CF-Visitor; behind
+    # Cloudflare X-Forwarded-Proto only reflects the CF->origin hop.
+    cf_visitor = request.headers.get('CF-Visitor', '')
+    proto      = request.headers.get('X-Forwarded-Proto', '')
+    if '"scheme":"http"' in cf_visitor or (not cf_visitor and proto == 'http'):
         return redirect(request.url.replace('http://', 'https://', 1), code=301)
 
 
