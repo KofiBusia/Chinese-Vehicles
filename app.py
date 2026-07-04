@@ -41,8 +41,8 @@ app.config['UPLOAD_FOLDER'] = os.path.join('static', 'uploads')
 app.config['MAX_CONTENT_LENGTH'] = 500 * 1024 * 1024  # 500 MB
 
 BUSINESS = {
-    'name': 'AutoPower Dealership',
-    'tagline': 'Drive Excellence. Power the Future.',
+    'name': 'China Cars in Ghana',
+    'tagline': 'Quality Chinese Cars & Solar Energy Systems in Accra',
     'phone': '+233 50 356 6913',
     'email': 'kofi@chinacarsinghana.com',
     'address': 'Accra, Ghana',
@@ -1949,6 +1949,100 @@ def admin_delete_application(aid):
     return redirect(url_for('admin_applications'))
 
 
+# ── Loan applications summary report (per period) ── #
+
+def _loan_report_data():
+    """Parse period filters from the query string and aggregate loan applications.
+    Supports preset periods (?period=) or a custom ?start=YYYY-MM-DD&end=YYYY-MM-DD."""
+    period = request.args.get('period', 'this_month')
+    start_s = request.args.get('start', '')
+    end_s   = request.args.get('end', '')
+    now = datetime.utcnow()
+
+    if start_s or end_s:
+        period = 'custom'
+        try:    start = datetime.strptime(start_s, '%Y-%m-%d')
+        except ValueError: start = None
+        try:    end = datetime.strptime(end_s, '%Y-%m-%d') + timedelta(days=1)
+        except ValueError: end = None
+    elif period == 'today':
+        start = now.replace(hour=0, minute=0, second=0, microsecond=0); end = None
+    elif period == 'this_week':
+        start = (now - timedelta(days=now.weekday())).replace(hour=0, minute=0, second=0, microsecond=0); end = None
+    elif period == 'last_month':
+        first_this = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        end   = first_this
+        start = (first_this - timedelta(days=1)).replace(day=1)
+    elif period == 'this_year':
+        start = now.replace(month=1, day=1, hour=0, minute=0, second=0, microsecond=0); end = None
+    elif period == 'all':
+        start = None; end = None
+    else:  # this_month (default)
+        period = 'this_month'
+        start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0); end = None
+
+    q = LoanApplication.query
+    if start: q = q.filter(LoanApplication.created_at >= start)
+    if end:   q = q.filter(LoanApplication.created_at < end)
+    apps = q.order_by(LoanApplication.created_at.desc()).all()
+
+    total_amount   = sum(a.loan_amount or 0 for a in apps)
+    total_deposit  = sum(a.deposit_amount or 0 for a in apps)
+    by_status, by_bank, by_product, by_sp = {}, {}, {}, {}
+    for a in apps:
+        by_status[a.status or 'pending'] = by_status.get(a.status or 'pending', 0) + 1
+        bank = 'Access Bank' if a.bank_choice == 'access' else 'Republic Bank'
+        by_bank[bank] = by_bank.get(bank, 0) + 1
+        ptype = (a.product_type or 'other').capitalize()
+        by_product[ptype] = by_product.get(ptype, 0) + 1
+        if a.sp_code:
+            key = f'{a.sp_name or a.sp_code} ({a.sp_code})'
+            by_sp[key] = by_sp.get(key, 0) + 1
+
+    return {
+        'period': period, 'start': start, 'end': end, 'apps': apps,
+        # end is exclusive; show the inclusive last day in the UI
+        'end_display': (end - timedelta(days=1)) if end else None,
+        'total': len(apps),
+        'total_amount': total_amount,
+        'total_deposit': total_deposit,
+        'avg_amount': (total_amount / len(apps)) if apps else 0,
+        'by_status': by_status, 'by_bank': by_bank, 'by_product': by_product,
+        'by_sp': sorted(by_sp.items(), key=lambda kv: -kv[1]),
+    }
+
+
+@app.route('/admin/reports/loans')
+@admin_required
+def admin_loan_report():
+    return render_template('admin/loan_report.html', r=_loan_report_data())
+
+
+@app.route('/admin/reports/loans.csv')
+@admin_required
+def admin_loan_report_csv():
+    r = _loan_report_data()
+    import csv as _csv
+    from io import StringIO
+    buf = StringIO()
+    w = _csv.writer(buf)
+    w.writerow(['ID', 'Date', 'Applicant', 'Email', 'Phone', 'Product Type', 'Product',
+                'Product Price USD', 'Loan Amount USD', 'Deposit USD', 'Term (months)',
+                'Bank', 'Status', 'Salesperson', 'SP Code'])
+    for a in r['apps']:
+        w.writerow([
+            a.id, a.created_at.strftime('%Y-%m-%d %H:%M') if a.created_at else '',
+            f'{a.first_name} {a.last_name}', a.email, a.phone,
+            a.product_type or '', a.product_name or '',
+            a.product_price or '', a.loan_amount or '', a.deposit_amount or '',
+            a.loan_term or '', 'Access Bank' if a.bank_choice == 'access' else 'Republic Bank',
+            a.status or 'pending', a.sp_name or '', a.sp_code or '',
+        ])
+    fname = f"loan-report-{r['period']}-{datetime.utcnow().strftime('%Y%m%d')}.csv"
+    return app.response_class(buf.getvalue(), mimetype='text/csv',
+        headers={'Content-Disposition': f'attachment; filename="{fname}"'})
+
+
 @app.route('/admin/contacts')
 @admin_required
 def admin_contacts():
@@ -3242,6 +3336,56 @@ def _gen_quote_code():
         code = ''.join(random.choices(chars, k=6))
         if not SolarQuote.query.filter_by(code=code).first():
             return code
+
+# ─────────────────────────── SEO: sitemap + robots ──────────────────────── #
+
+@app.route('/sitemap.xml')
+def sitemap():
+    """Dynamic XML sitemap: static pages + every available vehicle/solar listing."""
+    pages = []
+    static_paths = ['/', '/vehicles', '/solar', '/loan', '/about', '/contact', '/sales/register']
+    today = datetime.utcnow().strftime('%Y-%m-%d')
+    for p in static_paths:
+        pages.append({'loc': SITE_URL + p, 'lastmod': today,
+                      'changefreq': 'daily' if p in ('/', '/vehicles', '/solar') else 'weekly',
+                      'priority': '1.0' if p == '/' else '0.8'})
+    try:
+        for v in Vehicle.query.filter_by(available=True).all():
+            lastmod = (v.updated_at or v.created_at or datetime.utcnow()).strftime('%Y-%m-%d')
+            pages.append({'loc': f'{SITE_URL}/vehicles/{v.id}', 'lastmod': lastmod,
+                          'changefreq': 'weekly', 'priority': '0.9'})
+        for s in SolarSystem.query.filter_by(available=True).all():
+            lastmod = (s.updated_at or s.created_at or datetime.utcnow()).strftime('%Y-%m-%d')
+            pages.append({'loc': f'{SITE_URL}/solar/{s.id}', 'lastmod': lastmod,
+                          'changefreq': 'weekly', 'priority': '0.9'})
+    except Exception:
+        pass
+    xml = ['<?xml version="1.0" encoding="UTF-8"?>',
+           '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">']
+    for pg in pages:
+        xml.append(
+            f"<url><loc>{pg['loc']}</loc><lastmod>{pg['lastmod']}</lastmod>"
+            f"<changefreq>{pg['changefreq']}</changefreq><priority>{pg['priority']}</priority></url>")
+    xml.append('</urlset>')
+    return app.response_class('\n'.join(xml), mimetype='application/xml')
+
+
+@app.route('/robots.txt')
+def robots():
+    return app.response_class(f"""User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /api/
+Disallow: /mobile-upload/
+Disallow: /sales/login
+Disallow: /sales/portal
+Disallow: /sales/logout
+Disallow: /sales/submit
+Disallow: /sales/inventory
+
+Sitemap: {SITE_URL}/sitemap.xml
+""", mimetype='text/plain')
+
 
 @app.route('/api/ghs-rate')
 def api_ghs_rate():

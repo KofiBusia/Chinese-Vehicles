@@ -1,5 +1,26 @@
 {% extends "base.html" %}
-{% block title %}{{ solar.name }} — {{ business.name }}{% endblock %}
+{% block title %}{{ solar.name }} — Solar System Price in Ghana | {{ business.name }}{% endblock %}
+{% block meta_description %}{{ solar.name }} solar system for sale in Ghana at {{ solar.price | ghs }}. {% if solar.power_output %}{{ solar.power_output }} output. {% endif %}{% if solar.warranty %}{{ solar.warranty }} warranty. {% endif %}Installation in Accra & nationwide, bank financing available.{% endblock %}
+
+{% block structured_data %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Product",
+  "name": "{{ solar.name }}",
+  "description": "{{ (solar.tagline or solar.name) | e }} — solar energy system for sale in Accra, Ghana.",
+  "image": "{{ og_image_url(solar.cover) }}",
+  "offers": {
+    "@type": "Offer",
+    "url": "{{ canonical_url }}",
+    "priceCurrency": "GHS",
+    "price": "{{ '%.0f' | format(solar.price * USD_TO_GHS) }}",
+    "availability": "https://schema.org/{{ 'InStock' if solar.available else 'OutOfStock' }}",
+    "seller": {"@type": "AutoDealer", "name": "{{ business.name }}"}
+  }
+}
+</script>
+{% endblock %}
 
 {% block og_meta %}
 <meta property="og:type"        content="product">

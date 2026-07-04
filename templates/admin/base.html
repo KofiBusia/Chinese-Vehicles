@@ -225,6 +225,9 @@
       <span class="link-icon">🏦</span> Loan Applications
       {% if pending_loans > 0 %}<span class="sidebar-badge">{{ pending_loans }}</span>{% endif %}
     </a>
+    <a href="{{ url_for('admin_loan_report') }}" class="sidebar-link {% if request.endpoint == 'admin_loan_report' %}active{% endif %}">
+      <span class="link-icon">📈</span> Loan Report
+    </a>
     <a href="{{ url_for('admin_orders') }}" class="sidebar-link {% if request.endpoint == 'admin_orders' or request.endpoint == 'admin_update_order_status' %}active{% endif %}">
       <span class="link-icon">🛒</span> Orders &amp; Test Drives
       {% if pending_orders is defined and pending_orders > 0 %}<span class="sidebar-badge">{{ pending_orders }}</span>{% endif %}

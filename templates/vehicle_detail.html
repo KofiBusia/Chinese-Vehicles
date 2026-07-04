@@ -1,5 +1,27 @@
 {% extends "base.html" %}
-{% block title %}{{ vehicle.name }}{% if vehicle.year %} ({{ vehicle.year }}){% endif %} — {{ business.name }}{% endblock %}
+{% block title %}{{ vehicle.name }}{% if vehicle.year %} ({{ vehicle.year }}){% endif %} for Sale in Ghana — Price & Financing | {{ business.name }}{% endblock %}
+{% block meta_description %}{{ vehicle.name }}{% if vehicle.year %} ({{ vehicle.year }}){% endif %} for sale in Accra, Ghana at {{ vehicle.price | ghs }}. {% if vehicle.fuel_type %}{{ vehicle.fuel_type }}, {% endif %}{% if vehicle.transmission %}{{ vehicle.transmission }}. {% endif %}Bank financing available — book a test drive with {{ business.name }}.{% endblock %}
+
+{% block structured_data %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Product",
+  "name": "{{ vehicle.name }}{% if vehicle.year %} ({{ vehicle.year }}){% endif %}",
+  "description": "{{ (vehicle.tagline or vehicle.name) | e }} — Chinese vehicle for sale in Accra, Ghana.",
+  "image": "{{ og_image_url(vehicle.cover) }}",
+  "brand": {"@type": "Brand", "name": "{{ vehicle.name.split(' ')[0] | e }}"},
+  "offers": {
+    "@type": "Offer",
+    "url": "{{ canonical_url }}",
+    "priceCurrency": "GHS",
+    "price": "{{ '%.0f' | format(vehicle.price * USD_TO_GHS) }}",
+    "availability": "https://schema.org/{{ 'InStock' if vehicle.available else 'OutOfStock' }}",
+    "seller": {"@type": "AutoDealer", "name": "{{ business.name }}"}
+  }
+}
+</script>
+{% endblock %}
 
 {% block og_meta %}
 <meta property="og:type"        content="product">

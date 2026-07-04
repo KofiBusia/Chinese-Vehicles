@@ -1,0 +1,167 @@
+{% extends "admin/base.html" %}
+{% block title %}Loan Report{% endblock %}
+{% block page_title %}Loan Applications Report{% endblock %}
+
+{% block content %}
+
+<div class="breadcrumb">
+  <a href="{{ url_for('admin_dashboard') }}">Dashboard</a> ›
+  <a href="{{ url_for('admin_applications') }}">Loan Applications</a> ›
+  <span>Summary Report</span>
+</div>
+
+<!-- Period filter -->
+<div class="form-section">
+  <div class="form-section-header">📅 Report Period</div>
+  <div class="form-section-body" style="display:flex;flex-wrap:wrap;gap:.5rem;align-items:center;">
+    {% for key, label in [('today','Today'), ('this_week','This Week'), ('this_month','This Month'),
+                          ('last_month','Last Month'), ('this_year','This Year'), ('all','All Time')] %}
+    <a href="{{ url_for('admin_loan_report', period=key) }}"
+       class="btn btn-sm {{ 'btn-primary' if r.period == key else 'btn-outline' }}">{{ label }}</a>
+    {% endfor %}
+    <form method="get" style="display:flex;gap:.5rem;align-items:center;margin-left:auto;flex-wrap:wrap;">
+      <input type="date" name="start" class="form-control" style="padding:.35rem .6rem;font-size:.8rem;"
+             value="{{ request.args.get('start','') }}">
+      <span style="font-size:.8rem;color:var(--mid);">to</span>
+      <input type="date" name="end" class="form-control" style="padding:.35rem .6rem;font-size:.8rem;"
+             value="{{ request.args.get('end','') }}">
+      <button type="submit" class="btn btn-sm {{ 'btn-primary' if r.period == 'custom' else 'btn-outline' }}">Apply</button>
+    </form>
+  </div>
+</div>
+
+<p style="font-size:.83rem;color:var(--mid);margin-bottom:1.25rem;">
+  Showing
+  {% if r.start %}<strong>{{ r.start.strftime('%d %b %Y') }}</strong>{% else %}<strong>the beginning</strong>{% endif %}
+  →
+  {% if r.end_display %}<strong>{{ r.end_display.strftime('%d %b %Y') }}</strong>{% else %}<strong>today</strong>{% endif %}
+  &nbsp;·&nbsp;
+  <a href="{{ url_for('admin_loan_report_csv', **request.args) }}" class="btn btn-sm btn-success">⬇ Download CSV</a>
+</p>
+
+<!-- Summary cards -->
+<div class="stats-row">
+  <div class="stat-card blue">
+    <div class="stat-card-icon">🏦</div>
+    <div class="stat-card-value">{{ r.total }}</div>
+    <div class="stat-card-label">Applications in period</div>
+  </div>
+  <div class="stat-card green">
+    <div class="stat-card-icon">💰</div>
+    <div class="stat-card-value" style="font-size:1.4rem;">{{ r.total_amount | currency }}</div>
+    <div class="stat-card-label">Total loan amount requested<br>{{ r.total_amount | ghs }}</div>
+  </div>
+  <div class="stat-card gold">
+    <div class="stat-card-icon">📊</div>
+    <div class="stat-card-value" style="font-size:1.4rem;">{{ r.avg_amount | currency }}</div>
+    <div class="stat-card-label">Average loan amount</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-card-icon">🪙</div>
+    <div class="stat-card-value" style="font-size:1.4rem;">{{ r.total_deposit | currency }}</div>
+    <div class="stat-card-label">Total deposits offered</div>
+  </div>
+</div>
+
+<!-- Breakdowns -->
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1rem;margin-bottom:2rem;">
+  <div class="table-card">
+    <div class="table-header"><div class="table-title">By Status</div></div>
+    <table>
+      {% for status, n in r.by_status.items() %}
+      <tr>
+        <td>
+          <span class="badge {{ 'badge-green' if status == 'approved' else 'badge-red' if status == 'rejected' else 'badge-blue' if status == 'reviewing' else 'badge-yellow' }}">{{ status }}</span>
+        </td>
+        <td style="text-align:right;font-weight:700;">{{ n }}</td>
+        <td style="text-align:right;color:var(--mid);font-size:.78rem;">{{ '%.0f' | format(n / r.total * 100) }}%</td>
+      </tr>
+      {% else %}
+      <tr><td colspan="3" style="color:var(--mid);">No applications in this period.</td></tr>
+      {% endfor %}
+    </table>
+  </div>
+
+  <div class="table-card">
+    <div class="table-header"><div class="table-title">By Bank</div></div>
+    <table>
+      {% for bank, n in r.by_bank.items() %}
+      <tr>
+        <td>{{ bank }}</td>
+        <td style="text-align:right;font-weight:700;">{{ n }}</td>
+        <td style="text-align:right;color:var(--mid);font-size:.78rem;">{{ '%.0f' | format(n / r.total * 100) }}%</td>
+      </tr>
+      {% else %}
+      <tr><td colspan="3" style="color:var(--mid);">No applications in this period.</td></tr>
+      {% endfor %}
+    </table>
+  </div>
+
+  <div class="table-card">
+    <div class="table-header"><div class="table-title">By Product Type</div></div>
+    <table>
+      {% for ptype, n in r.by_product.items() %}
+      <tr>
+        <td>{{ '🚗' if ptype == 'Vehicle' else '☀️' if ptype == 'Solar' else '📦' }} {{ ptype }}</td>
+        <td style="text-align:right;font-weight:700;">{{ n }}</td>
+        <td style="text-align:right;color:var(--mid);font-size:.78rem;">{{ '%.0f' | format(n / r.total * 100) }}%</td>
+      </tr>
+      {% else %}
+      <tr><td colspan="3" style="color:var(--mid);">No applications in this period.</td></tr>
+      {% endfor %}
+    </table>
+  </div>
+
+  {% if r.by_sp %}
+  <div class="table-card">
+    <div class="table-header"><div class="table-title">Top Referring Salespersons</div></div>
+    <table>
+      {% for sp, n in r.by_sp[:8] %}
+      <tr>
+        <td>👤 {{ sp }}</td>
+        <td style="text-align:right;font-weight:700;">{{ n }}</td>
+      </tr>
+      {% endfor %}
+    </table>
+  </div>
+  {% endif %}
+</div>
+
+<!-- Applications list -->
+<div class="table-card">
+  <div class="table-header">
+    <div class="table-title">Applications ({{ r.total }})</div>
+  </div>
+  <div style="overflow-x:auto;">
+    <table>
+      <thead>
+        <tr>
+          <th>Date</th><th>Applicant</th><th>Product</th><th>Loan Amount</th>
+          <th>Term</th><th>Bank</th><th>Status</th><th>Referred By</th><th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for a in r.apps %}
+        <tr>
+          <td style="white-space:nowrap;">{{ a.created_at.strftime('%d %b %Y') if a.created_at }}</td>
+          <td><strong>{{ a.first_name }} {{ a.last_name }}</strong><br>
+              <span style="font-size:.75rem;color:var(--mid);">{{ a.phone }}</span></td>
+          <td>{{ '🚗' if a.product_type == 'vehicle' else '☀️' }} {{ a.product_name or '—' }}</td>
+          <td style="white-space:nowrap;font-weight:600;">{{ a.loan_amount | currency }}</td>
+          <td>{{ a.loan_term or '—' }} mo</td>
+          <td style="white-space:nowrap;">{{ 'Access' if a.bank_choice == 'access' else 'Republic' }}</td>
+          <td>
+            <span class="badge {{ 'badge-green' if a.status == 'approved' else 'badge-red' if a.status == 'rejected' else 'badge-blue' if a.status == 'reviewing' else 'badge-yellow' }}">{{ a.status or 'pending' }}</span>
+          </td>
+          <td style="font-size:.78rem;">{{ a.sp_name or '—' }}</td>
+          <td><a href="{{ url_for('admin_view_application', aid=a.id) }}" class="btn btn-sm btn-outline">View</a></td>
+        </tr>
+        {% else %}
+        <tr><td colspan="9" style="text-align:center;color:var(--mid);padding:2rem;">No loan applications in this period.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% endblock %}
