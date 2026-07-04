@@ -1981,9 +1981,19 @@ def _loan_report_data():
         period = 'this_month'
         start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0); end = None
 
+    bank = request.args.get('bank', '')
+    if bank not in ('republic', 'access'):
+        bank = ''
+
     q = LoanApplication.query
     if start: q = q.filter(LoanApplication.created_at >= start)
     if end:   q = q.filter(LoanApplication.created_at < end)
+    if bank == 'access':
+        q = q.filter(LoanApplication.bank_choice == 'access')
+    elif bank == 'republic':
+        # legacy rows may have NULL bank_choice — they defaulted to Republic
+        q = q.filter(db.or_(LoanApplication.bank_choice != 'access',
+                            LoanApplication.bank_choice.is_(None)))
     apps = q.order_by(LoanApplication.created_at.desc()).all()
 
     total_amount   = sum(a.loan_amount or 0 for a in apps)
@@ -2001,6 +2011,8 @@ def _loan_report_data():
 
     return {
         'period': period, 'start': start, 'end': end, 'apps': apps,
+        'bank': bank,
+        'bank_label': {'republic': 'Republic Bank', 'access': 'Access Bank'}.get(bank, 'All Banks'),
         # end is exclusive; show the inclusive last day in the UI
         'end_display': (end - timedelta(days=1)) if end else None,
         'total': len(apps),
@@ -2038,7 +2050,8 @@ def admin_loan_report_csv():
             a.loan_term or '', 'Access Bank' if a.bank_choice == 'access' else 'Republic Bank',
             a.status or 'pending', a.sp_name or '', a.sp_code or '',
         ])
-    fname = f"loan-report-{r['period']}-{datetime.utcnow().strftime('%Y%m%d')}.csv"
+    bank_part = f"-{r['bank']}" if r['bank'] else ''
+    fname = f"loan-report{bank_part}-{r['period']}-{datetime.utcnow().strftime('%Y%m%d')}.csv"
     return app.response_class(buf.getvalue(), mimetype='text/csv',
         headers={'Content-Disposition': f'attachment; filename="{fname}"'})
 

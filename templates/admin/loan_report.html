@@ -10,16 +10,39 @@
   <span>Summary Report</span>
 </div>
 
+{% set bank_arg = {'bank': r.bank} if r.bank else {} %}
+{# period/date args shared by the bank tabs so switching bank keeps the period #}
+{% set period_args = {} %}
+{% if r.period == 'custom' %}
+  {% if period_args.update({'start': request.args.get('start',''), 'end': request.args.get('end','')}) %}{% endif %}
+{% else %}
+  {% if period_args.update({'period': r.period}) %}{% endif %}
+{% endif %}
+
+<!-- Bank selector -->
+<div class="form-section">
+  <div class="form-section-header">🏦 Bank</div>
+  <div class="form-section-body" style="display:flex;flex-wrap:wrap;gap:.5rem;align-items:center;">
+    <a href="{{ url_for('admin_loan_report', **period_args) }}"
+       class="btn btn-sm {{ 'btn-primary' if not r.bank else 'btn-outline' }}">All Banks</a>
+    <a href="{{ url_for('admin_loan_report', bank='republic', **period_args) }}"
+       class="btn btn-sm {{ 'btn-primary' if r.bank == 'republic' else 'btn-outline' }}">Republic Bank</a>
+    <a href="{{ url_for('admin_loan_report', bank='access', **period_args) }}"
+       class="btn btn-sm {{ 'btn-primary' if r.bank == 'access' else 'btn-outline' }}">Access Bank</a>
+  </div>
+</div>
+
 <!-- Period filter -->
 <div class="form-section">
   <div class="form-section-header">📅 Report Period</div>
   <div class="form-section-body" style="display:flex;flex-wrap:wrap;gap:.5rem;align-items:center;">
     {% for key, label in [('today','Today'), ('this_week','This Week'), ('this_month','This Month'),
                           ('last_month','Last Month'), ('this_year','This Year'), ('all','All Time')] %}
-    <a href="{{ url_for('admin_loan_report', period=key) }}"
+    <a href="{{ url_for('admin_loan_report', period=key, **bank_arg) }}"
        class="btn btn-sm {{ 'btn-primary' if r.period == key else 'btn-outline' }}">{{ label }}</a>
     {% endfor %}
     <form method="get" style="display:flex;gap:.5rem;align-items:center;margin-left:auto;flex-wrap:wrap;">
+      {% if r.bank %}<input type="hidden" name="bank" value="{{ r.bank }}">{% endif %}
       <input type="date" name="start" class="form-control" style="padding:.35rem .6rem;font-size:.8rem;"
              value="{{ request.args.get('start','') }}">
       <span style="font-size:.8rem;color:var(--mid);">to</span>
@@ -31,7 +54,7 @@
 </div>
 
 <p style="font-size:.83rem;color:var(--mid);margin-bottom:1.25rem;">
-  Showing
+  <strong>{{ r.bank_label }}</strong> &nbsp;·&nbsp; Showing
   {% if r.start %}<strong>{{ r.start.strftime('%d %b %Y') }}</strong>{% else %}<strong>the beginning</strong>{% endif %}
   →
   {% if r.end_display %}<strong>{{ r.end_display.strftime('%d %b %Y') }}</strong>{% else %}<strong>today</strong>{% endif %}
@@ -82,6 +105,7 @@
     </table>
   </div>
 
+  {% if not r.bank %}
   <div class="table-card">
     <div class="table-header"><div class="table-title">By Bank</div></div>
     <table>
@@ -96,6 +120,7 @@
       {% endfor %}
     </table>
   </div>
+  {% endif %}
 
   <div class="table-card">
     <div class="table-header"><div class="table-title">By Product Type</div></div>
