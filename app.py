@@ -1975,13 +1975,111 @@ def admin_applications():
     return render_template('admin/applications.html', applications=apps, current_status=status)
 
 
+def send_application_status_email(a, new_status):
+    """Notify the applicant by email when the admin moves their loan
+    application to a new status. Sent in a background thread."""
+    if not SMTP_USER or not SMTP_PASSWORD or not a.email:
+        return
+
+    bank_name = 'Access Bank Ghana' if a.bank_choice == 'access' else 'Republic Bank Ghana'
+    product   = a.product_name or 'your selected product'
+    amount    = f'${a.loan_amount:,.2f}' if a.loan_amount else 'as requested'
+
+    messages = {
+        'processing': (
+            f'Your Loan Application is Being Processed — {product}',
+            f"""Great news — your loan application is now being processed.
+
+Our team and {bank_name} are reviewing your details. We may contact you
+if any additional documents are needed.
+
+  Product        : {product}
+  Loan Amount    : {amount}
+  Bank           : {bank_name}
+  Current Status : PROCESSING
+
+No action is needed from you right now. We will update you as soon as
+there is progress."""),
+        'approved': (
+            f'Congratulations! Your Loan Application is Approved — {product}',
+            f"""Congratulations {a.first_name}! 🎉
+
+Your loan application has been APPROVED.
+
+  Product        : {product}
+  Loan Amount    : {amount}
+  Bank           : {bank_name}
+  Current Status : APPROVED
+
+Our team will contact you shortly to arrange the next steps — final
+paperwork with {bank_name} and delivery of your {'vehicle' if a.product_type == 'vehicle' else 'solar system'}.
+
+If you have any questions in the meantime, call or WhatsApp us on {BUSINESS['phone']}."""),
+        'rejected': (
+            f'Update on Your Loan Application — {product}',
+            f"""Thank you for your loan application for {product}.
+
+After review with {bank_name}, we are unable to approve this application
+at this time.
+
+  Current Status : NOT APPROVED
+
+This is not necessarily final — circumstances change, and you are welcome
+to reapply, apply with a different deposit amount, or speak to us about
+alternative financing options.
+
+Call or WhatsApp us on {BUSINESS['phone']} and we will do our best to help."""),
+        'pending': (
+            f'Update on Your Loan Application — {product}',
+            f"""Your loan application for {product} has been moved back to
+PENDING status while we complete additional checks.
+
+We will be in touch soon. If you have questions, call or WhatsApp us on {BUSINESS['phone']}."""),
+    }
+    if new_status not in messages:
+        return
+    subject, body_core = messages[new_status]
+
+    body = f"""Hi {a.first_name},
+
+{body_core}
+
+──────────────────────────────────────
+{BUSINESS['name']}
+{BUSINESS['phone']} · {BUSINESS['email']}
+{SITE_URL}
+"""
+    msg = MIMEMultipart('alternative')
+    msg['Subject'] = subject
+    msg['From']    = SMTP_USER
+    msg['To']      = a.email
+    msg.attach(MIMEText(body, 'plain'))
+    recipient = a.email
+
+    def _send():
+        try:
+            with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
+                server.ehlo(); server.starttls()
+                server.login(SMTP_USER, SMTP_PASSWORD)
+                server.sendmail(SMTP_USER, [recipient], msg.as_string())
+            print(f'[EMAIL] Status "{new_status}" notification sent to {recipient}')
+        except Exception as e:
+            print(f'[EMAIL] Status notification to {recipient} failed: {e}')
+    threading.Thread(target=_send, daemon=True).start()
+
+
 @app.route('/admin/applications/<int:aid>/status', methods=['POST'])
 @admin_required
 def admin_update_app_status(aid):
     a = LoanApplication.query.get_or_404(aid)
+    old_status = a.status
     a.status = request.form.get('status', 'pending')
     db.session.commit()
-    flash(f'Application status updated to "{a.status}".', 'success')
+    if a.status != old_status:
+        send_application_status_email(a, a.status)
+        flash(f'Application status updated to "{a.status}" — applicant notified by email.', 'success')
+    else:
+        flash(f'Application status unchanged ("{a.status}").', 'success')
     return redirect(url_for('admin_applications'))
 
 
