@@ -922,7 +922,7 @@ function calcPrint(){
 <section style="padding: 5rem 2rem; background: var(--white);">
   <div style="max-width:1200px; margin:0 auto; text-align:center;">
     <h2 class="section-title reveal" style="margin-bottom:.5rem;">Why Choose Us?</h2>
-    <p class="section-subtitle reveal" style="margin-bottom:3rem;">The AutoPower difference</p>
+    <p class="section-subtitle reveal" style="margin-bottom:3rem;">The {{ business.name }} difference</p>
     <div style="display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:2rem;">
       {% set perks = [
         ('🏆', 'Premium Quality', 'Every vehicle and solar system is hand-selected and quality-checked.'),
@@ -942,5 +942,72 @@ function calcPrint(){
     </div>
   </div>
 </section>
+
+<!-- ── SEO CONTENT: what we do, in plain crawlable text ── -->
+<section style="padding:4.5rem 2rem;background:#f8fafc;">
+  <div style="max-width:1000px;margin:0 auto;color:#374151;font-size:.95rem;line-height:1.85;">
+
+    <h2 style="font-size:1.5rem;color:#111827;margin-bottom:1rem;">China Cars in Ghana — Quality Chinese Vehicles at Honest Prices</h2>
+    <p style="margin-bottom:1.5rem;">
+      <strong>China Cars in Ghana</strong> is a trusted dealer of brand-new Chinese cars in Accra. We stock the
+      SUVs, sedans, pickups and vans Ghanaians are switching to — modern, fuel-efficient vehicles from leading
+      Chinese manufacturers at prices far below equivalent European and Japanese models. Every car is
+      quality-checked, comes with a warranty, and can be financed through our partner banks so you can drive
+      away without paying the full amount upfront. <a href="{{ url_for('vehicles') }}" style="color:#1a7a00;font-weight:600;">Browse our vehicles for sale in Ghana →</a>
+    </p>
+
+    <h2 style="font-size:1.5rem;color:#111827;margin-bottom:1rem;">Solar Systems in Ghana — Beat the Light Bills</h2>
+    <p style="margin-bottom:1.5rem;">
+      We design, supply and install complete <strong>solar energy systems in Ghana</strong> for homes, shops and
+      businesses — solar panels, hybrid inverters with built-in MPPT, and GEL or lithium (LiFePO₄) battery
+      storage. Whether you want backup power for lights and fridge or a full off-grid system, our free
+      <a href="#calc-grid" style="color:#1a7a00;font-weight:600;">solar sizing calculator</a> builds you an instant
+      quote from your actual appliances. Installation available in Accra and nationwide.
+      <a href="{{ url_for('solar') }}" style="color:#1a7a00;font-weight:600;">See solar system prices in Ghana →</a>
+    </p>
+
+    <h2 style="font-size:1.5rem;color:#111827;margin-bottom:1rem;">Car &amp; Solar Financing Through Ghanaian Banks</h2>
+    <p style="margin-bottom:2.5rem;">
+      Buying a car or solar system in Ghana doesn't have to mean paying cash. Through our official partnerships
+      with <strong>Republic Bank Ghana</strong> and <strong>Access Bank Ghana</strong>, you can apply for flexible
+      vehicle and solar financing online in minutes and pay monthly.
+      <a href="{{ url_for('loan') }}" style="color:#1a7a00;font-weight:600;">Apply for financing →</a>
+    </p>
+
+    <h2 style="font-size:1.35rem;color:#111827;margin-bottom:1.25rem;">Frequently Asked Questions</h2>
+    {% set faqs = [
+      ('Are Chinese cars good for Ghana roads?',
+       'Yes. Modern Chinese vehicles from established manufacturers are built for markets like Ghana — strong suspension for rough roads, efficient engines for high fuel prices, and air conditioning suited to the climate. They now account for a large share of new vehicle imports into Ghana, and spare parts availability improves every year.'),
+      ('How much does a solar system cost in Ghana?',
+       'It depends on your appliances. A small home backup system (lights, TV, fridge, fan) is far cheaper than a full off-grid setup with air conditioning. Use our free solar sizing calculator on this page — add your appliances and it instantly generates a complete quote with panels, inverter, batteries and installation in Ghana cedis.'),
+      ('Can I buy a car in Ghana on credit or with bank financing?',
+       'Yes. We partner with Republic Bank Ghana and Access Bank Ghana to finance both vehicles and solar systems. You apply online through our website, choose your deposit and repayment term, and the bank processes your application — most applicants hear back within days.'),
+      ('Where is China Cars in Ghana located?',
+       'We are based in Accra, Ghana, and deliver vehicles and install solar systems nationwide. Contact us by phone or WhatsApp on ' ~ business.phone ~ ' to book a test drive or a free solar consultation.'),
+    ] %}
+    {% for q, a in faqs %}
+    <details style="background:white;border:1px solid #e5e7eb;border-radius:10px;padding:1rem 1.25rem;margin-bottom:.75rem;">
+      <summary style="font-weight:700;color:#111827;cursor:pointer;">{{ q }}</summary>
+      <p style="margin-top:.75rem;">{{ a }}</p>
+    </details>
+    {% endfor %}
+  </div>
+</section>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {% for q, a in faqs %}
+    {
+      "@type": "Question",
+      "name": {{ q | tojson }},
+      "acceptedAnswer": {"@type": "Answer", "text": {{ a | tojson }}}
+    }{{ "," if not loop.last }}
+    {% endfor %}
+  ]
+}
+</script>
 
 {% endblock %}

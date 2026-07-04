@@ -3551,6 +3551,15 @@ def sitemap():
     return app.response_class('\n'.join(xml), mimetype='application/xml')
 
 
+# IndexNow: lets Bing (and Yandex) index new/changed pages instantly.
+# The key file must be served from the site root per the IndexNow spec.
+INDEXNOW_KEY = 'c9e1f2a4b7d84306a51e8f0d2b6c4973'
+
+@app.route(f'/{INDEXNOW_KEY}.txt')
+def indexnow_key():
+    return app.response_class(INDEXNOW_KEY, mimetype='text/plain')
+
+
 @app.route('/robots.txt')
 def robots():
     return app.response_class(f"""User-agent: *
