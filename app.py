@@ -2302,6 +2302,16 @@ def admin_update_sale_status(sale_id):
 
 # ── Salesperson self-registration ── #
 
+def _password_issue(pw):
+    """Return an error message if the password is too weak, else None.
+    Rule: at least 8 characters with at least one letter and one number."""
+    if len(pw) < 8:
+        return 'Password must be at least 8 characters.'
+    if not re.search(r'[A-Za-z]', pw) or not re.search(r'\d', pw):
+        return 'Password must contain at least one letter and one number.'
+    return None
+
+
 @app.route('/sales/register', methods=['GET', 'POST'])
 @app.route('/sales/register/<token>', methods=['GET', 'POST'])
 def sales_register(token=None):
@@ -2328,8 +2338,8 @@ def sales_register(token=None):
             flash('Name and password are required.', 'error')
         elif password != confirm:
             flash('Passwords do not match.', 'error')
-        elif len(password) < 6:
-            flash('Password must be at least 6 characters.', 'error')
+        elif _password_issue(password):
+            flash(_password_issue(password), 'error')
         elif Salesperson.query.filter(
                 db.func.lower(Salesperson.full_name) == full_name.lower()).first():
             flash('An account with this name already exists. If this is you, please log in or contact the admin.', 'error')
@@ -3206,8 +3216,8 @@ def sales_reset_password(token):
     if request.method == 'POST':
         pw  = request.form.get('password', '')
         pw2 = request.form.get('password2', '')
-        if len(pw) < 6:
-            flash('Password must be at least 6 characters.', 'error')
+        if _password_issue(pw):
+            flash(_password_issue(pw), 'error')
             return render_template('sales/reset_password.html', token=token)
         if pw != pw2:
             flash('Passwords do not match.', 'error')
