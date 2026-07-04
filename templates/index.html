@@ -380,27 +380,27 @@
       </div>
 
       <!-- ── RIGHT: INVOICE PANEL ── -->
-      <div id="invoice-panel" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:16px;padding:1.75rem;" class="reveal reveal-delay-1">
+      <div id="invoice-panel" style="background:#ffffff;border:1px solid #e5e7eb;border-radius:16px;padding:1.75rem;color:#111827;" class="reveal reveal-delay-1">
 
         <!-- Placeholder state -->
         <div id="invoice-placeholder" style="text-align:center;padding:3rem 1rem;">
           <div style="font-size:3.5rem;margin-bottom:1rem;opacity:.35;">☀️</div>
-          <p style="color:rgba(255,255,255,.3);font-size:.9rem;line-height:1.6;">Add your appliances and click<br><strong style="color:rgba(255,255,255,.5);">Generate My Solar Quote</strong></p>
+          <p style="color:#6b7280;font-size:.9rem;line-height:1.6;">Add your appliances and click<br><strong style="color:#111827;">Generate My Solar Quote</strong></p>
         </div>
 
         <!-- Invoice (hidden until generated) -->
         <div id="invoice-content" style="display:none;">
           <!-- Invoice header -->
-          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1.25rem;padding-bottom:1rem;border-bottom:1px solid rgba(255,255,255,.1);">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1.25rem;padding-bottom:1rem;border-bottom:1px solid #e5e7eb;">
             <div>
               <img src="{{ url_for('static', filename='img/galaxy-logo.png') }}" alt="Galaxy Solar" style="height:32px;width:auto;border-radius:4px;margin-bottom:.5rem;display:block;">
-              <p style="font-size:.72rem;color:rgba(255,255,255,.4);">Galaxy Energy Company Ltd</p>
-              <p style="font-size:.72rem;color:rgba(255,255,255,.4);">www.galaxysolartech.com</p>
+              <p style="font-size:.72rem;color:#4b5563;">Galaxy Energy Company Ltd</p>
+              <p style="font-size:.72rem;color:#4b5563;">www.galaxysolartech.com</p>
             </div>
             <div style="text-align:right;">
-              <div style="font-size:.7rem;color:#33CC00;font-weight:700;letter-spacing:.08em;text-transform:uppercase;">SYSTEM QUOTE</div>
-              <div id="inv-date" style="font-size:.72rem;color:rgba(255,255,255,.4);margin-top:.2rem;"></div>
-              <div id="inv-ref" style="font-size:.68rem;color:rgba(255,255,255,.25);margin-top:.1rem;"></div>
+              <div style="font-size:.7rem;color:#1a7a00;font-weight:700;letter-spacing:.08em;text-transform:uppercase;">SYSTEM QUOTE</div>
+              <div id="inv-date" style="font-size:.72rem;color:#4b5563;margin-top:.2rem;"></div>
+              <div id="inv-ref" style="font-size:.68rem;color:#6b7280;margin-top:.1rem;"></div>
             </div>
           </div>
 
@@ -410,7 +410,7 @@
           <!-- Line items table -->
           <table style="width:100%;border-collapse:collapse;font-size:.8rem;margin-bottom:.75rem;">
             <thead>
-              <tr style="color:rgba(255,255,255,.35);text-transform:uppercase;font-size:.65rem;letter-spacing:.07em;border-bottom:1px solid rgba(255,255,255,.08);">
+              <tr style="color:#6b7280;text-transform:uppercase;font-size:.65rem;letter-spacing:.07em;border-bottom:1px solid #e5e7eb;">
                 <th style="text-align:left;padding:.4rem .25rem;">#</th>
                 <th style="text-align:left;padding:.4rem .25rem;">Component</th>
                 <th style="text-align:left;padding:.4rem .25rem;">Specification</th>
@@ -423,32 +423,32 @@
           </table>
 
           <!-- Subtotals -->
-          <div style="border-top:1px solid rgba(255,255,255,.08);padding-top:.75rem;">
-            <div style="display:flex;justify-content:space-between;font-size:.8rem;color:rgba(255,255,255,.5);margin-bottom:.3rem;">
+          <div style="border-top:1px solid #e5e7eb;padding-top:.75rem;">
+            <div style="display:flex;justify-content:space-between;font-size:.8rem;color:#4b5563;margin-bottom:.3rem;">
               <span>Equipment Subtotal</span><span id="inv-subtotal"></span>
             </div>
-            <div style="display:flex;justify-content:space-between;font-size:.8rem;color:rgba(255,255,255,.5);margin-bottom:.5rem;">
+            <div style="display:flex;justify-content:space-between;font-size:.8rem;color:#4b5563;margin-bottom:.5rem;">
               <span>Installation &amp; Accessories</span><span id="inv-install"></span>
             </div>
-            <div style="display:flex;justify-content:space-between;font-size:1.1rem;font-weight:800;color:white;border-top:1px solid rgba(51,204,0,.4);padding-top:.6rem;margin-top:.2rem;">
-              <span>TOTAL</span><span id="inv-total" style="color:#33CC00;"></span>
+            <div style="display:flex;justify-content:space-between;font-size:1.1rem;font-weight:800;color:#111827;border-top:2px solid #33CC00;padding-top:.6rem;margin-top:.2rem;">
+              <span>TOTAL</span><span id="inv-total" style="color:#1a7a00;"></span>
             </div>
           </div>
 
           <!-- Energy summary -->
-          <div id="inv-energy-box" style="background:rgba(51,204,0,.08);border:1px solid rgba(51,204,0,.2);border-radius:8px;padding:.75rem 1rem;margin-top:1rem;font-size:.78rem;">
-            <div style="font-weight:700;color:#33CC00;margin-bottom:.4rem;">System Summary</div>
-            <div id="inv-energy-detail" style="color:rgba(255,255,255,.6);line-height:1.7;"></div>
+          <div id="inv-energy-box" style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:.75rem 1rem;margin-top:1rem;font-size:.78rem;">
+            <div style="font-weight:700;color:#1a7a00;margin-bottom:.4rem;">System Summary</div>
+            <div id="inv-energy-detail" style="color:#374151;line-height:1.7;"></div>
           </div>
 
           <!-- Advisor card (shown when link was shared by a salesperson) -->
-          <div id="inv-advisor" style="display:none;background:rgba(51,204,0,.08);border:1px solid rgba(51,204,0,.25);border-radius:10px;padding:.85rem 1rem;margin-top:.85rem;">
-            <p style="font-size:.65rem;letter-spacing:.1em;text-transform:uppercase;color:#33CC00;font-weight:700;margin-bottom:.5rem;">Your Solar Advisor</p>
+          <div id="inv-advisor" style="display:none;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:.85rem 1rem;margin-top:.85rem;">
+            <p style="font-size:.65rem;letter-spacing:.1em;text-transform:uppercase;color:#1a7a00;font-weight:700;margin-bottom:.5rem;">Your Solar Advisor</p>
             <div style="display:flex;align-items:center;gap:.85rem;flex-wrap:wrap;">
               <div id="inv-advisor-avatar" style="width:40px;height:40px;border-radius:50%;background:#33CC00;color:white;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.9rem;flex-shrink:0;"></div>
               <div style="flex:1;min-width:120px;">
-                <div id="inv-advisor-name" style="font-weight:700;color:white;font-size:.88rem;"></div>
-                <div id="inv-advisor-code" style="font-size:.72rem;color:rgba(255,255,255,.45);margin-top:.1rem;"></div>
+                <div id="inv-advisor-name" style="font-weight:700;color:#111827;font-size:.88rem;"></div>
+                <div id="inv-advisor-code" style="font-size:.72rem;color:#4b5563;margin-top:.1rem;"></div>
               </div>
               <a id="inv-advisor-wa" href="#" target="_blank" style="display:flex;align-items:center;gap:.4rem;padding:.5rem .9rem;background:#22c55e;color:white;border-radius:7px;font-size:.78rem;font-weight:700;text-decoration:none;white-space:nowrap;">
                 💬 WhatsApp
@@ -457,7 +457,7 @@
           </div>
 
           <!-- Disclaimer -->
-          <p style="font-size:.68rem;color:rgba(255,255,255,.25);line-height:1.5;margin-top:.85rem;">
+          <p style="font-size:.68rem;color:#6b7280;line-height:1.5;margin-top:.85rem;">
             Prices in GH₵ as at June 2026. Quote valid 14 days. Installation in Greater Accra; other regions subject to transport supplement. 5-year system warranty; panels 10-year warranty.
           </p>
 
@@ -466,15 +466,15 @@
             <a href="{{ url_for('contact') }}" style="flex:1;min-width:120px;padding:.75rem;background:#33CC00;color:white;border:none;border-radius:8px;font-size:.85rem;font-weight:700;text-align:center;text-decoration:none;display:block;">
               Order This System
             </a>
-            <button onclick="calcShare()" id="share-btn" style="flex:1;min-width:120px;padding:.75rem;background:rgba(51,204,0,.12);border:1px solid rgba(51,204,0,.35);border-radius:8px;color:#55E600;font-size:.85rem;font-weight:600;cursor:pointer;font-family:inherit;">
+            <button onclick="calcShare()" id="share-btn" style="flex:1;min-width:120px;padding:.75rem;background:#f0fdf4;border:1px solid #86efac;border-radius:8px;color:#15803d;font-size:.85rem;font-weight:600;cursor:pointer;font-family:inherit;">
               🔗 Share Quote
             </button>
-            <button onclick="calcPrint()" style="flex:1;min-width:120px;padding:.75rem;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);border-radius:8px;color:white;font-size:.85rem;font-weight:600;cursor:pointer;font-family:inherit;">
+            <button onclick="calcPrint()" style="flex:1;min-width:120px;padding:.75rem;background:#f8fafc;border:1px solid #cbd5e1;border-radius:8px;color:#111827;font-size:.85rem;font-weight:600;cursor:pointer;font-family:inherit;">
               Print / Save PDF
             </button>
           </div>
           <!-- Share confirmation toast -->
-          <div id="share-toast" style="display:none;margin-top:.6rem;background:rgba(51,204,0,.15);border:1px solid rgba(51,204,0,.3);border-radius:8px;padding:.55rem .9rem;font-size:.78rem;color:#55E600;text-align:center;">
+          <div id="share-toast" style="display:none;margin-top:.6rem;background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:.55rem .9rem;font-size:.78rem;color:#15803d;text-align:center;">
             ✅ Link copied to clipboard! Share it on WhatsApp or anywhere.
           </div>
         </div>
@@ -501,9 +501,9 @@
 }
 #preset-btns button:hover{background:rgba(51,204,0,.28);color:white;}
 #appliance-tbody tr td{padding:.45rem .3rem;border-bottom:1px solid rgba(255,255,255,.06);color:rgba(255,255,255,.8);}
-#inv-tbody tr td{padding:.4rem .25rem;border-bottom:1px solid rgba(255,255,255,.05);color:rgba(255,255,255,.8);}
+#inv-tbody tr td{padding:.4rem .25rem;border-bottom:1px solid #f3f4f6;color:#111827;}
 #inv-tbody tr:last-child td{border-bottom:none;}
-.inv-chip{padding:.25rem .7rem;background:rgba(51,204,0,.15);border:1px solid rgba(51,204,0,.3);border-radius:20px;font-size:.72rem;color:#55E600;font-weight:600;}
+.inv-chip{padding:.25rem .7rem;background:#f0fdf4;border:1px solid #86efac;border-radius:20px;font-size:.72rem;color:#15803d;font-weight:600;}
 </style>
 
 <script>
@@ -678,12 +678,12 @@ function calcGenerate(){
     [3,PRODUCTS[invKey].name, PRODUCTS[invKey].spec,1,PRODUCTS[invKey].unit,invTotal],
   ];
   document.getElementById('inv-tbody').innerHTML = rows.map(r=>
-    `<tr><td style="color:rgba(255,255,255,.35)">${r[0]}</td>
-    <td><strong style="color:white">${r[1]}</strong></td>
-    <td style="color:rgba(255,255,255,.5);font-size:.75rem">${r[2]}</td>
+    `<tr><td style="color:#6b7280">${r[0]}</td>
+    <td><strong style="color:#111827">${r[1]}</strong></td>
+    <td style="color:#4b5563;font-size:.75rem">${r[2]}</td>
     <td style="text-align:center">${r[3]}</td>
     <td style="text-align:right">${fmt(r[4])}</td>
-    <td style="text-align:right;font-weight:700;color:#55E600">${fmt(r[5])}</td></tr>`
+    <td style="text-align:right;font-weight:700;color:#15803d">${fmt(r[5])}</td></tr>`
   ).join('');
 
   document.getElementById('inv-subtotal').textContent = 'GH₵ '+fmt(equipTotal);
@@ -692,11 +692,11 @@ function calcGenerate(){
 
   // energy detail
   document.getElementById('inv-energy-detail').innerHTML =
-    `Daily load: <strong style="color:white">${dailyKwh.toFixed(2)} kWh</strong> &nbsp;|&nbsp; ` +
-    `Peak demand: <strong style="color:white">${(peakWatts/1000).toFixed(1)} kW</strong><br>` +
-    `Solar array: <strong style="color:white">${(panelCount*0.63).toFixed(2)} kWp</strong> &nbsp;|&nbsp; ` +
-    `Battery bank: <strong style="color:white">${battLabel}</strong><br>` +
-    `Est. daily generation (5 PSH): <strong style="color:#33CC00">${(panelCount*0.63*5*0.82).toFixed(1)} kWh</strong>`;
+    `Daily load: <strong style="color:#111827">${dailyKwh.toFixed(2)} kWh</strong> &nbsp;|&nbsp; ` +
+    `Peak demand: <strong style="color:#111827">${(peakWatts/1000).toFixed(1)} kW</strong><br>` +
+    `Solar array: <strong style="color:#111827">${(panelCount*0.63).toFixed(2)} kWp</strong> &nbsp;|&nbsp; ` +
+    `Battery bank: <strong style="color:#111827">${battLabel}</strong><br>` +
+    `Est. daily generation (5 PSH): <strong style="color:#15803d">${(panelCount*0.63*5*0.82).toFixed(1)} kWh</strong>`;
 
   // show advisor card if sp data available
   if(window._calcSp){
