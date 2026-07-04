@@ -614,6 +614,16 @@ def inject_globals():
 
 # ── Salesperson referral tracking ───────────────────────────────────────── #
 @app.before_request
+def force_https():
+    """301 plain-HTTP requests to HTTPS (SEO: avoids Google indexing a
+    duplicate http:// version). Uses the proxy header set by Render/Cloudflare;
+    local dev sends no header and is unaffected."""
+    proto = request.headers.get('X-Forwarded-Proto', '')
+    if proto == 'http':
+        return redirect(request.url.replace('http://', 'https://', 1), code=301)
+
+
+@app.before_request
 def capture_referral():
     """Store salesperson referral in session when ?ref=CODE is in the URL."""
     ref = request.args.get('ref', '').strip()
