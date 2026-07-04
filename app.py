@@ -3560,6 +3560,13 @@ def indexnow_key():
     return app.response_class(INDEXNOW_KEY, mimetype='text/plain')
 
 
+@app.route('/googled6e30c45b232eb27.html')
+def google_site_verification():
+    """Google Search Console ownership verification."""
+    return app.response_class('google-site-verification: googled6e30c45b232eb27.html',
+                              mimetype='text/html')
+
+
 @app.route('/robots.txt')
 def robots():
     return app.response_class(f"""User-agent: *
