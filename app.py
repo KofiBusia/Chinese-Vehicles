@@ -2513,6 +2513,12 @@ def admin_team_email():
         subject    = request.form.get('subject', '').strip()
         body_tpl   = request.form.get('body', '').strip()
         recipient_ids = request.form.getlist('recipients')
+        attachment = request.files.get('attachment')
+        attachment_bytes = None
+        attachment_filename = None
+        if attachment and attachment.filename:
+            attachment_bytes = attachment.read()
+            attachment_filename = secure_filename(attachment.filename)
 
         if not subject or not body_tpl:
             flash('Subject and message body are required.', 'error')
@@ -2549,11 +2555,19 @@ def admin_team_email():
                 f"\nhttps://chinacarsinghana.com/sales/login"
             )
 
-            msg = MIMEMultipart('alternative')
+            msg = MIMEMultipart('mixed')
             msg['Subject'] = personalised_subject
             msg['From']    = SMTP_USER
             msg['To']      = sp.email
-            msg.attach(MIMEText(personalised_body, 'plain'))
+            alt = MIMEMultipart('alternative')
+            alt.attach(MIMEText(personalised_body, 'plain'))
+            msg.attach(alt)
+            if attachment_bytes:
+                part = MIMEBase('application', 'octet-stream')
+                part.set_payload(attachment_bytes)
+                encoders.encode_base64(part)
+                part.add_header('Content-Disposition', 'attachment', filename=attachment_filename)
+                msg.attach(part)
             try:
                 with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
                     server.ehlo(); server.starttls()

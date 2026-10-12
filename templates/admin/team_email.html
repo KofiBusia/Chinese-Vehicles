@@ -22,7 +22,7 @@
     </div>
   </div>
 
-  <form method="post" action="{{ url_for('admin_team_email') }}">
+  <form method="post" action="{{ url_for('admin_team_email') }}" enctype="multipart/form-data">
 
     <!-- Recipients -->
     <div class="form-section">
@@ -84,6 +84,20 @@
             <code style="background:#f1f5f9;padding:.1rem .35rem;border-radius:4px;">{ref_link}</code> Referral link &nbsp;
             <code style="background:#f1f5f9;padding:.1rem .35rem;border-radius:4px;">{commission}</code> Commission % &nbsp;
             <code style="background:#f1f5f9;padding:.1rem .35rem;border-radius:4px;">{login_url}</code> Portal login URL
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Attachment -->
+    <div class="form-section">
+      <div class="form-section-header">📎 Attachment (optional)</div>
+      <div class="form-section-body">
+        <div class="form-group">
+          <label class="form-label">Flier / Image / File</label>
+          <input type="file" name="attachment" class="form-control">
+          <p style="font-size:.75rem;color:var(--mid);margin-top:.5rem;">
+            Attach a flier image (JPG/PNG) or any file to include with this email.
           </p>
         </div>
       </div>
