@@ -1026,10 +1026,10 @@ const PC_PRESETS = [
 ];
 
 const PC_PRODUCTS = {
-  panel:{name:'JINKO Solar Panel',spec:'630W Mono PERC',unit:1800},
+  panel:{name:'JINKO Solar Panel',spec:'620W Mono PERC',unit:1800},
   gel200:{name:'RITAR GEL Battery',spec:'12V 200AH GEL',unit:4600},
   lifepo280:{name:'Galaxy Energy LiFePO₄',spec:'12.8V 280AH',unit:7800},
-  lifepo51v:{name:'Galaxy Energy LiFePO₄',spec:'51.2V 100AH',unit:15000},
+  lifepo51v:{name:'Galaxy Energy LiFePO₄',spec:'51.2V 300AH',unit:30000},
   inv_1k2:{name:'Galaxy Solar Inverter',spec:'1.2KW · Built-in MPPT',unit:2775},
   inv_3k6:{name:'Galaxy Solar Inverter',spec:'3.6KW · Built-in MPPT',unit:4200},
   inv_5k5:{name:'Galaxy Solar Inverter',spec:'5.5KW Hybrid · Built-in MPPT',unit:4200},
@@ -1100,7 +1100,7 @@ function pcGenerate(){
   const dailyKwh  = pcAppliances.reduce((s,a)=>(s+a.watts*a.hours*a.qty/1000),0);
   const peakWatts = pcAppliances.reduce((s,a)=>(s+a.watts*a.qty),0);
   const peakLoad  = peakWatts*1.25;
-  const panelCount = Math.max(2,Math.ceil(dailyKwh*1.2/(0.630*5)));
+  const panelCount = Math.max(2,Math.ceil(dailyKwh*1.2/(0.620*5)));
   const needWh    = dailyKwh*1000;
 
   let battKey,battCount,battLabel;
@@ -1109,7 +1109,7 @@ function pcGenerate(){
     if(battCount%2!==0)battCount++;
     battKey='gel200'; battLabel=`${battCount}× 12V 200AH GEL`;
   } else {
-    if(needWh>6000){ battCount=Math.max(1,Math.ceil(needWh/4096)); battKey='lifepo51v'; battLabel=`${battCount}× 51.2V 100AH LiFePO₄`; }
+    if(needWh>6000){ battCount=Math.max(1,Math.ceil(needWh/12288)); battKey='lifepo51v'; battLabel=`${battCount}× 51.2V 300AH LiFePO₄`; }
     else           { battCount=Math.max(1,Math.ceil(needWh/2867)); battKey='lifepo280'; battLabel=`${battCount}× 12.8V 280AH LiFePO₄`; }
   }
 
@@ -1132,7 +1132,7 @@ function pcGenerate(){
   document.getElementById('pc-inv-date').textContent =
     new Date().toLocaleDateString('en-GH',{day:'2-digit',month:'short',year:'numeric'});
 
-  const chips=[`${panelCount}× 630W Panels`,`${(panelCount*0.63).toFixed(1)}kWp`,battLabel,PC_PRODUCTS[invKey].spec];
+  const chips=[`${panelCount}× 620W Panels`,`${(panelCount*0.62).toFixed(1)}kWp`,battLabel,PC_PRODUCTS[invKey].spec];
   document.getElementById('pc-inv-chips').innerHTML =
     chips.map(c=>`<span style="display:inline-block;padding:.2rem .6rem;background:rgba(51,204,0,.15);border:1px solid rgba(51,204,0,.3);border-radius:20px;font-size:.68rem;color:#55E600;font-weight:600;margin:.1rem;">${c}</span>`).join('');
 

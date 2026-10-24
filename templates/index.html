@@ -521,10 +521,10 @@ const PRESETS = [
 ];
 
 const PRODUCTS = {
-  panel:       {name:'JINKO Solar Panel',spec:'630W Mono PERC',unit:1800},
+  panel:       {name:'JINKO Solar Panel',spec:'620W Mono PERC',unit:1800},
   gel200:      {name:'RITAR GEL Battery',spec:'12V 200AH GEL Deep Cycle',unit:4600},
   lifepo280:   {name:'Galaxy Energy LiFePO₄',spec:'12.8V 280AH (3.58kWh)',unit:7800},
-  lifepo51v:   {name:'Galaxy Energy LiFePO₄',spec:'51.2V 100AH (5.12kWh)',unit:15000},
+  lifepo51v:   {name:'Galaxy Energy LiFePO₄',spec:'51.2V 300AH (15.36kWh)',unit:30000},
   inv_1k2:     {name:'Galaxy Solar Inverter',spec:'1.2KW Pure Sine Wave · Built-in MPPT',unit:2775},
   inv_3k6:     {name:'Galaxy Solar Inverter',spec:'3.6KW Pure Sine Wave · Built-in MPPT',unit:4200},
   inv_5k5:     {name:'Galaxy Solar Inverter',spec:'5.5KW Hybrid · Built-in MPPT',unit:4200},
@@ -606,8 +606,8 @@ function calcGenerate(){
   const peakWatts = appliances.reduce((s,a)=>(s + a.watts*a.qty),0);
   const peakLoad  = peakWatts * 1.25; // 25% safety
 
-  // ── Panels (630W, 5 PSH Ghana, 1.2 design factor) ──
-  const panelCount = Math.max(2, Math.ceil(dailyKwh * 1.2 / (0.630 * 5)));
+  // ── Panels (620W, 5 PSH Ghana, 1.2 design factor) ──
+  const panelCount = Math.max(2, Math.ceil(dailyKwh * 1.2 / (0.620 * 5)));
 
   // ── Battery bank ──
   const needWh = dailyKwh * 1000;
@@ -619,11 +619,11 @@ function calcGenerate(){
     battKey   = 'gel200';
     battLabel = `${battCount}× 12V 200AH GEL`;
   } else {
-    // prefer 51.2V 100AH (4096Wh usable) for large, 12.8V 280AH (2867Wh) for small
+    // prefer 51.2V 300AH (12288Wh usable) for large, 12.8V 280AH (2867Wh) for small
     if(needWh > 6000){
-      battCount = Math.max(1, Math.ceil(needWh / 4096));
+      battCount = Math.max(1, Math.ceil(needWh / 12288));
       battKey   = 'lifepo51v';
-      battLabel = `${battCount}× 51.2V 100AH LiFePO₄`;
+      battLabel = `${battCount}× 51.2V 300AH LiFePO₄`;
     } else {
       battCount = Math.max(1, Math.ceil(needWh / 2867));
       battKey   = 'lifepo280';
@@ -663,8 +663,8 @@ function calcGenerate(){
 
   // chips
   const chips = [
-    `${panelCount}× 630W Panels`,
-    `${(panelCount*0.63).toFixed(1)}kWp System`,
+    `${panelCount}× 620W Panels`,
+    `${(panelCount*0.62).toFixed(1)}kWp System`,
     `${battLabel}`,
     PRODUCTS[invKey].spec,
   ];
@@ -694,9 +694,9 @@ function calcGenerate(){
   document.getElementById('inv-energy-detail').innerHTML =
     `Daily load: <strong style="color:#111827">${dailyKwh.toFixed(2)} kWh</strong> &nbsp;|&nbsp; ` +
     `Peak demand: <strong style="color:#111827">${(peakWatts/1000).toFixed(1)} kW</strong><br>` +
-    `Solar array: <strong style="color:#111827">${(panelCount*0.63).toFixed(2)} kWp</strong> &nbsp;|&nbsp; ` +
+    `Solar array: <strong style="color:#111827">${(panelCount*0.62).toFixed(2)} kWp</strong> &nbsp;|&nbsp; ` +
     `Battery bank: <strong style="color:#111827">${battLabel}</strong><br>` +
-    `Est. daily generation (5 PSH): <strong style="color:#15803d">${(panelCount*0.63*5*0.82).toFixed(1)} kWh</strong>`;
+    `Est. daily generation (5 PSH): <strong style="color:#15803d">${(panelCount*0.62*5*0.82).toFixed(1)} kWh</strong>`;
 
   // show advisor card if sp data available
   if(window._calcSp){
