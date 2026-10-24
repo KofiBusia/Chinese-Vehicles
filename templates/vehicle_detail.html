@@ -130,6 +130,20 @@
       </div>
       {% endif %}
 
+      <!-- Financing Plans -->
+      {% set fin_plans = vehicle.get_financing_plan() %}
+      {% if fin_plans %}
+      <div class="features-section reveal">
+        <h2 class="features-title">💳 Financing Plans</h2>
+        <ul class="features-list" style="background:var(--light);border-radius:12px;padding:1.25rem 1.5rem;">
+          {% for line in fin_plans %}
+          <li class="feature-item" style="margin-bottom:.5rem;"><span class="feature-icon">💰</span> {{ line }}</li>
+          {% endfor %}
+        </ul>
+        <p style="font-size:.78rem;color:var(--mid);margin-top:.5rem;">Terms and conditions applied. Contact us to confirm current availability of these plans.</p>
+      </div>
+      {% endif %}
+
       <!-- Videos -->
       {% set vids = vehicle.get_videos() %}
       {% if vids %}

@@ -250,6 +250,7 @@ class Vehicle(db.Model):
     color         = db.Column(db.String(50))
     seats         = db.Column(db.Integer)
     features      = db.Column(db.Text, default='[]')
+    financing_plan = db.Column(db.Text, default='[]')  # list of financing option lines, e.g. "20% Deposit: GH₵176,000 — 5yr GH₵16,267/mo"
     images        = db.Column(db.Text, default='[]')
     videos        = db.Column(db.Text, default='[]')
     featured      = db.Column(db.Boolean, default=False)
@@ -267,6 +268,10 @@ class Vehicle(db.Model):
 
     def get_features(self):
         try: return json.loads(self.features or '[]')
+        except: return []
+
+    def get_financing_plan(self):
+        try: return json.loads(self.financing_plan or '[]')
         except: return []
 
     @property
@@ -1867,6 +1872,7 @@ def admin_vehicles():
 def admin_add_vehicle():
     if request.method == 'POST':
         feats = [f.strip() for f in request.form.get('features', '').splitlines() if f.strip()]
+        fin_plan = [f.strip() for f in request.form.get('financing_plan', '').splitlines() if f.strip()]
         _price_ghs = request.form.get('price_ghs', type=float) or 0
         v = Vehicle(
             name         = request.form.get('name'),
@@ -1882,6 +1888,7 @@ def admin_add_vehicle():
             color        = request.form.get('color'),
             seats        = request.form.get('seats', type=int),
             features     = json.dumps(feats),
+            financing_plan = json.dumps(fin_plan),
             images       = '[]',
             videos       = '[]',
             featured     = 'featured' in request.form,
@@ -1923,6 +1930,7 @@ def admin_edit_vehicle(vid):
     v = Vehicle.query.get_or_404(vid)
     if request.method == 'POST':
         feats = [f.strip() for f in request.form.get('features', '').splitlines() if f.strip()]
+        fin_plan = [f.strip() for f in request.form.get('financing_plan', '').splitlines() if f.strip()]
         _price_ghs = request.form.get('price_ghs', type=float) or 0
         _old_price = v.price
         v.name         = request.form.get('name')
@@ -1938,6 +1946,7 @@ def admin_edit_vehicle(vid):
         v.color        = request.form.get('color')
         v.seats        = request.form.get('seats', type=int)
         v.features     = json.dumps(feats)
+        v.financing_plan = json.dumps(fin_plan)
         v.featured     = 'featured' in request.form
         v.available    = 'available' in request.form
         v.updated_at   = datetime.utcnow()
@@ -4040,6 +4049,7 @@ def init_db():
                 "ALTER TABLE salesperson      ADD COLUMN IF NOT EXISTS reset_token        VARCHAR(64)",
                 "ALTER TABLE salesperson      ADD COLUMN IF NOT EXISTS reset_token_expiry TIMESTAMP",
                 "ALTER TABLE loan_application ADD COLUMN IF NOT EXISTS bank_choice        VARCHAR(20) DEFAULT 'republic'",
+                "ALTER TABLE vehicle          ADD COLUMN IF NOT EXISTS financing_plan TEXT",
             ]
             for sql in migrations:
                 try:

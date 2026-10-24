@@ -111,6 +111,11 @@
               <textarea name="features" class="form-control" rows="6"
                         placeholder="Leather seats&#10;Sunroof&#10;Backup camera&#10;Bluetooth&#10;…">{% if vehicle %}{{ vehicle.get_features() | join('\n') }}{% endif %}</textarea>
             </div>
+            <div class="form-group full">
+              <label class="form-label">Financing Plans (one per line)</label>
+              <textarea name="financing_plan" class="form-control" rows="6"
+                        placeholder="20% Deposit: GH₵176,000 — 5yr: GH₵16,267/mo, 4yr: GH₵19,128/mo&#10;0% Deposit — 5yr: GH₵20,476/mo, 4yr: GH₵24,047/mo">{% if vehicle %}{{ vehicle.get_financing_plan() | join('\n') }}{% endif %}</textarea>
+            </div>
           </div>
         </div>
       </div>
