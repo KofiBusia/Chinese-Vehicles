@@ -2,6 +2,7 @@ import os
 import io
 import re
 import json
+import time
 import uuid
 import smtplib
 import threading
@@ -83,6 +84,30 @@ SMTP_HOST     = 'smtp.gmail.com'
 SMTP_PORT     = 587
 SMTP_USER     = os.environ.get('SMTP_USER', '')
 SMTP_PASSWORD = os.environ.get('SMTP_PASSWORD', '')
+
+
+def _smtp_connect():
+    """Open+authenticate one SMTP connection, for reuse across a batch of sends.
+    Opening a fresh connection per email trips Gmail's abuse/rate limiting on
+    bulk sends ("Connection unexpectedly closed")."""
+    server = smtplib.SMTP(SMTP_HOST, SMTP_PORT, timeout=20)
+    server.ehlo()
+    server.starttls()
+    server.login(SMTP_USER, SMTP_PASSWORD)
+    return server
+
+
+def _smtp_send(server, to_addr, msg):
+    """Send via an existing connection, transparently reconnecting once if the
+    connection was dropped (e.g. idle timeout mid-batch). Returns the (possibly
+    reconnected) server so the caller keeps using a live connection."""
+    try:
+        server.sendmail(SMTP_USER, [to_addr], msg.as_string())
+        return server
+    except (smtplib.SMTPServerDisconnected, smtplib.SMTPSenderRefused, OSError):
+        server = _smtp_connect()
+        server.sendmail(SMTP_USER, [to_addr], msg.as_string())
+        return server
 
 # Cloudinary — persistent cloud storage for uploaded images/videos
 USE_CLOUDINARY = False
@@ -1420,12 +1445,36 @@ def loan():
 @app.route('/contact', methods=['GET', 'POST'])
 def contact():
     if request.method == 'POST':
+        email   = request.form.get('email', '').strip()
+        subject = request.form.get('subject', '').strip()
+        if not EMAIL_RE.match(email):
+            flash('The email address looks invalid — please check it (e.g. name@example.com).', 'error')
+            return render_template('contact.html')
+
+        # Duplicate = the same request (same email + same subject) still
+        # awaiting a reply — mirrors the loan application's duplicate check.
+        dup = Contact.query.filter(
+            db.func.lower(Contact.email) == email.lower(),
+            Contact.status != 'replied'
+        ).filter(
+            db.func.lower(Contact.subject) == subject.lower() if subject
+            else Contact.subject.is_(None)
+        ).first()
+        if dup:
+            flash(
+                f'You already sent us this request on {dup.created_at.strftime("%d %b %Y")} and we have not '
+                f'replied yet — no need to send it again. We will get back to you shortly, or call/WhatsApp us '
+                f'on {BUSINESS["phone"]} if it is urgent.',
+                'error'
+            )
+            return render_template('contact.html')
+
         sp_code, sp_name, sp_phone = _sp_session()
         c = Contact(
             name     = request.form.get('name', '').strip(),
-            email    = request.form.get('email', '').strip(),
+            email    = email,
             phone    = request.form.get('phone', '').strip(),
-            subject  = request.form.get('subject', '').strip(),
+            subject  = subject,
             message  = request.form.get('message', '').strip(),
             sp_code  = sp_code,
             sp_name  = sp_name,
@@ -1448,12 +1497,36 @@ def about():
 def order_vehicle(vid):
     vehicle = Vehicle.query.get_or_404(vid)
     if request.method == 'POST':
+        email      = request.form.get('email', '').strip()
+        order_type = request.form.get('order_type', 'order')
+        if not EMAIL_RE.match(email):
+            flash('The email address looks invalid — please check it (e.g. name@example.com).', 'error')
+            return render_template('order.html', vehicle=vehicle, order_type=order_type)
+
+        # Duplicate = the same request (same email + same vehicle + same type)
+        # still pending — mirrors the loan application's duplicate check.
+        dup = CarOrder.query.filter(
+            db.func.lower(CarOrder.email) == email.lower(),
+            CarOrder.vehicle_id == vid,
+            CarOrder.order_type == order_type,
+            CarOrder.status == 'pending'
+        ).first()
+        if dup:
+            kind = 'test drive booking' if order_type == 'test_drive' else 'order'
+            flash(
+                f'You already submitted this {kind} for the {vehicle.name} on {dup.created_at.strftime("%d %b %Y")} '
+                f'and we have not confirmed it yet — no need to submit it again. We will contact you shortly, or '
+                f'call/WhatsApp us on {BUSINESS["phone"]} if it is urgent.',
+                'error'
+            )
+            return render_template('order.html', vehicle=vehicle, order_type=order_type)
+
         sp_code, sp_name, sp_phone = _sp_session()
         order = CarOrder(
-            order_type     = request.form.get('order_type', 'order'),
+            order_type     = order_type,
             vehicle_id     = vid,
             name           = request.form.get('name', '').strip(),
-            email          = request.form.get('email', '').strip(),
+            email          = email,
             phone          = request.form.get('phone', '').strip(),
             location       = request.form.get('location', '').strip(),
             latitude       = request.form.get('latitude', type=float),
@@ -1520,6 +1593,7 @@ def admin_refer_unanswered_orders():
         with app_ctx:
             sent = 0
             failed = 0
+            server = _smtp_connect()
             for oid in ids:
                 o = CarOrder.query.get(oid)
                 if not o or not o.email:
@@ -1544,21 +1618,22 @@ Best regards,
 {BUSINESS['name']} Team
 {BUSINESS['phone']} · {BUSINESS['email']}
 """
+                msg = MIMEMultipart('alternative')
+                msg['Subject'] = subject
+                msg['From']    = SMTP_USER
+                msg['To']      = o.email
+                msg.attach(MIMEText(body, 'plain'))
                 try:
-                    msg = MIMEMultipart('alternative')
-                    msg['Subject'] = subject
-                    msg['From']    = SMTP_USER
-                    msg['To']      = o.email
-                    msg.attach(MIMEText(body, 'plain'))
-                    with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
-                        server.ehlo()
-                        server.starttls()
-                        server.login(SMTP_USER, SMTP_PASSWORD)
-                        server.sendmail(SMTP_USER, [o.email], msg.as_string())
+                    server = _smtp_send(server, o.email, msg)
                     sent += 1
                 except Exception as e:
                     print(f'[EMAIL] Referral to Anthony failed for {o.email}: {e}')
                     failed += 1
+                time.sleep(0.3)
+            try:
+                if server: server.quit()
+            except Exception:
+                pass
             print(f'[EMAIL] Order referral blast finished: {sent} sent, {failed} failed.')
 
     threading.Thread(target=_send_all, args=(app.app_context(), order_ids), daemon=True).start()
@@ -1590,6 +1665,7 @@ def admin_test_drive_blast():
     def _send_all(app_ctx, order_list):
         nonlocal sent, failed
         with app_ctx:
+            server = _smtp_connect()
             for o in order_list:
                 if not o.email:
                     continue
@@ -1638,20 +1714,22 @@ China Cars in Ghana
 kofi@chinacarsinghana.com
 https://chinacarsinghana.com
 """
+                msg = MIMEMultipart('alternative')
+                msg['Subject'] = f'Your Test Drive — Visit Us at Our Tema Showroom'
+                msg['From']    = SMTP_USER
+                msg['To']      = o.email
+                msg.attach(MIMEText(body, 'plain'))
                 try:
-                    msg = MIMEMultipart('alternative')
-                    msg['Subject'] = f'Your Test Drive — Visit Us at Our Tema Showroom'
-                    msg['From']    = SMTP_USER
-                    msg['To']      = o.email
-                    msg.attach(MIMEText(body, 'plain'))
-                    with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
-                        server.ehlo(); server.starttls()
-                        server.login(SMTP_USER, SMTP_PASSWORD)
-                        server.sendmail(SMTP_USER, [o.email], msg.as_string())
+                    server = _smtp_send(server, o.email, msg)
                     sent += 1
                 except Exception as e:
                     print(f'[EMAIL] Test drive blast failed for {o.email}: {e}')
                     failed += 1
+                time.sleep(0.3)
+            try:
+                if server: server.quit()
+            except Exception:
+                pass
 
     threading.Thread(target=_send_all, args=(app.app_context(), orders), daemon=True).start()
 
@@ -2466,6 +2544,7 @@ def admin_refer_unanswered_contacts():
         with app_ctx:
             sent = 0
             failed = 0
+            server = _smtp_connect()
             for cid in ids:
                 c = Contact.query.get(cid)
                 if not c or not c.email:
@@ -2491,23 +2570,24 @@ Best regards,
 {BUSINESS['name']} Team
 {BUSINESS['phone']} · {BUSINESS['email']}
 """
+                msg = MIMEMultipart('alternative')
+                msg['Subject'] = subject
+                msg['From']    = SMTP_USER
+                msg['To']      = c.email
+                msg.attach(MIMEText(body, 'plain'))
                 try:
-                    msg = MIMEMultipart('alternative')
-                    msg['Subject'] = subject
-                    msg['From']    = SMTP_USER
-                    msg['To']      = c.email
-                    msg.attach(MIMEText(body, 'plain'))
-                    with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
-                        server.ehlo()
-                        server.starttls()
-                        server.login(SMTP_USER, SMTP_PASSWORD)
-                        server.sendmail(SMTP_USER, [c.email], msg.as_string())
+                    server = _smtp_send(server, c.email, msg)
                     c.status = 'referred_to_anthony'
                     db.session.commit()
                     sent += 1
                 except Exception as e:
                     print(f'[EMAIL] Referral to Anthony failed for {c.email}: {e}')
                     failed += 1
+                time.sleep(0.3)
+            try:
+                if server: server.quit()
+            except Exception:
+                pass
             print(f'[EMAIL] Contact referral blast finished: {sent} sent, {failed} failed.')
 
     threading.Thread(target=_send_all, args=(app.app_context(), contact_ids), daemon=True).start()
@@ -2726,6 +2806,8 @@ def sales_register(token=None):
             flash('Passwords do not match.', 'error')
         elif _password_issue(password):
             flash(_password_issue(password), 'error')
+        elif email and not EMAIL_RE.match(email):
+            flash('The email address looks invalid — please check it (e.g. name@example.com).', 'error')
         elif Salesperson.query.filter(
                 db.func.lower(Salesperson.full_name) == full_name.lower()).first():
             flash('An account with this name already exists. If this is you, please log in or contact the admin.', 'error')
