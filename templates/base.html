@@ -62,7 +62,6 @@
     "@context": "https://schema.org",
     "@type": "AutoDealer",
     "name": "{{ business.name }}",
-    "alternateName": "Galaxy Auto Ghana",
     "description": "Dealer of quality Chinese vehicles and solar energy systems in Accra, Ghana. Bank financing available.",
     "url": "{{ SITE_URL }}",
     "telephone": "{{ business.phone }}",
@@ -99,7 +98,7 @@
 <nav class="main-nav {% block nav_class %}{% endblock %}" id="mainNav">
   <div class="nav-container">
     <a href="{{ url_for('index') }}" class="nav-logo">
-      <img src="{{ url_for('static', filename='img/galaxy-logo.png') }}" alt="{{ business.name }}" style="height:38px;width:auto;border-radius:5px;display:block;">
+      <span class="logo-icon">🚗</span> {{ business.name }}
     </a>
     <div class="nav-links">
       <a href="{{ url_for('vehicles') }}" class="nav-link {% if request.endpoint == 'vehicles' or request.endpoint == 'vehicle_detail' %}active{% endif %}">Vehicles</a>
@@ -165,8 +164,8 @@
   <div class="footer-inner">
     <div class="footer-grid">
       <div class="footer-brand">
-        <a href="{{ url_for('index') }}" style="display:inline-block;margin-bottom:.75rem;">
-          <img src="{{ url_for('static', filename='img/galaxy-logo.png') }}" alt="{{ business.name }}" style="height:44px;width:auto;border-radius:6px;">
+        <a href="{{ url_for('index') }}" style="display:inline-block;margin-bottom:.75rem;text-decoration:none;">
+          <h3 style="margin:0;">{{ business.name }}</h3>
         </a>
         <p>{{ business.tagline }}<br>Your trusted partner for premium vehicles and solar energy solutions.</p>
         <div class="footer-social">
