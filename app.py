@@ -66,10 +66,11 @@ SITE_URL = 'https://chinacarsinghana.com'
 
 # ── Email configuration ───────────────────────────────────────────────────── #
 LOAN_TO_EMAIL       = 'sbonsu@republicghana.com'          # Republic Bank primary
-LOAN_CC_EMAILS      = ['kofi@chinacarsinghana.com', 'pdesbordes@republicghana.com']
+LOAN_CC_EMAILS      = ['kofi@chinacarsinghana.com', 'pdesbordes@republicghana.com', 'eduafoanthony265@gmail.com']
 ACCESS_BANK_EMAILS  = ['emmanueloffei44@gmail.com', 'Offeie@accessbankplc.com']
-ACCESS_BANK_CC      = ['kofi@chinacarsinghana.com']
+ACCESS_BANK_CC      = ['kofi@chinacarsinghana.com', 'eduafoanthony265@gmail.com']
 NOTIFY_EMAILS       = ['kofi@chinacarsinghana.com']  # orders, test drives, contacts
+HEAD_OF_SALES_EMAIL = 'eduafoanthony265@gmail.com'   # Anthony Eduafo — gets a copy of every loan email + the full schedule
 # SMTP settings
 SMTP_HOST     = 'smtp.gmail.com'
 SMTP_PORT     = 587
@@ -1986,6 +1987,81 @@ def admin_applications():
     if status: q = q.filter_by(status=status)
     apps = q.order_by(LoanApplication.created_at.desc()).all()
     return render_template('admin/applications.html', applications=apps, current_status=status)
+
+
+def send_loan_schedule_to_head_of_sales():
+    """Email Anthony (Head of Sales) a full schedule of every loan application —
+    name, vehicle/product, amount, bank, status — so he can follow up with the
+    banks on behalf of customers still waiting."""
+    if not SMTP_USER or not SMTP_PASSWORD:
+        return False, 'SMTP not configured — no email sent.'
+
+    apps = LoanApplication.query.order_by(LoanApplication.created_at.desc()).all()
+    if not apps:
+        return False, 'No loan applications found.'
+
+    rate = get_ghs_rate()
+    lines = []
+    for a in apps:
+        bank   = 'Access Bank' if a.bank_choice == 'access' else 'Republic Bank'
+        amount = f"${a.loan_amount:,.2f} (GH₵ {a.loan_amount * rate:,.2f})" if a.loan_amount else 'N/A'
+        lines.append(
+            f"#{a.id:<5} {a.first_name} {a.last_name:<20} | "
+            f"{(a.product_name or 'N/A'):<30} | "
+            f"{amount:<28} | "
+            f"{bank:<13} | "
+            f"{a.status.upper():<10} | "
+            f"{a.phone:<14} | "
+            f"{a.created_at.strftime('%d %b %Y')}"
+        )
+
+    pending_count = sum(1 for a in apps if a.status in ('pending', 'processing'))
+
+    body = f"""\
+Hi Anthony,
+
+Here is the full schedule of loan applications as of {datetime.utcnow().strftime('%d %B %Y')}.
+{pending_count} application{'s are' if pending_count != 1 else ' is'} still pending/processing —
+please contact the banks (Republic Bank / Access Bank) to follow up on these
+customers' applications.
+
+{'=' * 110}
+{'ID':<6}{'APPLICANT':<25}{'VEHICLE / PRODUCT':<32}{'AMOUNT':<30}{'BANK':<14}{'STATUS':<11}{'PHONE':<15}{'DATE'}
+{'=' * 110}
+""" + "\n".join(lines) + f"""
+{'=' * 110}
+
+Total applications : {len(apps)}
+Pending/Processing  : {pending_count}
+
+──────────────────────────────────────
+{BUSINESS['name']}
+{BUSINESS['phone']} · {BUSINESS['email']}
+{SITE_URL}
+"""
+    try:
+        msg = MIMEMultipart('alternative')
+        msg['Subject'] = f'Loan Application Schedule — {len(apps)} applications ({pending_count} need bank follow-up)'
+        msg['From']    = SMTP_USER
+        msg['To']      = HEAD_OF_SALES_EMAIL
+        msg.attach(MIMEText(body, 'plain'))
+        with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
+            server.ehlo()
+            server.starttls()
+            server.login(SMTP_USER, SMTP_PASSWORD)
+            server.sendmail(SMTP_USER, [HEAD_OF_SALES_EMAIL], msg.as_string())
+        return True, f'Schedule of {len(apps)} applications sent to {HEAD_OF_SALES_EMAIL}.'
+    except Exception as e:
+        print(f'[EMAIL] Failed to send loan schedule: {e}')
+        return False, f'Failed to send: {e}'
+
+
+@app.route('/admin/applications/send-schedule', methods=['POST'])
+@admin_required
+def admin_send_loan_schedule():
+    ok, message = send_loan_schedule_to_head_of_sales()
+    flash(message, 'success' if ok else 'error')
+    return redirect(url_for('admin_applications'))
 
 
 def send_application_status_email(a, new_status):

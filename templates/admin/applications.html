@@ -5,7 +5,7 @@
 {% block content %}
 
 <!-- Filter tabs -->
-<div style="display:flex;gap:.5rem;margin-bottom:1.5rem;flex-wrap:wrap;">
+<div style="display:flex;gap:.5rem;margin-bottom:1.5rem;flex-wrap:wrap;align-items:center;">
   {% for label, val in [('All', ''), ('Pending', 'pending'), ('Processing', 'processing'), ('Approved', 'approved'), ('Rejected', 'rejected')] %}
   <a href="{{ url_for('admin_applications') }}{% if val %}?status={{ val }}{% endif %}"
      style="padding:.45rem 1rem;border-radius:20px;font-size:.82rem;font-weight:600;text-decoration:none;
@@ -13,6 +13,12 @@
     {{ label }}
   </a>
   {% endfor %}
+  <form method="post" action="{{ url_for('admin_send_loan_schedule') }}" style="margin-left:auto;"
+        onsubmit="return confirm('Email the full loan application schedule to Anthony (Head of Sales)?');">
+    <button type="submit" class="btn btn-sm" style="background:#f59e0b;color:#0f172a;font-weight:700;">
+      📋 Send Schedule to Anthony
+    </button>
+  </form>
 </div>
 
 <div class="table-card">
