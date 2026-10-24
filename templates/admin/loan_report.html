@@ -29,6 +29,8 @@
        class="btn btn-sm {{ 'btn-primary' if r.bank == 'republic' else 'btn-outline' }}">Republic Bank</a>
     <a href="{{ url_for('admin_loan_report', bank='access', **period_args) }}"
        class="btn btn-sm {{ 'btn-primary' if r.bank == 'access' else 'btn-outline' }}">Access Bank</a>
+    <a href="{{ url_for('admin_loan_report', bank='omnibsic', **period_args) }}"
+       class="btn btn-sm {{ 'btn-primary' if r.bank == 'omnibsic' else 'btn-outline' }}">OmniBSIC Bank</a>
   </div>
 </div>
 
@@ -174,7 +176,7 @@
           <td>{{ '🚗' if a.product_type == 'vehicle' else '☀️' }} {{ a.product_name or '—' }}</td>
           <td style="white-space:nowrap;font-weight:600;">{{ a.loan_amount | currency }}</td>
           <td>{{ a.loan_term or '—' }} mo</td>
-          <td style="white-space:nowrap;">{{ 'Access' if a.bank_choice == 'access' else 'Republic' }}</td>
+          <td style="white-space:nowrap;">{{ bank_label_for(a.bank_choice) }}</td>
           <td>
             <span class="badge {{ 'badge-green' if a.status == 'approved' else 'badge-red' if a.status == 'rejected' else 'badge-blue' if a.status == 'reviewing' else 'badge-yellow' }}">{{ a.status or 'pending' }}</span>
           </td>

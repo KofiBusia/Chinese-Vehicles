@@ -69,8 +69,15 @@ LOAN_TO_EMAIL       = 'sbonsu@republicghana.com'          # Republic Bank primar
 LOAN_CC_EMAILS      = ['kofi@chinacarsinghana.com', 'pdesbordes@republicghana.com', 'eduafoanthony265@gmail.com']
 ACCESS_BANK_EMAILS  = ['emmanueloffei44@gmail.com', 'Offeie@accessbankplc.com']
 ACCESS_BANK_CC      = ['kofi@chinacarsinghana.com', 'eduafoanthony265@gmail.com']
+OMNIBSIC_BANK_EMAIL = 'felix.narteh@omnibsic.com.gh'
+OMNIBSIC_BANK_CC    = ['kofi@chinacarsinghana.com', 'pdesbordes@republicghana.com', 'eduafoanthony265@gmail.com']
 NOTIFY_EMAILS       = ['kofi@chinacarsinghana.com', 'eduafoanthony265@gmail.com']  # orders, test drives, contacts
 HEAD_OF_SALES_EMAIL = 'eduafoanthony265@gmail.com'   # Anthony Eduafo — gets a copy of every loan email + the full schedule
+
+BANK_LABELS = {'republic': 'Republic Bank', 'access': 'Access Bank', 'omnibsic': 'OmniBSIC Bank'}
+
+def bank_label_for(bank_choice, suffix=''):
+    return BANK_LABELS.get(bank_choice or 'republic', BANK_LABELS['republic']) + suffix
 # SMTP settings
 SMTP_HOST     = 'smtp.gmail.com'
 SMTP_PORT     = 587
@@ -116,8 +123,11 @@ def send_loan_notification(app_obj):
         d_ghs        = f"GH₵ {app_obj.deposit_amount * rate:,.2f}" if app_obj.deposit_amount else 'N/A'
         income_str   = f"${app_obj.annual_income:,.2f} (GH₵ {app_obj.annual_income * rate:,.2f})" if app_obj.annual_income else 'N/A'
 
-        is_access = (app_obj.bank_choice or 'republic') == 'access'
-        bank_label = 'ACCESS BANK GHANA' if is_access else 'REPUBLIC BANK GHANA'
+        bank_key = app_obj.bank_choice or 'republic'
+        bank_label = {
+            'access':   'ACCESS BANK GHANA',
+            'omnibsic': 'OMNIBSIC BANK GHANA',
+        }.get(bank_key, 'REPUBLIC BANK GHANA')
 
         sp_section = ''
         if app_obj.sp_code:
@@ -167,15 +177,18 @@ NEW LOAN APPLICATION — #{app_obj.id}
 {'=' * 54}
 Submitted : {app_obj.created_at.strftime('%d %B %Y at %H:%M UTC')}
 """
-        if is_access:
+        if bank_key == 'access':
             to_addr    = ACCESS_BANK_EMAILS[0]
             cc_addrs   = ACCESS_BANK_EMAILS[1:] + ACCESS_BANK_CC
+        elif bank_key == 'omnibsic':
+            to_addr    = OMNIBSIC_BANK_EMAIL
+            cc_addrs   = OMNIBSIC_BANK_CC
         else:
             to_addr    = LOAN_TO_EMAIL
             cc_addrs   = LOAN_CC_EMAILS
 
         all_recipients = [to_addr] + cc_addrs
-        bank_tag = 'Access Bank' if is_access else 'Republic Bank'
+        bank_tag = {'access': 'Access Bank', 'omnibsic': 'OmniBSIC Bank'}.get(bank_key, 'Republic Bank')
         msg = MIMEMultipart('alternative')
         msg['Subject'] = f"[{bank_tag} Loan #{app_obj.id}] {ptype}: {pname} — {app_obj.first_name} {app_obj.last_name}"
         msg['From']    = SMTP_USER
@@ -295,7 +308,7 @@ class LoanApplication(db.Model):
     employer          = db.Column(db.String(100))
     annual_income     = db.Column(db.Float)
     message           = db.Column(db.Text)
-    bank_choice       = db.Column(db.String(20), default='republic')  # 'republic' | 'access'
+    bank_choice       = db.Column(db.String(20), default='republic')  # 'republic' | 'access' | 'omnibsic'
     status            = db.Column(db.String(20), default='pending')
     created_at        = db.Column(db.DateTime, default=datetime.utcnow)
     sp_code           = db.Column(db.String(20))
@@ -490,6 +503,7 @@ def og_image_url(path=None):
     return SITE_URL + url_for('static', filename='img/og-default.svg')
 
 app.jinja_env.globals['og_image_url'] = og_image_url
+app.jinja_env.globals['bank_label_for'] = bank_label_for
 
 
 def _delete_media_file(path):
@@ -1497,20 +1511,23 @@ def admin_refer_unanswered_orders():
         flash('SMTP not configured — no emails sent.', 'error')
         return redirect(url_for('admin_orders'))
 
-    pending = CarOrder.query.filter_by(status='pending').all()
-    if not pending:
+    order_ids = [o.id for o in CarOrder.query.filter_by(status='pending').all()]
+    if not order_ids:
         flash('No pending orders or test drives found.', 'success')
         return redirect(url_for('admin_orders'))
 
-    sent = 0
-    failed = 0
-    for o in pending:
-        if not o.email:
-            continue
-        vehicle_name = o.vehicle.name if o.vehicle else 'the vehicle'
-        kind = 'test drive booking' if o.order_type == 'test_drive' else 'order'
-        subject = f"Sorry for the delay on your {kind} — {BUSINESS['name']}"
-        body = f"""Hi {o.name},
+    def _send_all(app_ctx, ids):
+        with app_ctx:
+            sent = 0
+            failed = 0
+            for oid in ids:
+                o = CarOrder.query.get(oid)
+                if not o or not o.email:
+                    continue
+                vehicle_name = o.vehicle.name if o.vehicle else 'the vehicle'
+                kind = 'test drive booking' if o.order_type == 'test_drive' else 'order'
+                subject = f"Sorry for the delay on your {kind} — {BUSINESS['name']}"
+                body = f"""Hi {o.name},
 
 We're sorry — it looks like your {kind} for the {vehicle_name} hasn't been
 followed up on yet.
@@ -1527,26 +1544,27 @@ Best regards,
 {BUSINESS['name']} Team
 {BUSINESS['phone']} · {BUSINESS['email']}
 """
-        try:
-            msg = MIMEMultipart('alternative')
-            msg['Subject'] = subject
-            msg['From']    = SMTP_USER
-            msg['To']      = o.email
-            msg.attach(MIMEText(body, 'plain'))
-            with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
-                server.ehlo()
-                server.starttls()
-                server.login(SMTP_USER, SMTP_PASSWORD)
-                server.sendmail(SMTP_USER, [o.email], msg.as_string())
-            sent += 1
-        except Exception as e:
-            print(f'[EMAIL] Referral to Anthony failed for {o.email}: {e}')
-            failed += 1
+                try:
+                    msg = MIMEMultipart('alternative')
+                    msg['Subject'] = subject
+                    msg['From']    = SMTP_USER
+                    msg['To']      = o.email
+                    msg.attach(MIMEText(body, 'plain'))
+                    with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
+                        server.ehlo()
+                        server.starttls()
+                        server.login(SMTP_USER, SMTP_PASSWORD)
+                        server.sendmail(SMTP_USER, [o.email], msg.as_string())
+                    sent += 1
+                except Exception as e:
+                    print(f'[EMAIL] Referral to Anthony failed for {o.email}: {e}')
+                    failed += 1
+            print(f'[EMAIL] Order referral blast finished: {sent} sent, {failed} failed.')
 
+    threading.Thread(target=_send_all, args=(app.app_context(), order_ids), daemon=True).start()
     flash(
-        f'Referred {sent} pending order{"s" if sent != 1 else ""}/test drive{"s" if sent != 1 else ""} to Anthony Eduafo'
-        + (f' ({failed} failed to send).' if failed else '.'),
-        'success' if sent else 'error'
+        f'Referring {len(order_ids)} pending order{"s" if len(order_ids) != 1 else ""}/test drive{"s" if len(order_ids) != 1 else ""} to Anthony Eduafo in the background.',
+        'success'
     )
     return redirect(url_for('admin_orders'))
 
@@ -2111,7 +2129,7 @@ def send_loan_schedule_to_head_of_sales():
     rate = get_ghs_rate()
     lines = []
     for a in apps:
-        bank   = 'Access Bank' if a.bank_choice == 'access' else 'Republic Bank'
+        bank   = bank_label_for(a.bank_choice)
         amount = f"${a.loan_amount:,.2f} (GH₵ {a.loan_amount * rate:,.2f})" if a.loan_amount else 'N/A'
         lines.append(
             f"#{a.id:<5} {a.first_name} {a.last_name:<20} | "
@@ -2178,7 +2196,7 @@ def send_application_status_email(a, new_status):
     if not SMTP_USER or not SMTP_PASSWORD or not a.email:
         return
 
-    bank_name = 'Access Bank Ghana' if a.bank_choice == 'access' else 'Republic Bank Ghana'
+    bank_name = bank_label_for(a.bank_choice, suffix=' Ghana')
     product   = a.product_name or 'your selected product'
     amount    = f'${a.loan_amount:,.2f}' if a.loan_amount else 'as requested'
 
@@ -2334,17 +2352,17 @@ def _loan_report_data():
         start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0); end = None
 
     bank = request.args.get('bank', '')
-    if bank not in ('republic', 'access'):
+    if bank not in ('republic', 'access', 'omnibsic'):
         bank = ''
 
     q = LoanApplication.query
     if start: q = q.filter(LoanApplication.created_at >= start)
     if end:   q = q.filter(LoanApplication.created_at < end)
-    if bank == 'access':
-        q = q.filter(LoanApplication.bank_choice == 'access')
+    if bank in ('access', 'omnibsic'):
+        q = q.filter(LoanApplication.bank_choice == bank)
     elif bank == 'republic':
         # legacy rows may have NULL bank_choice — they defaulted to Republic
-        q = q.filter(db.or_(LoanApplication.bank_choice != 'access',
+        q = q.filter(db.or_(LoanApplication.bank_choice.notin_(['access', 'omnibsic']),
                             LoanApplication.bank_choice.is_(None)))
     apps = q.order_by(LoanApplication.created_at.desc()).all()
 
@@ -2353,8 +2371,8 @@ def _loan_report_data():
     by_status, by_bank, by_product, by_sp = {}, {}, {}, {}
     for a in apps:
         by_status[a.status or 'pending'] = by_status.get(a.status or 'pending', 0) + 1
-        bank = 'Access Bank' if a.bank_choice == 'access' else 'Republic Bank'
-        by_bank[bank] = by_bank.get(bank, 0) + 1
+        bank_lbl = bank_label_for(a.bank_choice)
+        by_bank[bank_lbl] = by_bank.get(bank_lbl, 0) + 1
         ptype = (a.product_type or 'other').capitalize()
         by_product[ptype] = by_product.get(ptype, 0) + 1
         if a.sp_code:
@@ -2364,7 +2382,7 @@ def _loan_report_data():
     return {
         'period': period, 'start': start, 'end': end, 'apps': apps,
         'bank': bank,
-        'bank_label': {'republic': 'Republic Bank', 'access': 'Access Bank'}.get(bank, 'All Banks'),
+        'bank_label': BANK_LABELS.get(bank, 'All Banks'),
         # end is exclusive; show the inclusive last day in the UI
         'end_display': (end - timedelta(days=1)) if end else None,
         'total': len(apps),
@@ -2399,7 +2417,7 @@ def admin_loan_report_csv():
             f'{a.first_name} {a.last_name}', a.email, a.phone,
             a.product_type or '', a.product_name or '',
             a.product_price or '', a.loan_amount or '', a.deposit_amount or '',
-            a.loan_term or '', 'Access Bank' if a.bank_choice == 'access' else 'Republic Bank',
+            a.loan_term or '', bank_label_for(a.bank_choice),
             a.status or 'pending', a.sp_name or '', a.sp_code or '',
         ])
     bank_part = f"-{r['bank']}" if r['bank'] else ''
@@ -2431,25 +2449,29 @@ def admin_delete_contact(cid):
 @admin_required
 def admin_refer_unanswered_contacts():
     """Email every contact-form message that never got a reply, pointing the
-    customer to Anthony Eduafo (Head of Sales) for direct follow-up."""
+    customer to Anthony Eduafo (Head of Sales) for direct follow-up. Runs in a
+    background thread since there can be hundreds of messages to send."""
     if not SMTP_USER or not SMTP_PASSWORD:
         flash('SMTP not configured — no emails sent.', 'error')
         return redirect(url_for('admin_contacts'))
 
-    all_contacts = Contact.query.filter(
+    contact_ids = [c.id for c in Contact.query.filter(
         Contact.status != 'referred_to_anthony'
-    ).all()
-    if not all_contacts:
+    ).all()]
+    if not contact_ids:
         flash('No messages found to refer — everyone has already been referred.', 'success')
         return redirect(url_for('admin_contacts'))
 
-    sent = 0
-    failed = 0
-    for c in all_contacts:
-        if not c.email:
-            continue
-        subject = f"Sorry for the delay — {BUSINESS['name']}"
-        body = f"""Hi {c.name},
+    def _send_all(app_ctx, ids):
+        with app_ctx:
+            sent = 0
+            failed = 0
+            for cid in ids:
+                c = Contact.query.get(cid)
+                if not c or not c.email:
+                    continue
+                subject = f"Sorry for the delay — {BUSINESS['name']}"
+                body = f"""Hi {c.name},
 
 We're sorry — it looks like your message to us hasn't been answered yet:
 
@@ -2469,28 +2491,29 @@ Best regards,
 {BUSINESS['name']} Team
 {BUSINESS['phone']} · {BUSINESS['email']}
 """
-        try:
-            msg = MIMEMultipart('alternative')
-            msg['Subject'] = subject
-            msg['From']    = SMTP_USER
-            msg['To']      = c.email
-            msg.attach(MIMEText(body, 'plain'))
-            with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
-                server.ehlo()
-                server.starttls()
-                server.login(SMTP_USER, SMTP_PASSWORD)
-                server.sendmail(SMTP_USER, [c.email], msg.as_string())
-            c.status = 'referred_to_anthony'
-            sent += 1
-        except Exception as e:
-            print(f'[EMAIL] Referral to Anthony failed for {c.email}: {e}')
-            failed += 1
+                try:
+                    msg = MIMEMultipart('alternative')
+                    msg['Subject'] = subject
+                    msg['From']    = SMTP_USER
+                    msg['To']      = c.email
+                    msg.attach(MIMEText(body, 'plain'))
+                    with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
+                        server.ehlo()
+                        server.starttls()
+                        server.login(SMTP_USER, SMTP_PASSWORD)
+                        server.sendmail(SMTP_USER, [c.email], msg.as_string())
+                    c.status = 'referred_to_anthony'
+                    db.session.commit()
+                    sent += 1
+                except Exception as e:
+                    print(f'[EMAIL] Referral to Anthony failed for {c.email}: {e}')
+                    failed += 1
+            print(f'[EMAIL] Contact referral blast finished: {sent} sent, {failed} failed.')
 
-    db.session.commit()
+    threading.Thread(target=_send_all, args=(app.app_context(), contact_ids), daemon=True).start()
     flash(
-        f'Referred {sent} unanswered message{"s" if sent != 1 else ""} to Anthony Eduafo'
-        + (f' ({failed} failed to send).' if failed else '.'),
-        'success' if sent else 'error'
+        f'Referring {len(contact_ids)} message{"s" if len(contact_ids) != 1 else ""} to Anthony Eduafo in the background — this may take a few minutes.',
+        'success'
     )
     return redirect(url_for('admin_contacts'))
 

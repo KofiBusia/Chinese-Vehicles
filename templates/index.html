@@ -872,6 +872,13 @@ function calcPrint(){
             <div style="font-size:.72rem;color:rgba(255,255,255,.45);">10% – 16% p.a.</div>
           </div>
         </div>
+        <div style="display:inline-flex;align-items:center;gap:.75rem;background:rgba(109,40,217,.1);border:1px solid rgba(109,40,217,.25);padding:.65rem 1.5rem;border-radius:50px;">
+          <div style="width:36px;height:36px;background:#6d28d9;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:.6rem;color:white;flex-shrink:0;">OB</div>
+          <div style="text-align:left;">
+            <div style="font-size:.95rem;font-weight:700;color:white;">OmniBSIC Bank Ghana</div>
+            <div style="font-size:.72rem;color:rgba(255,255,255,.45);">10% – 15% p.a.</div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -943,6 +950,24 @@ function calcPrint(){
   </div>
 </section>
 
+<!-- ── MEET OUR TEAM ── -->
+<section style="padding:5rem 2rem;background:var(--light);">
+  <div style="max-width:1200px;margin:0 auto;text-align:center;">
+    <p style="font-size:.75rem;letter-spacing:.15em;text-transform:uppercase;color:var(--blue);margin-bottom:.75rem;">Our People</p>
+    <h2 class="section-title reveal">Meet Our Team</h2>
+  </div>
+  <div style="max-width:380px;margin:2rem auto 0;text-align:center;" class="reveal">
+    <img src="{{ url_for('static', filename='img/anthony-eduafo.jpg') }}" alt="Anthony Eduafo — Head of Sales"
+         style="width:220px;height:220px;object-fit:cover;object-position:top;border-radius:50%;margin:0 auto 1.25rem;display:block;box-shadow:0 10px 30px rgba(0,0,0,.12);">
+    <h3 style="font-family:var(--font-head);font-size:1.3rem;font-weight:800;margin-bottom:.2rem;">Anthony Eduafo</h3>
+    <p style="color:var(--blue);font-weight:700;font-size:.85rem;letter-spacing:.03em;text-transform:uppercase;margin-bottom:1rem;">Head of Sales</p>
+    <div style="display:flex;gap:.75rem;justify-content:center;flex-wrap:wrap;">
+      <a href="tel:0536971740" style="display:inline-flex;align-items:center;gap:.4rem;padding:.6rem 1.1rem;background:white;color:var(--dark);border-radius:6px;font-weight:600;font-size:.85rem;text-decoration:none;">📞 0536 971 740</a>
+      <a href="https://wa.me/233536971740" target="_blank" style="display:inline-flex;align-items:center;gap:.4rem;padding:.6rem 1.1rem;background:#25d366;color:white;border-radius:6px;font-weight:600;font-size:.85rem;text-decoration:none;">💬 WhatsApp</a>
+    </div>
+  </div>
+</section>
+
 <!-- ── SEO CONTENT: what we do, in plain crawlable text ── -->
 <section style="padding:4.5rem 2rem;background:#f8fafc;">
   <div style="max-width:1000px;margin:0 auto;color:#374151;font-size:.95rem;line-height:1.85;">
@@ -969,8 +994,8 @@ function calcPrint(){
     <h2 style="font-size:1.5rem;color:#111827;margin-bottom:1rem;">Car &amp; Solar Financing Through Ghanaian Banks</h2>
     <p style="margin-bottom:2.5rem;">
       Buying a car or solar system in Ghana doesn't have to mean paying cash. Through our official partnerships
-      with <strong>Republic Bank Ghana</strong> and <strong>Access Bank Ghana</strong>, you can apply for flexible
-      vehicle and solar financing online in minutes and pay monthly.
+      with <strong>Republic Bank Ghana</strong>, <strong>Access Bank Ghana</strong> and <strong>OmniBSIC Bank Ghana</strong>,
+      you can apply for flexible vehicle and solar financing online in minutes and pay monthly.
       <a href="{{ url_for('loan') }}" style="color:#1a7a00;font-weight:600;">Apply for financing →</a>
     </p>
 
@@ -981,7 +1006,7 @@ function calcPrint(){
       ('How much does a solar system cost in Ghana?',
        'It depends on your appliances. A small home backup system (lights, TV, fridge, fan) is far cheaper than a full off-grid setup with air conditioning. Use our free solar sizing calculator on this page — add your appliances and it instantly generates a complete quote with panels, inverter, batteries and installation in Ghana cedis.'),
       ('Can I buy a car in Ghana on credit or with bank financing?',
-       'Yes. We partner with Republic Bank Ghana and Access Bank Ghana to finance both vehicles and solar systems. You apply online through our website, choose your deposit and repayment term, and the bank processes your application — most applicants hear back within days.'),
+       'Yes. We partner with Republic Bank Ghana, Access Bank Ghana and OmniBSIC Bank Ghana to finance both vehicles and solar systems. You apply online through our website, choose your deposit and repayment term, and the bank processes your application — most applicants hear back within days.'),
       ('Where is China Cars in Ghana located?',
        'We are based in Accra, Ghana, and deliver vehicles and install solar systems nationwide. Contact us by phone or WhatsApp on ' ~ business.phone ~ ' to book a test drive or a free solar consultation.'),
     ] %}

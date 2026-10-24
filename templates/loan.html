@@ -17,6 +17,10 @@
       <div class="bank-logo" style="background:#dc2626;color:white;">AB</div>
       <span>Access Bank Ghana</span>
     </div>
+    <div class="bank-badge" style="background:rgba(109,40,217,.12);border-color:rgba(109,40,217,.3);">
+      <div class="bank-logo" style="background:#6d28d9;color:white;">OB</div>
+      <span>OmniBSIC Bank Ghana</span>
+    </div>
   </div>
   <h1>Apply for a Loan</h1>
   <p>Drive your dream vehicle or power your home with solar energy. Choose your preferred bank, complete the form below and we'll process your application within 24–48 hours.</p>
@@ -37,7 +41,7 @@
           </div>
         </div>
         <div class="form-card-body">
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1rem;">
 
             <label id="lbl-republic" for="bankRepublic" style="display:flex;flex-direction:column;gap:.5rem;cursor:pointer;padding:1.25rem;border:2px solid var(--blue);border-radius:12px;background:rgba(37,99,235,.04);transition:all .2s;">
               <div style="display:flex;align-items:center;gap:.65rem;">
@@ -60,6 +64,18 @@
               <div style="font-size:.8rem;color:var(--mid);line-height:1.5;padding-left:1.75rem;">
                 Interest Rate: <strong style="color:#dc2626;">10% – 16% p.a.</strong><br>
                 Competitive rates · Pan-African banking group
+              </div>
+            </label>
+
+            <label id="lbl-omnibsic" for="bankOmnibsic" style="display:flex;flex-direction:column;gap:.5rem;cursor:pointer;padding:1.25rem;border:2px solid #e5e7eb;border-radius:12px;background:transparent;transition:all .2s;">
+              <div style="display:flex;align-items:center;gap:.65rem;">
+                <input type="radio" name="bank_choice" id="bankOmnibsic" value="omnibsic" style="accent-color:#6d28d9;">
+                <div style="width:34px;height:34px;background:#6d28d9;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:.6rem;color:white;flex-shrink:0;">OB</div>
+                <span style="font-weight:700;font-size:.95rem;">OmniBSIC Bank Ghana</span>
+              </div>
+              <div style="font-size:.8rem;color:var(--mid);line-height:1.5;padding-left:1.75rem;">
+                Interest Rate: <strong style="color:#6d28d9;">10% – 15% p.a.</strong><br>
+                Personalized service · Flexible vehicle & solar financing
               </div>
             </label>
 
@@ -328,7 +344,8 @@ window.USD_TO_GHS = {{ USD_TO_GHS }};
 
 const BANK_CONFIG = {
   republic: { label: 'Republic Bank Ghana', min: 12, max: 14 },
-  access:   { label: 'Access Bank Ghana',   min: 10, max: 16 }
+  access:   { label: 'Access Bank Ghana',   min: 10, max: 16 },
+  omnibsic: { label: 'OmniBSIC Bank Ghana', min: 10, max: 15 }
 };
 let currentBank = 'republic';
 
@@ -384,7 +401,7 @@ function updateCalc() {
 document.getElementById('loan_term')?.addEventListener('change', updateCalc);
 
 // ── Bank switch ────────────────────────────────────────────────────────────
-const BANK_LABELS = { republic: 'Republic Bank Ghana', access: 'Access Bank Ghana' };
+const BANK_LABELS = { republic: 'Republic Bank Ghana', access: 'Access Bank Ghana', omnibsic: 'OmniBSIC Bank Ghana' };
 
 function onBankChange() {
   currentBank = document.querySelector('input[name="bank_choice"]:checked')?.value || 'republic';
@@ -394,6 +411,8 @@ function onBankChange() {
   document.getElementById('lbl-republic').style.background  = currentBank === 'republic' ? 'rgba(37,99,235,.04)' : 'transparent';
   document.getElementById('lbl-access').style.borderColor   = currentBank === 'access'   ? '#dc2626' : '#e5e7eb';
   document.getElementById('lbl-access').style.background    = currentBank === 'access'   ? 'rgba(220,38,38,.04)' : 'transparent';
+  document.getElementById('lbl-omnibsic').style.borderColor = currentBank === 'omnibsic' ? '#6d28d9' : '#e5e7eb';
+  document.getElementById('lbl-omnibsic').style.background  = currentBank === 'omnibsic' ? 'rgba(109,40,217,.04)' : 'transparent';
 
   const rateEl = document.getElementById('previewRate');
   if (rateEl) rateEl.textContent = `${cfg.min}% – ${cfg.max}% p.a.`;
