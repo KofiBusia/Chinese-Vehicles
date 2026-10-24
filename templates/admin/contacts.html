@@ -122,6 +122,12 @@
     {% set unread = contacts | selectattr('status','equalto','unread') | list | length %}
     {% if unread %} &nbsp;·&nbsp; <strong style="color:#f59e0b;">{{ unread }} new</strong>{% endif %}
   </span>
+  <form method="post" action="{{ url_for('admin_refer_unanswered_contacts') }}"
+        onsubmit="return confirm('Email EVERY message sender (all {{ contacts | length }}), pointing them to Anthony Eduafo for follow-up?');">
+    <button type="submit" class="btn btn-sm" style="background:#f59e0b;color:#0f172a;font-weight:700;">
+      📨 Refer All Messages to Anthony
+    </button>
+  </form>
 </div>
 
 <div class="inbox">

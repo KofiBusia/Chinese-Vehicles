@@ -49,7 +49,13 @@
      class="btn btn-sm {% if request.args.get('status') == 'pending' %}btn-primary{% else %}btn-outline{% endif %}">
     Pending only
   </a>
-  <form method="post" action="{{ url_for('admin_test_drive_blast') }}" style="margin-left:auto;"
+  <form method="post" action="{{ url_for('admin_refer_unanswered_orders') }}" style="margin-left:auto;"
+        onsubmit="return confirm('Email everyone with a PENDING order or test drive, pointing them to Anthony Eduafo for follow-up?');">
+    <button type="submit" class="btn btn-sm" style="background:#f59e0b;color:#0f172a;font-weight:700;">
+      📨 Refer Pending to Anthony
+    </button>
+  </form>
+  <form method="post" action="{{ url_for('admin_test_drive_blast') }}"
         onsubmit="return confirm('Send showroom location email to ALL test drive customers?');">
     <button type="submit" class="btn btn-sm" style="background:#f59e0b;color:#0f172a;font-weight:700;">
       📍 Email All Test Drive Customers

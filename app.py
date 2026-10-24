@@ -69,7 +69,7 @@ LOAN_TO_EMAIL       = 'sbonsu@republicghana.com'          # Republic Bank primar
 LOAN_CC_EMAILS      = ['kofi@chinacarsinghana.com', 'pdesbordes@republicghana.com', 'eduafoanthony265@gmail.com']
 ACCESS_BANK_EMAILS  = ['emmanueloffei44@gmail.com', 'Offeie@accessbankplc.com']
 ACCESS_BANK_CC      = ['kofi@chinacarsinghana.com', 'eduafoanthony265@gmail.com']
-NOTIFY_EMAILS       = ['kofi@chinacarsinghana.com']  # orders, test drives, contacts
+NOTIFY_EMAILS       = ['kofi@chinacarsinghana.com', 'eduafoanthony265@gmail.com']  # orders, test drives, contacts
 HEAD_OF_SALES_EMAIL = 'eduafoanthony265@gmail.com'   # Anthony Eduafo — gets a copy of every loan email + the full schedule
 # SMTP settings
 SMTP_HOST     = 'smtp.gmail.com'
@@ -698,6 +698,49 @@ Submitted : {order.created_at.strftime('%d %B %Y at %H:%M UTC')}
             server.sendmail(SMTP_USER, NOTIFY_EMAILS, msg.as_string())
     except Exception as e:
         print(f'[EMAIL] Order notification failed: {e}')
+
+def send_new_contact_alert(c):
+    """Email admin + Anthony Eduafo (Head of Sales) whenever a new contact-form
+    message comes in, so it gets picked up immediately instead of sitting
+    unanswered in the inbox."""
+    if not SMTP_USER or not SMTP_PASSWORD:
+        return
+    try:
+        body = f"""\
+NEW CONTACT MESSAGE — #{c.id}
+{'=' * 54}
+
+  FROM
+  ----
+  Name  : {c.name}
+  Email : {c.email}
+  Phone : {c.phone or 'Not provided'}
+
+  SUBJECT
+  -------
+  {c.subject or 'Not specified'}
+
+  MESSAGE
+  -------
+  {c.message}
+
+{'=' * 54}
+Submitted : {c.created_at.strftime('%d %B %Y at %H:%M UTC')}
+
+Please follow up with this customer as soon as possible.
+"""
+        msg = MIMEMultipart('alternative')
+        msg['Subject'] = f"[New Message #{c.id}] {c.subject or 'Website Contact Form'} — {c.name}"
+        msg['From']    = SMTP_USER
+        msg['To']      = ', '.join(NOTIFY_EMAILS)
+        msg.attach(MIMEText(body, 'plain'))
+        with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
+            server.ehlo(); server.starttls()
+            server.login(SMTP_USER, SMTP_PASSWORD)
+            server.sendmail(SMTP_USER, NOTIFY_EMAILS, msg.as_string())
+    except Exception as e:
+        print(f'[EMAIL] New contact alert failed: {e}')
+
 
 def send_salesperson_welcome(sp):
     """Email the new salesperson their code + login details, and notify admin."""
@@ -1376,6 +1419,7 @@ def contact():
         )
         db.session.add(c)
         db.session.commit()
+        send_new_contact_alert(c)
         flash('Thank you! Your message has been sent. We will be in touch shortly.', 'success')
         return redirect(url_for('contact'))
     return render_template('contact.html')
@@ -1440,6 +1484,70 @@ def admin_update_order_status(oid):
     order.status = request.form.get('status', 'pending')
     db.session.commit()
     flash('Order status updated.', 'success')
+    return redirect(url_for('admin_orders'))
+
+
+@app.route('/admin/orders/refer-unanswered', methods=['POST'])
+@admin_required
+def admin_refer_unanswered_orders():
+    """Email every still-pending order/test-drive booking (never confirmed,
+    completed or cancelled — i.e. no response from us yet), pointing the
+    customer to Anthony Eduafo (Head of Sales) for direct follow-up."""
+    if not SMTP_USER or not SMTP_PASSWORD:
+        flash('SMTP not configured — no emails sent.', 'error')
+        return redirect(url_for('admin_orders'))
+
+    pending = CarOrder.query.filter_by(status='pending').all()
+    if not pending:
+        flash('No pending orders or test drives found.', 'success')
+        return redirect(url_for('admin_orders'))
+
+    sent = 0
+    failed = 0
+    for o in pending:
+        if not o.email:
+            continue
+        vehicle_name = o.vehicle.name if o.vehicle else 'the vehicle'
+        kind = 'test drive booking' if o.order_type == 'test_drive' else 'order'
+        subject = f"Sorry for the delay on your {kind} — {BUSINESS['name']}"
+        body = f"""Hi {o.name},
+
+We're sorry — it looks like your {kind} for the {vehicle_name} hasn't been
+followed up on yet.
+
+Please reach out directly to our Head of Sales, Anthony Eduafo, and he will
+take care of you right away:
+
+  Phone / WhatsApp : 0536 971 740
+
+You can also just reply to this email. Thanks for your patience, and sorry
+again for the delay!
+
+Best regards,
+{BUSINESS['name']} Team
+{BUSINESS['phone']} · {BUSINESS['email']}
+"""
+        try:
+            msg = MIMEMultipart('alternative')
+            msg['Subject'] = subject
+            msg['From']    = SMTP_USER
+            msg['To']      = o.email
+            msg.attach(MIMEText(body, 'plain'))
+            with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
+                server.ehlo()
+                server.starttls()
+                server.login(SMTP_USER, SMTP_PASSWORD)
+                server.sendmail(SMTP_USER, [o.email], msg.as_string())
+            sent += 1
+        except Exception as e:
+            print(f'[EMAIL] Referral to Anthony failed for {o.email}: {e}')
+            failed += 1
+
+    flash(
+        f'Referred {sent} pending order{"s" if sent != 1 else ""}/test drive{"s" if sent != 1 else ""} to Anthony Eduafo'
+        + (f' ({failed} failed to send).' if failed else '.'),
+        'success' if sent else 'error'
+    )
     return redirect(url_for('admin_orders'))
 
 
@@ -2316,6 +2424,74 @@ def admin_delete_contact(cid):
     db.session.delete(c)
     db.session.commit()
     flash('Message deleted.', 'success')
+    return redirect(url_for('admin_contacts'))
+
+
+@app.route('/admin/contacts/refer-unanswered', methods=['POST'])
+@admin_required
+def admin_refer_unanswered_contacts():
+    """Email every contact-form message that never got a reply, pointing the
+    customer to Anthony Eduafo (Head of Sales) for direct follow-up."""
+    if not SMTP_USER or not SMTP_PASSWORD:
+        flash('SMTP not configured — no emails sent.', 'error')
+        return redirect(url_for('admin_contacts'))
+
+    all_contacts = Contact.query.filter(
+        Contact.status != 'referred_to_anthony'
+    ).all()
+    if not all_contacts:
+        flash('No messages found to refer — everyone has already been referred.', 'success')
+        return redirect(url_for('admin_contacts'))
+
+    sent = 0
+    failed = 0
+    for c in all_contacts:
+        if not c.email:
+            continue
+        subject = f"Sorry for the delay — {BUSINESS['name']}"
+        body = f"""Hi {c.name},
+
+We're sorry — it looks like your message to us hasn't been answered yet:
+
+{'─' * 50}
+{c.message}
+{'─' * 50}
+
+Please reach out directly to our Head of Sales, Anthony Eduafo, and he will
+take care of you right away:
+
+  Phone / WhatsApp : 0536 971 740
+
+You can also just reply to this email. Thanks for your patience, and sorry
+again for the delay!
+
+Best regards,
+{BUSINESS['name']} Team
+{BUSINESS['phone']} · {BUSINESS['email']}
+"""
+        try:
+            msg = MIMEMultipart('alternative')
+            msg['Subject'] = subject
+            msg['From']    = SMTP_USER
+            msg['To']      = c.email
+            msg.attach(MIMEText(body, 'plain'))
+            with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
+                server.ehlo()
+                server.starttls()
+                server.login(SMTP_USER, SMTP_PASSWORD)
+                server.sendmail(SMTP_USER, [c.email], msg.as_string())
+            c.status = 'referred_to_anthony'
+            sent += 1
+        except Exception as e:
+            print(f'[EMAIL] Referral to Anthony failed for {c.email}: {e}')
+            failed += 1
+
+    db.session.commit()
+    flash(
+        f'Referred {sent} unanswered message{"s" if sent != 1 else ""} to Anthony Eduafo'
+        + (f' ({failed} failed to send).' if failed else '.'),
+        'success' if sent else 'error'
+    )
     return redirect(url_for('admin_contacts'))
 
 
