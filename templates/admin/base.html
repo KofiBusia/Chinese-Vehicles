@@ -235,6 +235,9 @@
       <span class="link-icon">✉️</span> Messages
       {% if unread_contacts > 0 %}<span class="sidebar-badge">{{ unread_contacts }}</span>{% endif %}
     </a>
+    <a href="{{ url_for('admin_whatsapp_inquiries') }}" class="sidebar-link {% if request.endpoint == 'admin_whatsapp_inquiries' %}active{% endif %}">
+      <span class="link-icon">💬</span> WhatsApp Inquiries
+    </a>
     <div class="nav-section-label">Team</div>
     <a href="{{ url_for('admin_salespersons') }}" class="sidebar-link {% if 'salesperson' in request.endpoint or ('sale' in request.endpoint and 'team_email' not in request.endpoint) %}active{% endif %}">
       <span class="link-icon">👥</span> Salespersons

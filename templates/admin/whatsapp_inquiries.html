@@ -1,0 +1,110 @@
+{% extends "admin/base.html" %}
+{% block title %}WhatsApp Inquiries{% endblock %}
+{% block page_title %}WhatsApp Inquiries{% endblock %}
+
+{% block content %}
+<style>
+  .inbox { display: flex; flex-direction: column; gap: 1rem; }
+  .msg-card {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-left: 4px solid #25d366;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,.06);
+  }
+  .msg-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1rem 1.25rem;
+    flex-wrap: wrap;
+  }
+  .msg-from { font-weight: 700; font-size: .95rem; }
+  .msg-contact { font-size: .8rem; color: #6b7280; margin-top: .2rem; display: flex; gap: .75rem; flex-wrap: wrap; }
+  .msg-contact a { color: #3b82f6; }
+  .badge-date { font-size: .75rem; color: #9ca3af; flex-shrink: 0; }
+  .msg-body {
+    padding: .75rem 1.25rem 1rem;
+    border-top: 1px solid #f3f4f6;
+  }
+  .msg-text { font-size: .875rem; color: #374151; line-height: 1.65; white-space: pre-wrap; }
+  .msg-footer {
+    padding: .6rem 1.25rem 1rem;
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    flex-wrap: wrap;
+  }
+  .btn-del {
+    padding: .4rem .8rem;
+    background: none;
+    color: #ef4444;
+    border: 1.5px solid #fca5a5;
+    border-radius: 7px;
+    font-size: .78rem;
+    cursor: pointer;
+    margin-left: auto;
+    transition: background .2s;
+  }
+  .btn-del:hover { background: #fef2f2; }
+  .empty-state {
+    text-align: center;
+    padding: 4rem 2rem;
+    color: #9ca3af;
+    font-size: .95rem;
+  }
+  .info-note {
+    font-size: .82rem;
+    color: #6b7280;
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    border-radius: 8px;
+    padding: .75rem 1rem;
+    margin-bottom: 1.25rem;
+  }
+</style>
+
+<div class="info-note">
+  💬 This logs when a visitor clicks a WhatsApp button on the site — the page/vehicle, the prefilled message, and when. It does <strong>not</strong> show the actual WhatsApp conversation, which happens directly on Anthony's phone outside this website.
+</div>
+
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;flex-wrap:wrap;gap:.5rem;">
+  <span style="font-size:.9rem;color:#6b7280;">
+    {{ inquiries | length }} inquir{{ 'y' if inquiries | length == 1 else 'ies' }} (most recent 500)
+  </span>
+</div>
+
+<div class="inbox">
+  {% for i in inquiries %}
+  <div class="msg-card" id="wa-{{ i.id }}">
+    <div class="msg-head">
+      <div>
+        <div class="msg-from">{{ i.context or 'WhatsApp click' }}</div>
+        <div class="msg-contact">
+          <span>📞 To: {{ i.target or 'n/a' }}</span>
+          {% if i.vehicle %}<span>🚗 {{ i.vehicle.name }}</span>{% endif %}
+          {% if i.page_url %}<span>🔗 <a href="{{ i.page_url }}" target="_blank" rel="noopener">{{ i.page_url }}</a></span>{% endif %}
+        </div>
+      </div>
+      <span class="badge-date">{{ i.created_at.strftime('%b %d, %Y · %H:%M') }}</span>
+    </div>
+    {% if i.message %}
+    <div class="msg-body">
+      <div class="msg-text">{{ i.message }}</div>
+    </div>
+    {% endif %}
+    <div class="msg-footer">
+      <form method="post" action="{{ url_for('admin_delete_whatsapp_inquiry', iid=i.id) }}"
+            onsubmit="return confirm('Delete this inquiry log?');" style="display:inline;">
+        <button type="submit" class="btn-del">🗑 Delete</button>
+      </form>
+    </div>
+  </div>
+  {% else %}
+  <div class="empty-state">📭 No WhatsApp inquiries logged yet.</div>
+  {% endfor %}
+</div>
+
+{% endblock %}

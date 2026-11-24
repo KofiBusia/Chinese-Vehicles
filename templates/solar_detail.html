@@ -149,7 +149,7 @@
             🏦 Loan for This System
           </a>
           <a href="https://wa.me/{{ business.whatsapp }}?text=Hi!%20I'm%20interested%20in%20the%20{{ solar.name | urlencode }}%20solar%20system."
-             class="btn-full dark" target="_blank">
+             class="btn-full dark js-wa-track" data-wa-context="Solar Detail: {{ solar.name }}" target="_blank">
             💬 WhatsApp Us
           </a>
           <a href="{{ url_for('contact') }}" class="btn-full outline">

@@ -383,6 +383,17 @@ class CarOrder(db.Model):
     sp_phone       = db.Column(db.String(20))
 
 
+class WhatsAppInquiry(db.Model):
+    id         = db.Column(db.Integer, primary_key=True)
+    context    = db.Column(db.String(120))    # e.g. "Hero — Special Order"
+    target     = db.Column(db.String(30))     # phone number the click targeted
+    message    = db.Column(db.Text)           # prefilled WhatsApp message text
+    page_url   = db.Column(db.String(300))
+    vehicle_id = db.Column(db.Integer, db.ForeignKey('vehicle.id'), nullable=True)
+    vehicle    = db.relationship('Vehicle')
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+
 class AdminUser(db.Model):
     id            = db.Column(db.Integer, primary_key=True)
     username      = db.Column(db.String(50), unique=True, nullable=False)
@@ -1445,6 +1456,26 @@ def loan():
                            preselect_vehicle=preselect_v,
                            preselect_solar=preselect_s,
                            loan_interest_rate=loan_interest_rate)
+
+
+@app.route('/api/whatsapp-click', methods=['POST'])
+def api_whatsapp_click():
+    data = request.get_json(silent=True) or {}
+    vid = data.get('vehicle_id')
+    try:
+        vid = int(vid) if vid else None
+    except (TypeError, ValueError):
+        vid = None
+    rec = WhatsAppInquiry(
+        context=str(data.get('context', ''))[:120],
+        target=str(data.get('target', ''))[:30],
+        message=str(data.get('message', ''))[:2000],
+        page_url=str(data.get('page_url', ''))[:300],
+        vehicle_id=vid,
+    )
+    db.session.add(rec)
+    db.session.commit()
+    return jsonify({'ok': True})
 
 
 @app.route('/contact', methods=['GET', 'POST'])
@@ -2520,6 +2551,23 @@ def admin_contacts():
     Contact.query.filter_by(status='unread').update({'status': 'read'})
     db.session.commit()
     return render_template('admin/contacts.html', contacts=contacts)
+
+
+@app.route('/admin/whatsapp-inquiries')
+@admin_required
+def admin_whatsapp_inquiries():
+    inquiries = WhatsAppInquiry.query.order_by(WhatsAppInquiry.created_at.desc()).limit(500).all()
+    return render_template('admin/whatsapp_inquiries.html', inquiries=inquiries)
+
+
+@app.route('/admin/whatsapp-inquiries/delete/<int:iid>', methods=['POST'])
+@admin_required
+def admin_delete_whatsapp_inquiry(iid):
+    rec = WhatsAppInquiry.query.get_or_404(iid)
+    db.session.delete(rec)
+    db.session.commit()
+    flash('Inquiry deleted.', 'success')
+    return redirect(url_for('admin_whatsapp_inquiries'))
 
 
 @app.route('/admin/contacts/delete/<int:cid>', methods=['POST'])

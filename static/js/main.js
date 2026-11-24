@@ -310,3 +310,29 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
 });
+
+/* ── WhatsApp click tracking ──────────────────────────────────
+   Logs a click on any .js-wa-track link (context, destination number,
+   prefilled message, page) to the admin panel, then lets the browser
+   proceed to open WhatsApp as normal. Fire-and-forget: never blocks
+   or delays the link. */
+document.addEventListener('click', (e) => {
+  const link = e.target.closest('a.js-wa-track');
+  if (!link) return;
+  try {
+    const url = new URL(link.href, window.location.href);
+    const target = (url.pathname || '').replace(/^\//, '') || url.searchParams.get('phone') || '';
+    const payload = JSON.stringify({
+      context:    link.dataset.waContext || '',
+      target:     target,
+      message:    url.searchParams.get('text') || '',
+      page_url:   window.location.href,
+      vehicle_id: link.dataset.vehicleId || null,
+    });
+    if (navigator.sendBeacon) {
+      navigator.sendBeacon('/api/whatsapp-click', new Blob([payload], { type: 'application/json' }));
+    } else {
+      fetch('/api/whatsapp-click', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: payload, keepalive: true });
+    }
+  } catch (err) { /* never block the WhatsApp link on tracking failure */ }
+}, true);

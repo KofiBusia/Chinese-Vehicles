@@ -171,7 +171,7 @@
         <div class="footer-social">
           <a href="{{ business.facebook }}" class="social-btn" title="Facebook">f</a>
           <a href="{{ business.instagram }}" class="social-btn" title="Instagram">📸</a>
-          <a href="https://wa.me/{{ business.whatsapp }}" class="social-btn" title="WhatsApp">💬</a>
+          <a href="https://wa.me/{{ business.whatsapp }}" class="social-btn js-wa-track" data-wa-context="Footer Social Icon" title="WhatsApp">💬</a>
         </div>
       </div>
       <div class="footer-col">
@@ -226,7 +226,7 @@
 
 <!-- WhatsApp FAB -->
 <a href="https://wa.me/{{ business.whatsapp }}?text=Hello%2C%20I%20am%20interested%20in%20your%20vehicles%20and%20solar%20systems."
-   class="whatsapp-fab" id="whatsappBtn" target="_blank" rel="noopener" title="Chat on WhatsApp">
+   class="whatsapp-fab js-wa-track" data-wa-context="Floating WhatsApp Button" id="whatsappBtn" target="_blank" rel="noopener" title="Chat on WhatsApp">
   💬
 </a>
 
@@ -254,7 +254,7 @@
 .whatsapp-fab:hover { transform: scale(1.1); }
 </style>
 
-<script src="{{ url_for('static', filename='js/main.js') }}?v=5"></script>
+<script src="{{ url_for('static', filename='js/main.js') }}?v=6"></script>
 {% block extra_js %}{% endblock %}
 </body>
 </html>

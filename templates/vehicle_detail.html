@@ -182,7 +182,7 @@
             🏦 Apply for Loan
           </a>
           <a href="https://wa.me/{{ business.whatsapp }}?text=Hi!%20I'm%20interested%20in%20the%20{{ vehicle.name | urlencode }}%20listed%20at%20{{ vehicle.price | currency | urlencode }}"
-             class="btn-full outline" target="_blank">
+             class="btn-full outline js-wa-track" data-wa-context="Vehicle Detail: {{ vehicle.name }}" data-vehicle-id="{{ vehicle.id }}" target="_blank">
             💬 WhatsApp Us
           </a>
         </div>
