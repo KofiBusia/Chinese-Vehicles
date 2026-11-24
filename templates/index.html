@@ -24,9 +24,17 @@
       </div>
     </div>
 
+    <div style="margin:0 0 1.75rem;display:inline-flex;align-items:center;gap:.6rem;background:rgba(26,86,219,.14);border:2px solid rgba(79,142,247,.55);border-radius:12px;padding:.8rem 1.4rem;max-width:560px;text-align:left;">
+      <span style="font-size:1.4rem;">🚗</span>
+      <span style="font-size:.95rem;font-weight:700;color:white;line-height:1.5;">
+        Can't find your model? <span style="color:#4f8ef7;">We'll special-order any Chinese vehicle for you</span> — just ask.
+      </span>
+    </div>
+
     <div class="hero-actions">
       <a href="{{ url_for('vehicles') }}" class="btn-hero-primary">Explore Vehicles</a>
       <a href="{{ url_for('solar') }}" class="btn-hero-secondary">Solar Systems</a>
+      <a href="#special-order" class="btn-hero-secondary">Special-Order a Vehicle</a>
     </div>
   </div>
   <div class="scroll-indicator">
@@ -825,7 +833,7 @@ function calcPrint(){
 </section>
 
 <!-- ── SPECIAL ORDER CTA ── -->
-<section style="background:linear-gradient(135deg,#0d0d14 0%,#1a2744 100%);padding:5rem 2rem;position:relative;overflow:hidden;">
+<section id="special-order" style="background:linear-gradient(135deg,#0d0d14 0%,#1a2744 100%);padding:5rem 2rem;position:relative;overflow:hidden;">
   <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 70% 30%,rgba(26,86,219,.18),transparent 60%);"></div>
   <div style="max-width:800px;margin:0 auto;text-align:center;position:relative;" class="reveal">
     <p style="font-size:.75rem;letter-spacing:.18em;text-transform:uppercase;color:#4f8ef7;font-weight:700;margin-bottom:.75rem;">Can't Find Your Model?</p>
