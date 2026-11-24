@@ -24,11 +24,18 @@
       </div>
     </div>
 
-    <div style="margin:0 0 1.75rem;display:inline-flex;align-items:center;gap:.6rem;background:rgba(26,86,219,.14);border:2px solid rgba(79,142,247,.55);border-radius:12px;padding:.8rem 1.4rem;max-width:560px;text-align:left;">
-      <span style="font-size:1.4rem;">🚗</span>
-      <span style="font-size:.95rem;font-weight:700;color:white;line-height:1.5;">
-        Can't find your model? <span style="color:#4f8ef7;">We'll special-order any Chinese vehicle for you</span> — just ask.
-      </span>
+    <div style="margin:0 0 1.75rem;display:flex;align-items:center;gap:.9rem;background:rgba(26,86,219,.14);border:2px solid rgba(79,142,247,.55);border-radius:12px;padding:.8rem 1.4rem;max-width:560px;text-align:left;">
+      <img src="{{ url_for('static', filename='img/anthony-eduafo.jpg') }}" alt="Anthony Eduafo — Head of Sales" style="width:52px;height:52px;border-radius:50%;object-fit:cover;object-position:top;flex-shrink:0;box-shadow:0 4px 12px rgba(0,0,0,.3);">
+      <div>
+        <div style="font-size:.95rem;font-weight:700;color:white;line-height:1.4;">
+          Can't find your model? <span style="color:#4f8ef7;">We'll special-order any Chinese vehicle for you.</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:.6rem;margin-top:.5rem;flex-wrap:wrap;">
+          <span style="font-size:.78rem;color:rgba(255,255,255,.6);">Talk to <strong style="color:white;">Anthony</strong>, Head of Sales:</span>
+          <a href="tel:0536971740" style="font-size:.78rem;color:white;text-decoration:none;font-weight:600;">📞 0536 971 740</a>
+          <a href="https://wa.me/233536971740?text=Hi%2C%20I%27d%20like%20to%20place%20a%20special%20order%20for%20a%20Chinese%20vehicle." target="_blank" style="display:inline-flex;align-items:center;gap:.3rem;padding:.3rem .7rem;background:#25d366;color:white;border-radius:5px;font-weight:600;font-size:.78rem;text-decoration:none;">💬 WhatsApp</a>
+        </div>
+      </div>
     </div>
 
     <div class="hero-actions">
@@ -843,6 +850,19 @@ function calcPrint(){
     <p style="font-size:1.05rem;color:rgba(255,255,255,.65);max-width:600px;margin:0 auto 2rem;line-height:1.7;">
       Looking for a specific make, model, trim or colour that isn't in our current inventory? We import directly from China and can source almost any Chinese vehicle to your exact specification — just tell us what you're after and we'll get it for you.
     </p>
+
+    <div style="display:inline-flex;align-items:center;gap:1rem;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.15);border-radius:14px;padding:1.1rem 1.5rem;margin-bottom:2rem;text-align:left;">
+      <img src="{{ url_for('static', filename='img/anthony-eduafo.jpg') }}" alt="Anthony Eduafo — Head of Sales" style="width:64px;height:64px;border-radius:50%;object-fit:cover;object-position:top;flex-shrink:0;box-shadow:0 6px 16px rgba(0,0,0,.3);">
+      <div>
+        <div style="font-weight:700;color:white;font-size:1rem;">Anthony Eduafo</div>
+        <div style="font-size:.78rem;color:#4f8ef7;font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin-bottom:.5rem;">Head of Sales</div>
+        <div style="display:flex;gap:.6rem;flex-wrap:wrap;">
+          <a href="tel:0536971740" style="display:inline-flex;align-items:center;gap:.35rem;padding:.4rem .8rem;background:rgba(255,255,255,.1);color:white;border-radius:6px;font-weight:600;font-size:.8rem;text-decoration:none;">📞 0536 971 740</a>
+          <a href="https://wa.me/233536971740?text=Hi%2C%20I%27d%20like%20to%20place%20a%20special%20order%20for%20a%20Chinese%20vehicle." target="_blank" style="display:inline-flex;align-items:center;gap:.35rem;padding:.4rem .8rem;background:#25d366;color:white;border-radius:6px;font-weight:600;font-size:.8rem;text-decoration:none;">💬 WhatsApp</a>
+        </div>
+      </div>
+    </div>
+
     <div style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;">
       <a href="https://wa.me/233536971740?text=Hi%2C%20I%27d%20like%20to%20place%20a%20special%20order%20for%20a%20Chinese%20vehicle." target="_blank" style="display:inline-flex;align-items:center;gap:.5rem;padding:1rem 2rem;background:#25d366;color:white;border-radius:8px;font-weight:700;font-size:.95rem;text-decoration:none;">
         💬 Request a Special Order
